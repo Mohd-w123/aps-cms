@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>APS Fatehpur — Developer Guide &amp; Prompt Strategy (2-Day Build)</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #38bdf8;
+            --accent2: #818cf8;
+            --accent3: #34d399;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --border: #334155;
+            --danger: #f87171;
+            --warning: #fbbf24;
+            --success: #34d399;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+        .hero { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%); padding: 60px 40px; text-align: center; border-bottom: 2px solid var(--border); }
+        .hero h1 { font-size: 2.6rem; color: var(--accent); margin-bottom: 10px; }
+        .hero .subtitle { font-size: 1.15rem; color: var(--muted); max-width: 800px; margin: 0 auto; }
+        .hero .badge { display: inline-block; margin-top: 18px; padding: 6px 20px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; background: rgba(56,189,248,0.15); color: var(--accent); border: 1px solid var(--accent); }
+        .container { max-width: 1120px; margin: 0 auto; padding: 40px 24px; }
+        section { margin-bottom: 52px; }
+        section > h2 { font-size: 1.65rem; color: var(--accent); margin-bottom: 8px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+        section > .section-desc { color: var(--muted); margin-bottom: 20px; font-size: 0.95rem; }
+        h3 { font-size: 1.2rem; color: var(--accent2); margin: 24px 0 8px; }
+        h4 { font-size: 1.05rem; color: var(--accent3); margin: 16px 0 6px; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin-bottom: 18px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+        pre, .prompt-block { background: #0d1117; border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; overflow-x: auto; font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace; font-size: 0.88rem; line-height: 1.6; margin: 10px 0 16px; color: #c9d1d9; white-space: pre-wrap; word-wrap: break-word; }
+        .prompt-block { border-left: 4px solid var(--accent2); background: rgba(129,140,248,0.06); }
+        .prompt-label { display: inline-block; background: var(--accent2); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 2px 10px; border-radius: 4px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 0.92rem; }
+        th { background: #1a2744; color: var(--accent); text-align: left; padding: 10px 14px; border: 1px solid var(--border); }
+        td { padding: 10px 14px; border: 1px solid var(--border); vertical-align: top; }
+        tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+        ul, ol { padding-left: 24px; margin: 8px 0; }
+        li { margin-bottom: 5px; }
+        .tag { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-right: 4px; }
+        .tag-day1 { background: rgba(251,191,36,0.15); color: var(--warning); }
+        .tag-day2 { background: rgba(52,211,153,0.15); color: var(--success); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+        hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+        footer { text-align: center; padding: 30px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .note { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.25); border-radius: 8px; padding: 14px 18px; margin: 12px 0; font-size: 0.92rem; }
+        .note::before { content: '⚠ '; font-weight: 700; }
+        .removed { text-decoration: line-through; color: var(--danger); opacity: 0.5; }
+    </style>
+</head>
+<body>
+
+<div class="hero">
+    <h1>APS Fatehpur — School Management System</h1>
+    <p class="subtitle">
+        Developer Guide &amp; Prompt Strategy — CMS-Driven Dynamic Multi-School Website
+        <br /><strong>Next.js · Node.js · MongoDB · Centralized Admin CMS</strong>
+    </p>
+    <span class="badge">2-Day Build Plan &nbsp;|&nbsp; 4 Schools &nbsp;|&nbsp; 1 Admin CMS &nbsp;|&nbsp; English Only</span>
+</div>
+
+<div class="container">
+
+<!-- ═══════════════════ SCOPE ═══════════════════ -->
+<section>
+    <h2>Scope Clarification</h2>
+    <div class="card">
+        <div class="card-title">What This Project IS</div>
+        <ul>
+            <li><strong>CMS-driven dynamic website</strong> — All content (text, images, pages) is managed from the Admin Panel.</li>
+            <li><strong>English only</strong> — No multi-language, no i18n, no RTL. All 5 sites in English.</li>
+            <li><strong>Fee structure</strong> = just a CMS page. Admin types fee info in the rich-text editor → renders on the website. No separate fee model.</li>
+            <li><strong>Multi-tenant</strong> — One codebase, one DB, one admin panel manages all 5 school websites. Content scoped by <code>schoolId</code>.</li>
+            <li>Forms (Admission, Enquiry, Career Application) submit data to backend — admin views submissions.</li>
+        </ul>
+    </div>
+    <div class="card">
+        <div class="card-title">What Is NOT Included</div>
+        <ul>
+            <li class="removed">Multi-language / i18n (Urdu, Hindi)</li>
+            <li class="removed">RTL layout support</li>
+            <li class="removed">FeeStructure model / fee CRUD (fees = CMS page)</li>
+            <li class="removed">BusRoute model (bus routes = CMS page)</li>
+            <li class="removed">AcademicCalendar model (calendar = CMS page)</li>
+            <li class="removed">Translation files</li>
+        </ul>
+        <p style="margin-top:10px;color:var(--muted);">Fees, bus routes, academic calendar, uniforms, curriculum, affiliation, RTE, career counseling — all rendered as <strong>CMS pages</strong> (rich text content managed from admin).</p>
+    </div>
+</section>
+
+<!-- ═══════════════════ 1. ARCHITECTURE ═══════════════════ -->
+<section id="architecture">
+    <h2>1. Architecture Overview</h2>
+
+    <div class="card">
+        <div class="card-title">Domain Map</div>
+        <table>
+            <thead><tr><th>School</th><th>Domain / Subdomain</th><th>Identity</th></tr></thead>
+            <tbody>
+                <tr><td>Group (Landing)</td><td>apsfatehpur.com</td><td>Umbrella site showing all 4 schools</td></tr>
+                <tr><td>APS Girls</td><td>apsgirls.apsfatehpur.com</td><td>Girls-specific theme &amp; content</td></tr>
+                <tr><td>APS Boys</td><td>apsboys.apsfatehpur.com</td><td>Boys-specific theme &amp; content</td></tr>
+                <tr><td>Ashrafululum (Madrasa)</td><td>madrasa.apsfatehpur.com</td><td>Madrasa-specific theme</td></tr>
+                <tr><td>Azad School</td><td>azadschool.in</td><td>Separate branding</td></tr>
+            </tbody>
+        </table>
+        <p style="color:var(--muted);margin-top:8px;">All sites in <strong>English only</strong>. Unique theme/colors per school. Content managed via CMS.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Tech Stack</div>
+        <table>
+            <thead><tr><th>Layer</th><th>Technology</th><th>Why</th></tr></thead>
+            <tbody>
+                <tr><td>Frontend</td><td>Next.js 14 (App Router)</td><td>SSR/SSG, file-based routing, image optimization</td></tr>
+                <tr><td>Backend / API</td><td>Next.js API Routes (or separate Express)</td><td>REST API, same deploy</td></tr>
+                <tr><td>Database</td><td>MongoDB + Mongoose</td><td>Flexible schema, JSON-friendly, free Atlas tier</td></tr>
+                <tr><td>Auth</td><td>JWT + bcrypt</td><td>Stateless admin auth, role-based access</td></tr>
+                <tr><td>File Storage</td><td>Cloudinary</td><td>Photos, videos, PDFs — offloaded from server</td></tr>
+                <tr><td>Admin / CMS</td><td>Next.js (/admin routes)</td><td>Centralized CMS — one panel manages all schools</td></tr>
+                <tr><td>Styling</td><td>Tailwind CSS + shadcn/ui</td><td>Rapid UI dev, pre-built components</td></tr>
+                <tr><td>Deployment</td><td>Vercel + MongoDB Atlas</td><td>Auto-SSL, CI/CD, free tier friendly</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Architecture Diagram</div>
+        <pre>
+┌─────────────────────────────────────────────────────────┐
+│                    ONE Next.js App                       │
+│                                                          │
+│  Middleware: hostname → schoolSlug                        │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐│
+│  │ apsgirls │  │ apsboys  │  │ madrasa  │  │azadschool││
+│  │  theme   │  │  theme   │  │  theme   │  │  theme   ││
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘│
+│       └──────────────┴──────────────┴──────────────┘     │
+│                        ↓                                 │
+│              Shared Components + Pages                   │
+│              (content loaded from MongoDB                │
+│               filtered by schoolId)                      │
+│                        ↓                                 │
+│              ┌──────────────────┐                        │
+│              │  Admin CMS Panel │                        │
+│              │  /admin/...      │                        │
+│              │  Manages ALL     │                        │
+│              │  school content  │                        │
+│              └──────────────────┘                        │
+│                        ↓                                 │
+│              ┌──────────────────┐                        │
+│              │  MongoDB Atlas   │                        │
+│              │  (schoolId on    │                        │
+│              │   every doc)     │                        │
+│              └──────────────────┘                        │
+└─────────────────────────────────────────────────────────┘
+        </pre>
+    </div>
+</section>
+
+<!-- ═══════════════════ 2. PROJECT STRUCTURE ═══════════════════ -->
+<section id="structure">
+    <h2>2. Project Structure</h2>
+
+    <pre>
+aps-fatehpur/
+├── app/
+│   ├── (public)/                      # Public website pages
+│   │   ├── page.tsx                   # Home page (dynamic per school)
+│   │   ├── about/
+│   │   │   ├── page.tsx               # About — mission, vision (CMS)
+│   │   │   ├── director/page.tsx
+│   │   │   ├── chairman/page.tsx
+│   │   │   ├── principal/page.tsx
+│   │   │   └── infrastructure/page.tsx
+│   │   ├── structure/
+│   │   │   ├── uniforms/page.tsx      # CMS page
+│   │   │   ├── bus-routes/page.tsx    # CMS page
+│   │   │   ├── calendar/page.tsx      # CMS page
+│   │   │   ├── career-counseling/page.tsx  # CMS page
+│   │   │   └── awards/page.tsx
+│   │   ├── academy/
+│   │   │   ├── admissions/page.tsx    # CMS + link to Apply
+│   │   │   ├── curriculum/page.tsx    # CMS page
+│   │   │   ├── affiliation/page.tsx   # CMS page
+│   │   │   ├── rte/page.tsx           # CMS page
+│   │   │   └── fees/page.tsx          # CMS page (fee table in rich text)
+│   │   ├── facilities/page.tsx        # CMS + Gallery
+│   │   ├── news/
+│   │   │   ├── page.tsx               # News listing
+│   │   │   ├── [slug]/page.tsx        # Single article
+│   │   │   ├── tours/page.tsx         # CMS page
+│   │   │   └── videos/page.tsx        # Video gallery
+│   │   ├── toppers/page.tsx           # Top rank students
+│   │   ├── aicu/page.tsx              # AICU section
+│   │   ├── contact/page.tsx           # Contact + enquiry form
+│   │   ├── alumni/page.tsx
+│   │   ├── careers/page.tsx           # Jobs + apply
+│   │   └── apply/page.tsx             # Online admission form
+│   │
+│   ├── (admin)/                       # Admin CMS (protected)
+│   │   ├── layout.tsx                 # Sidebar layout
+│   │   ├── login/page.tsx
+│   │   ├── dashboard/page.tsx
+│   │   ├── schools/page.tsx           # Superadmin: manage schools
+│   │   ├── users/page.tsx
+│   │   ├── pages/
+│   │   │   ├── page.tsx               # List CMS pages
+│   │   │   └── [id]/page.tsx          # Rich text editor
+│   │   ├── news/page.tsx
+│   │   ├── gallery/page.tsx
+│   │   ├── toppers/page.tsx
+│   │   ├── aicu/page.tsx
+│   │   ├── persons/page.tsx
+│   │   ├── admissions/page.tsx
+│   │   ├── enquiries/page.tsx
+│   │   ├── careers/page.tsx
+│   │   ├── alumni/page.tsx
+│   │   └── settings/page.tsx
+│   │
+│   ├── api/                           # API routes
+│   │   ├── auth/login/route.ts
+│   │   ├── auth/me/route.ts
+│   │   ├── schools/route.ts
+│   │   ├── users/route.ts
+│   │   ├── pages/route.ts            # CMS pages CRUD
+│   │   ├── persons/route.ts
+│   │   ├── news/route.ts
+│   │   ├── gallery/route.ts
+│   │   ├── toppers/route.ts
+│   │   ├── aicu/route.ts
+│   │   ├── admissions/route.ts
+│   │   ├── enquiries/route.ts
+│   │   ├── careers/route.ts
+│   │   ├── alumni/route.ts
+│   │   └── upload/route.ts
+│   │
+│   ├── layout.tsx
+│   └── globals.css
+│
+├── components/
+│   ├── ui/                            # shadcn/ui components
+│   ├── school/                        # Header, Footer, Hero, PageBanner, CmsPage
+│   ├── admin/                         # Sidebar, DataTable, RichTextEditor
+│   └── forms/                         # EnquiryForm, AdmissionForm, CareerForm
+│
+├── config/
+│   ├── schools.ts                     # School configs (theme, name, features)
+│   └── navigation.ts                  # Nav items per school
+│
+├── lib/
+│   ├── db.ts                          # MongoDB connection (cached)
+│   ├── auth.ts                        # JWT helpers + middleware
+│   ├── school-resolver.ts             # Hostname → schoolSlug
+│   └── cloudinary.ts                  # Upload helper
+│
+├── hooks/
+│   ├── useSchool.ts                   # Current school context
+│   └── useAuth.ts                     # Admin auth state
+│
+├── middleware.ts
+├── tailwind.config.ts
+├── next.config.js
+└── package.json
+    </pre>
+</section>
+
+<!-- ═══════════════════ 3. DATABASE ═══════════════════ -->
+<section id="database">
+    <h2>3. MongoDB Schema Design</h2>
+    <p class="section-desc">Every collection has <code>schoolId</code>. All strings in English. No localized fields.</p>
+
+    <div class="card">
+        <div class="card-title">Collections (Simplified — No Fee/Calendar/Bus Models)</div>
+        <pre>
+// ─── School ───
+{
+  _id, name, slug (unique), domain, subdomain,
+  logo, favicon,
+  theme: { primaryColor, secondaryColor, accentColor },
+  contactInfo: { phone, email, address, mapEmbed },
+  socialLinks: { facebook, instagram, youtube, twitter },
+  stats: { students, teachers, years, awards },
+  isActive, createdAt, updatedAt
+}
+
+// ─── User (Admin CMS users only) ───
+{
+  _id, schoolId (ref+index), name, email (unique),
+  passwordHash, role: "superadmin" | "school_admin" | "editor",
+  lastLogin, isActive, createdAt
+}
+
+// ─── Page (THE CORE CMS MODEL) ───
+// Powers: about, fees, bus-routes, calendar, uniforms,
+// curriculum, affiliation, rte, career-counseling, etc.
+{
+  _id, schoolId (index), slug (string),
+  title (string), content (string — rich HTML from editor),
+  featuredImage (string), seo: { metaTitle, metaDescription },
+  isPublished (boolean), updatedBy (ref User),
+  createdAt, updatedAt
+}
+// Compound unique index: { schoolId, slug }
+
+// ─── Person (Director / Chairman / Principal) ───
+{
+  _id, schoolId, role: "director" | "chairman" | "principal",
+  name, designation, bio (rich text string),
+  photo, qualifications, order, isActive
+}
+
+// ─── News ───
+{
+  _id, schoolId, title, slug, content (rich HTML),
+  category: "announcement" | "event" | "tour",
+  featuredImage, images: [],
+  isPublished, publishedAt, createdAt
+}
+
+// ─── Gallery ───
+{
+  _id, schoolId, type: "photo" | "video",
+  title, url, thumbnailUrl, category,
+  order, isPublished, createdAt
+}
+
+// ─── Topper ───
+{
+  _id, schoolId, studentName, photo, class,
+  year, rank, percentage, examName,
+  subjects: [{ name, marks }], isPublished, createdAt
+}
+
+// ─── AICU ───
+{
+  _id, schoolId, title, description (rich text),
+  services: [{ name, description, icon }],
+  images: [], schedule (string), isActive, createdAt
+}
+
+// ─── Admission (form submissions) ───
+{
+  _id, schoolId, studentName, parentName, phone, email,
+  class, dob, gender, address, previousSchool,
+  documents: [{ name, url }],
+  status: "pending" | "reviewed" | "accepted" | "rejected",
+  appliedAt, reviewedBy, reviewedAt
+}
+
+// ─── Enquiry (contact form submissions) ───
+{
+  _id, schoolId, name, email, phone,
+  subject, message, status: "new" | "read" | "replied",
+  createdAt
+}
+
+// ─── Career ───
+{
+  _id, schoolId, title, department, description,
+  qualifications, experience, salary,
+  isActive, deadline, createdAt
+}
+
+// ─── CareerApplication ───
+{
+  _id, careerId (ref), schoolId, name, email, phone,
+  resume (url), coverLetter,
+  status: "pending" | "shortlisted" | "rejected", appliedAt
+}
+
+// ─── Alumni ───
+{
+  _id, schoolId, name, batch, course,
+  currentRole, company, photo, testimonial,
+  isApproved, createdAt
+}
+        </pre>
+    </div>
+
+    <div class="note">
+        <strong>Key insight:</strong> Fee structure, bus routes, academic calendar, uniforms, curriculum, affiliation, RTE, career counseling — ALL just <code>Page</code> documents with different slugs. Admin uses the rich-text editor to compose, frontend renders the HTML. No separate models needed.
+    </div>
+</section>
+
+<!-- ═══════════════════ 4. TIMELINE ═══════════════════ -->
+<section id="timeline">
+    <h2>4. Two-Day Build Timeline</h2>
+
+    <div class="note">12-14 hours/day of AI-assisted development. Copy-paste the prompts from Section 5 into your AI coding assistant.</div>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-title"><span class="tag tag-day1">DAY 1</span> Backend + Core Frontend</div>
+            <table>
+                <tr><th>Block</th><th>Time</th><th>Deliverable</th></tr>
+                <tr><td>D1-B1</td><td>1.5h</td><td>Project setup, DB, all Mongoose models</td></tr>
+                <tr><td>D1-B2</td><td>1.5h</td><td>Auth (login, JWT, RBAC), seed script</td></tr>
+                <tr><td>D1-B3</td><td>2.5h</td><td>All CRUD API routes</td></tr>
+                <tr><td>D1-B4</td><td>1h</td><td>Multi-tenant middleware, file upload</td></tr>
+                <tr><td>D1-B5</td><td>2h</td><td>Layout, Header, Footer, theming</td></tr>
+                <tr><td>D1-B6</td><td>3h</td><td>Home + About + Structure pages</td></tr>
+            </table>
+        </div>
+        <div class="card">
+            <div class="card-title"><span class="tag tag-day2">DAY 2</span> Pages + Admin CMS</div>
+            <table>
+                <tr><th>Block</th><th>Time</th><th>Deliverable</th></tr>
+                <tr><td>D2-B1</td><td>2h</td><td>Academy + Facilities + AICU</td></tr>
+                <tr><td>D2-B2</td><td>1.5h</td><td>News + Gallery + Toppers</td></tr>
+                <tr><td>D2-B3</td><td>1.5h</td><td>Contact + Alumni + Careers + Apply</td></tr>
+                <tr><td>D2-B4</td><td>4h</td><td>Full Admin CMS Panel</td></tr>
+                <tr><td>D2-B5</td><td>2h</td><td>Security + deploy + DNS</td></tr>
+            </table>
+        </div>
+    </div>
+</section>
+
+<hr />
+
+<!-- ═══════════════════ 5. PROMPTS ═══════════════════ -->
+<section id="prompts">
+    <h2>5. Prompt Strategy — Copy &amp; Paste Prompts</h2>
+    <p class="section-desc">Execute in order. Each builds on the previous.</p>
+
+    <!-- D1-B1 -->
+    <h3><span class="tag tag-day1">DAY 1</span> Block 1 — Project Setup &amp; Models (1.5 hrs)</h3>
+
+    <div class="prompt-block">
+        <span class="prompt-label">Prompt D1-B1-P1 — Project Init</span>
+
+Create a Next.js 14 project with App Router, TypeScript, and Tailwind CSS for a multi-school CMS website called "APS Fatehpur". English only, no i18n.
+
+Requirements:
+1. Initialize Next.js 14 with: TypeScript, Tailwind CSS, ESLint, App Router.
+2. Install dependencies:
+   - mongoose, bcryptjs, jsonwebtoken, cloudinary
+   - react-hook-form, zod, @hookform/resolvers
+   - lucide-react (icons), sharp (image optimization)
+   - react-quill (rich text editor — will be dynamic-imported with ssr:false)
+   - @types/bcryptjs, @types/jsonwebtoken
+3. Run: npx shadcn-ui@latest init, then add: button, card, dialog, table, input, select, textarea, badge, tabs, dropdown-menu, sheet, separator, skeleton, alert-dialog
+4. Create .env.local with placeholders: MONGODB_URI, JWT_SECRET, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, NEXT_PUBLIC_SITE_URL
+5. Create lib/db.ts — cached MongoDB connection via Mongoose (reuse in serverless/dev).
+6. Create config/schools.ts — array of 5 school configs:
+   Each: { id, name, slug, domain/subdomain, theme: { primary, secondary, accent }, logo, features }
+   Schools: apsfatehpur (navy/gold), apsgirls (purple/pink), apsboys (blue/green), madrasa (emerald/gold), azadschool (orange/white)
+7. Create middleware.ts — reads hostname, maps to schoolSlug, sets x-school-slug header. localhost fallback: ?school= query param.
+
+No pages yet — only foundation files.
+    </div>
+
+    <div class="prompt-block">
+        <span class="prompt-label">Prompt D1-B1-P2 — All Mongoose Models</span>
+
+Create all Mongoose models under lib/models/ for the APS Fatehpur CMS. English only — all string fields are plain strings, no localized objects. Every model has schoolId for multi-tenant isolation.
+
+Create these 13 models with full schemas, indexes, timestamps:
+
+1. School — name, slug (unique), domain, subdomain, logo, favicon, theme (object), contactInfo (object), socialLinks (object), stats (object: students, teachers, years, awards), isActive
+2. User — schoolId (ref+index), name, email (unique), passwordHash, role (enum: superadmin, school_admin, editor), lastLogin, isActive
+3. Page — schoolId+slug (compound unique index), title (String), content (String — rich HTML), featuredImage, seo: { metaTitle, metaDescription }, isPublished, updatedBy (ref User)
+4. Person — schoolId, role (enum: director, chairman, principal), name, designation, bio (string — rich text), photo, qualifications, order, isActive
+5. News — schoolId, title, slug (unique per school), content (rich HTML), category (enum: announcement, event, tour), featuredImage, images [], isPublished, publishedAt
+6. Gallery — schoolId, type (enum: photo, video), title, url, thumbnailUrl, category, order, isPublished
+7. Topper — schoolId, studentName, photo, class, year, rank, percentage, examName, subjects [{name, marks}], isPublished
+8. AICU — schoolId, title, description (rich text), services [{name, description, icon}], images [], schedule, isActive
+9. Admission — schoolId, studentName, parentName, phone, email, class, dob, gender, address, previousSchool, documents [{name, url}], status (enum: pending/reviewed/accepted/rejected), appliedAt, reviewedBy, reviewedAt
+10. Enquiry — schoolId, name, email, phone, subject, message, status (enum: new/read/replied)
+11. Career — schoolId, title, department, description, qualifications, experience, salary, isActive, deadline
+12. CareerApplication — careerId (ref), schoolId, name, email, phone, resume (url), coverLetter, status (enum: pending/shortlisted/rejected), appliedAt
+13. Alumni — schoolId, name, batch, course, currentRole, company, photo, testimonial, isApproved
+
+Use: mongoose.models.X || mongoose.model('X', schema) pattern for Next.js hot-reload safety.
+    </div>
+
+    <!-- D1-B2 -->
+    <h3><span class="tag tag-day1">DAY 1</span> Block 2 — Auth System (1.5 hrs)</h3>
+
+    <div class="prompt-block">
+        <span class="prompt-label">Prompt D1-B2-P1 — Authentication</span>
+
+Build admin authentication for the APS Fatehpur CMS.
+
+1. POST /api/auth/login — email + password → validate → JWT (24h expiry, payload: userId, schoolId, role) → return { token, user }
+2. GET /api/auth/me — protected, return current user profile
+3. lib/auth.ts:
+   - verifyToken(req) — extract JWT from "Authorization: Bearer ___" header or httpOnly cookie
+   - withAuth(handler, allowedRoles?) — HOC wrapping API handlers, verifies JWT, optional role check
+   - withSchoolScope(handler) — ensures user can only access their school's data (superadmin exempt)
+4. Seed script (scripts/seed.ts):
+   - Create 5 School documents matching config/schools.ts
+   - Create 1 superadmin (admin@apsfatehpur.com)
+   - Create 1 school_admin per school
+   - Create default CMS Page documents for each school with placeholder content for these slugs: about, fees, bus-routes, calendar, uniforms, curriculum, affiliation, rte, career-counseling, facilities, tours, highlights, awards, infrastructure
+5. Password: bcryptjs, 12 rounds. NEVER return passwordHash in responses.
+6. Error format: { success: false, error: "message" }
+    </div>
+
+    <!-- D1-B3 -->
+    <h3><span class="tag tag-day1">DAY 1</span> Block 3 — All CRUD API Routes (2.5 hrs)</h3>
+
+    <div class="prompt-block">
+        <span class="prompt-label">Prompt D1-B3-P1 — All API Routes</span>
+
+Create all REST API routes using Next.js App Router (app/api/[resource]/route.ts).
+Response format: { success: true, data, pagination? }. Admin endpoints protected with withAuth. Public GETs filtered by schoolId from x-school-slug header.
+
+ROUTES:
+
+1. /api/schools — GET (list active), GET by slug, PUT (superadmin: update settings/theme)
+2. /api/users — GET (list by school), POST, PUT, DELETE (admin only)
+3. /api/pages — GET by schoolId+slug (public: renders page content), POST, PUT, DELETE (admin)
+   This is the CORE CMS endpoint.
+4. /api/persons — GET by schoolId+role (public), POST/PUT/DELETE (admin)
+5. /api/news — GET (paginated, filter by category), GET by slug, POST/PUT/DELETE (admin)
+6. /api/gallery — GET (filter by type/category), POST with Cloudinary upload, PUT, DELETE (admin)
+7. /api/toppers — GET (filter by year/class), POST/PUT/DELETE (admin)
+8. /api/aicu — GET by schoolId, POST/PUT (admin)
+9. /api/admissions — POST (public: submit), GET (admin: list by status), PUT (admin: update status)
+10. /api/enquiries — POST (public: contact form), GET (admin: list), PUT (admin: mark read/replied)
+11. /api/careers — GET (public: active), POST/PUT/DELETE (admin)
+    POST /api/careers/apply — public: submit application with resume
+12. /api/alumni — POST (public: submit for approval), GET (public: approved only), GET (admin: all), PUT (admin: approve/reject)
+13. /api/upload — POST: file → Cloudinary → return { url, publicId }
+
+Pagination: page + limit query params (defaults: 1, 20).
+Input validation with Zod on all POST/PUT.
+Create a reusable apiHandler utility for DB connection, body parsing, error handling.
+    </div>
+
+    <!-- D1-B4 -->
+    <h3><span class="tag tag-day1">DAY 1</span> Block 4 — Multi-Tenant &amp; Upload (1 hr)</h3>
+
+    <div class="prompt-block">
+        <span class="prompt-label">Prompt D1-B4-P1 — School Context &amp; File Upload</span>
+
+Implement multi-tenant context and file uploads:
+
+1. Enhance middleware.ts — Map hostnames:
+   apsfatehpur.com → "apsfatehpur", apsgirls.apsfatehpur.com → "apsgirls",
+   apsboys.apsfatehpur.com → "apsboys", madrasa.apsfatehpur.com → "madrasa",
+   azadschool.in → "azadschool", localhost → ?school= param.
+   Set x-school-slug header + cookie.
+
+2. SchoolProvider (React context):
+   - Reads school slug from cookie
+   - Provides: name, slug, theme, contactInfo, socialLinks, stats, features via useSchool() hook
+
+3. POST /api/upload:
+   - Upload to Cloudinary folder: aps-fatehpur/{schoolSlug}/
+   - Validate: images ≤5MB, videos ≤50MB, PDFs ≤10MB
+   - Return: { url, publicId, format }
+
+4. next.config.js: add Cloudinary to images.remotePatterns
+    </div>
+
+    <!-- D1-B5 -->
+    <h3><span class="tag tag-day1">DAY 1</span> Block 5 — Layout &amp; Theming (2 hrs)</h3>
+
+    <div class="prompt-block">
+        <span class="prompt-label">Prompt D1-B5-P1 — Layout, Header, Footer, Theming</span>
+
+Build root layout, header, footer, and theming. English only.
+
+1. Root Layout (app/layout.tsx):
+   - Wrap in SchoolProvider
+   - Apply school theme as CSS variables (--primary, --secondary, --accent)
+   - Meta tags with school name
+
+2. 5 Themes in config/schools.ts:
+   apsfatehpur: Navy #1e3a5f + Gold #d4a843
+   apsgirls: Purple #6b21a8 + Pink #ec4899
+   apsboys: Blue #1e40af + Green #16a34a
+   madrasa: Emerald #047857 + Gold #d4a843
+   azadschool: Orange #ea580c + White #f8fafc
+
+3. Header (components/school/Header.tsx):
+   - Logo + school name
+   - Nav (data-driven from config/navigation.ts):
+     Home, About (dropdown: Mission &amp; Vision, Director, Chairman, Principal, Infrastructure),
+     Structure (dropdown: Uniforms, Bus Routes, Calendar, Counseling, Awards),
+     Academy (dropdown: Admissions, Curriculum, Affiliation, RTE, Fees),
+     Facilities, News (dropdown: Announcements, Tours, Videos),
+     Toppers, AICU, Alumni, Careers, Contact
+   - "Apply Online" CTA button
+   - Mobile: hamburger → slide-out sheet
+   - Sticky, shrink on scroll
+
+4. Footer: contact info, quick links (4 cols), social icons, copyright
+
+5. PageBanner component: title + breadcrumbs + optional background image. Used on every inner page.
+    </div>
+
+    <!-- D1-B6 -->
+    <h3><span class="tag tag-day1">DAY 1</span> Block 6 — Home + About + Structure (3 hrs)</h3>
+
+    <div class="prompt-block">
+        <span class="prompt-label">Prompt D1-B6-P1 — Home Page</span>
+
+Build the Home Page — all content fetched from backend CMS.
+
+Sections (each a separate component):
+1. Hero Slider — full-width image carousel from Gallery where category="hero", auto-play
+2. Welcome Snippet — About text from Page slug="about" (trimmed), Director photo from Person, "Read More"
+3. Quick Stats Bar — animated counters from school.stats
+4. Announcements Ticker — scrolling marquee of latest 5 News items
+5. Highlights — 4 feature cards from Page slug="highlights" or hardcoded
+6. Top Rankers — horizontal scroll of top 5 Topper cards
+7. AICU Banner — title + description from AICU model + CTA
+8. Photo Gallery Preview — 6-8 photos from Gallery
+9. Latest News — 3 cards from News
+10. Testimonials — alumni testimonial carousel
+11. CTA Banner — "Apply Now" full-width section → /apply
+
+Server-side fetch, revalidate: 3600. School-scoped. Responsive, mobile-first.
+    </div>
+
+    <div class="prompt-block">
+        <span class="prompt-label">Prompt D1-B6-P2 — About &amp; Structure Pages</span>
+
+Build About and Structure pages. Most are CMS-rendered.
+
+First, create a reusable CmsPage component:
+- Takes slug prop
+- Fetches Page content from /api/pages?slug=X&amp;school=Y (server-side)
+- Renders: PageBanner (title, breadcrumb) + rich HTML content (dangerouslySetInnerHTML with DOMPurify sanitization)
+- Shows "Content coming soon..." if page not found
+
+ABOUT PAGES:
+1. /about — CmsPage slug="about"
+2. /about/director — Fetch Person role="director" → photo, name, designation, bio
+3. /about/chairman — Same, role="chairman"
+4. /about/principal — Same, role="principal"
+5. /about/infrastructure — CmsPage slug="infrastructure" + Gallery category="infrastructure"
+
+STRUCTURE PAGES (all CMS):
+6. /structure/uniforms — CmsPage slug="uniforms"
+7. /structure/bus-routes — CmsPage slug="bus-routes"
+8. /structure/calendar — CmsPage slug="calendar"
+9. /structure/career-counseling — CmsPage slug="career-counseling"
+10. /structure/awards — CmsPage slug="awards" + Gallery category="awards"
+
+Every page: PageBanner, SSR, school-scoped, responsive.
+    </div>
+
+    <!-- DAY 2 -->
+    <h3><span class="tag tag-day2">DAY 2</span> Block 1 — Academy, Facilities, AICU (2 hrs)</h3>
+
+    <div class="prompt-block">
+        <span class="prompt-label">Prompt D2-B1-P1</span>
+
+Build remaining CMS-driven pages:
+
+ACADEMY (all CMS pages using CmsPage component):
+1. /academy/admissions — CmsPage slug="admissions" + "Apply Online" CTA → /apply
+2. /academy/curriculum — CmsPage slug="curriculum"
+3. /academy/affiliation — CmsPage slug="affiliation"
+4. /academy/rte — CmsPage slug="rte"
+5. /academy/fees — CmsPage slug="fees" (admin writes fee table in rich text editor, renders as HTML)
+
+FACILITIES:
+6. /facilities — CmsPage slug="facilities" + Gallery grid where category="facilities" (photo cards with lightbox)
+
+AICU:
+7. /aicu — Custom layout: hero, description (rich text from AICU model), services grid (icon cards), schedule, photo gallery, CTA → /contact
+   Data from GET /api/aicu
+
+All pages: PageBanner, SSR, school-scoped.
+    </div>
+
+    <h3><span class="tag tag-day2">DAY 2</span> Block 2 — News, Gallery, Toppers (1.5 hrs)</h3>
+
+    <div class="prompt-block">
+        <span class="prompt-label">Prompt D2-B2-P1</span>
+
+1. /news — Listing: filter tabs (All, Announcements, Events, Tours), card grid, pagination. GET /api/news
+2. /news/[slug] — Single article: rich text, featured image, date, category badge, related news
+3. /news/tours — CmsPage slug="tours"
+4. /news/videos — Video gallery: YouTube embeds grid. GET /api/gallery?type=video
+5. /toppers — Year filter dropdown, card grid (photo, name, class, rank, %), top 3 highlighted, expandable subject marks. GET /api/toppers
+
+SSR with revalidate: 3600, responsive.
+    </div>
+
+    <h3><span class="tag tag-day2">DAY 2</span> Block 3 — Contact, Alumni, Careers, Apply (1.5 hrs)</h3>
+
+    <div class="prompt-block">
+        <span class="prompt-label">Prompt D2-B3-P1</span>
+
+Build pages with forms:
+
+1. /contact:
+   - Google Maps embed, contact details, social links
+   - Enquiry Form (react-hook-form + Zod): Name*, Email*, Phone*, Subject*, Message* → POST /api/enquiries → success toast
+   - Group site: show all 4 school addresses
+
+2. /alumni:
+   - Approved alumni grid (photo, name, batch, role)
+   - "Register" form: Name, Batch, Course, Role, Company, Photo, Testimonial → POST /api/alumni
+
+3. /careers:
+   - Active job listings (expandable), "Apply" opens modal form: Name*, Email*, Phone*, Resume (PDF ≤5MB)*, Cover letter → POST /api/careers/apply
+
+4. /apply — Multi-step admission form (wizard):
+   Step 1: Student (name, DOB, gender, class)
+   Step 2: Parent (name, phone, email, address)
+   Step 3: Previous school (name, class, %)
+   Step 4: Documents (birth cert, marksheet, photo — optional uploads)
+   Step 5: Review → Submit
+   Progress bar, react-hook-form, Zod per step, POST /api/admissions → confirmation with reference number.
+    </div>
+
+    <h3><span class="tag tag-day2">DAY 2</span> Block 4 — Admin CMS Panel (4 hrs)</h3>
+
+    <div class="prompt-block">
+        <span class="prompt-label">Prompt D2-B4-P1 — Admin Layout + Dashboard</span>
+
+Build the Admin CMS panel.
+
+LAYOUT (app/(admin)/layout.tsx):
+- Left sidebar (collapsible): Dashboard, Pages, News, Gallery, Toppers, AICU, Persons, Admissions, Enquiries, Careers, Alumni, Users (admin), Schools (superadmin), Settings
+- Top bar: school selector dropdown (superadmin sees all, school_admin sees theirs), user name, logout
+- Redirect to /admin/login if no valid JWT
+
+LOGIN (/admin/login): email + password → POST /api/auth/login → httpOnly cookie → redirect to dashboard
+
+DASHBOARD (/admin/dashboard):
+- Stat cards: admissions count, pending enquiries, active careers, published news, gallery items
+- Recent activity: latest 10 enquiries + admissions
+- Quick action buttons
+    </div>
+
+    <div class="prompt-block">
+        <span class="prompt-label">Prompt D2-B4-P2 — All Admin Content Pages</span>
+
+Build all admin CMS pages. First create shared components:
+
+Shared Components:
+- DataTable: sortable, filterable, paginated table with action column (edit, delete). shadcn Table based.
+- RichTextEditor: wraps react-quill (dynamic import, ssr:false), image insert via Cloudinary, headings, bold, italic, lists, links, tables.
+- FileUploader: drag-drop, preview, upload to /api/upload.
+- ConfirmDialog: shadcn AlertDialog wrapper.
+- StatusBadge: colored badge for statuses.
+
+Admin Pages:
+
+1. PAGES CMS (/admin/pages):
+   - Table: Title, Slug, Published, Last Updated
+   - "Create Page" → title + slug + featured image
+   - Click Edit → FULL EDITOR: Rich text editor for content, featured image, SEO fields, publish toggle, save
+   - This powers: about, fees, bus-routes, calendar, uniforms, curriculum, affiliation, rte, career-counseling, facilities, tours, highlights, awards, infrastructure, and any new page
+   - API: /api/pages
+
+2. NEWS (/admin/news):
+   - DataTable + Create/Edit (title, rich text, category, images, publish)
+
+3. GALLERY (/admin/gallery):
+   - Grid view, drag-drop upload, set title + category + type, reorder, delete
+
+4. TOPPERS (/admin/toppers):
+   - DataTable + Create/Edit (all fields, photo, dynamic subject rows)
+
+5. AICU (/admin/aicu):
+   - Edit: title, description (rich text), services list, images, schedule
+
+6. PERSONS (/admin/persons):
+   - Table + Create/Edit (name, role, designation, bio rich text, photo, qualifications)
+
+7. ADMISSIONS (/admin/admissions):
+   - DataTable (name, class, date, status badge), filter by status, view details, accept/reject
+
+8. ENQUIRIES (/admin/enquiries):
+   - DataTable, click → view message, mark read/replied
+
+9. CAREERS (/admin/careers):
+   - Job postings CRUD + view applications per career (resume download, shortlist/reject)
+
+10. ALUMNI (/admin/alumni):
+    - Pending approvals + approved list, approve/reject
+
+11. USERS (/admin/users):
+    - DataTable + Create/Edit (name, email, password, role), toggle active
+
+12. SCHOOLS (/admin/schools — superadmin):
+    - Edit: name, logo, theme colors, contact info, social links, stats
+
+13. SETTINGS (/admin/settings):
+    - School profile shortcut for school_admin
+    </div>
+
+    <h3><span class="tag tag-day2">DAY 2</span> Block 5 — Security &amp; Deployment (2 hrs)</h3>
+
+    <div class="prompt-block">
+        <span class="prompt-label">Prompt D2-B5-P1 — Security &amp; Deployment</span>
+
+SECURITY:
+1. Rate limiting: 100 req/min public, 10 req/min auth routes
+2. Sanitize rich text with DOMPurify server-side before storing
+3. Security headers in next.config.js: CSP, X-Frame-Options: DENY, X-Content-Type-Options: nosniff, HSTS
+4. CORS: allow only the 5 known domains
+5. JWT in httpOnly cookies for admin
+6. Password: min 8 chars, bcrypt 12 rounds
+7. Account lockout: 5 failed attempts → 30min cooldown
+8. File upload: validate MIME server-side, enforce max sizes
+9. Sanitize all CMS HTML before rendering on frontend
+
+DEPLOYMENT:
+1. vercel.json: all 5 domains aliased to same deployment
+2. DNS:
+   - apsfatehpur.com: A → Vercel, CNAME www → cname.vercel-dns.com
+   - CNAME: apsgirls, apsboys, madrasa → cname.vercel-dns.com
+   - azadschool.in: A → Vercel, CNAME www → cname.vercel-dns.com
+3. SSL: auto via Vercel
+4. MongoDB Atlas: connection string, whitelist 0.0.0.0/0
+5. Env vars for Vercel dashboard
+6. Post-deploy: run seed → verify domains → test admin → upload content
+    </div>
+</section>
+
+<hr />
+
+<!-- ═══════════════════ 6. CMS FLOW ═══════════════════ -->
+<section>
+    <h2>6. How the CMS Page System Works</h2>
+
+    <div class="card">
+        <div class="card-title">The Page Model is Central</div>
+        <pre>
+╔══════════════════════════════════════════════════════════════╗
+║  ADMIN (CMS)                    FRONTEND (Public Website)   ║
+║                                                              ║
+║  /admin/pages                                                ║
+║    ├─ Click "Edit" on "fees"                                 ║
+║    │  → Rich Text Editor opens                               ║
+║    │  → Admin types fee table      PUT /api/pages/:id        ║
+║    │     stores: { content: "&lt;table&gt;..." }                   ║
+║    │                                                         ║
+║    │                              /academy/fees              ║
+║    │                                ├─ CmsPage slug="fees"   ║
+║    │                                │  GET /api/pages?       ║
+║    │                                │   slug=fees&amp;school=X   ║
+║    │                                ├─ Sanitize + render     ║
+║    │                                └─ User sees fee table   ║
+╚══════════════════════════════════════════════════════════════╝
+
+Pages using this pattern:
+  about, fees, bus-routes, calendar, uniforms, curriculum,
+  affiliation, rte, career-counseling, facilities, tours,
+  highlights, awards, infrastructure
+        </pre>
+    </div>
+
+    <div class="card">
+        <div class="card-title">CmsPage Component (the reusable pattern)</div>
+        <pre>
+// components/school/CmsPage.tsx
+export default async function CmsPage({ slug, schoolSlug }) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SITE_URL}/api/pages?slug=${slug}&amp;school=${schoolSlug}`,
+    { next: { revalidate: 3600 } }
+  );
+  const { data: page } = await res.json();
+  if (!page) return &lt;div&gt;Content coming soon...&lt;/div&gt;;
+
+  return (
+    &lt;&gt;
+      &lt;PageBanner title={page.title} image={page.featuredImage} /&gt;
+      &lt;div
+        className="prose max-w-none"
+        dangerouslySetInnerHTML={{ __html: sanitize(page.content) }}
+      /&gt;
+    &lt;/&gt;
+  );
+}
+
+// Usage — every CMS page is a one-liner:
+// app/(public)/academy/fees/page.tsx
+export default function FeesPage() {
+  const school = getSchoolFromHeaders();
+  return &lt;CmsPage slug="fees" schoolSlug={school.slug} /&gt;;
+}
+        </pre>
+    </div>
+</section>
+
+<hr />
+
+<!-- ═══════════════════ 7. KEY PATTERNS ═══════════════════ -->
+<section>
+    <h2>7. Key Code Patterns</h2>
+
+    <div class="card">
+        <div class="card-title">Multi-Tenant Middleware</div>
+        <pre>
+// middleware.ts
+const SCHOOL_MAP: Record&lt;string, string&gt; = {
+  'apsfatehpur.com': 'apsfatehpur',
+  'www.apsfatehpur.com': 'apsfatehpur',
+  'apsgirls.apsfatehpur.com': 'apsgirls',
+  'apsboys.apsfatehpur.com': 'apsboys',
+  'madrasa.apsfatehpur.com': 'madrasa',
+  'azadschool.in': 'azadschool',
+  'www.azadschool.in': 'azadschool',
+};
+
+export function middleware(request: NextRequest) {
+  const host = request.headers.get('host') || '';
+  let slug = SCHOOL_MAP[host];
+  if (!slug &amp;&amp; host.includes('localhost')) {
+    slug = request.nextUrl.searchParams.get('school') || 'apsfatehpur';
+  }
+  const res = NextResponse.next();
+  res.headers.set('x-school-slug', slug || 'apsfatehpur');
+  return res;
+}
+        </pre>
+    </div>
+
+    <div class="card">
+        <div class="card-title">API Route Pattern</div>
+        <pre>
+// app/api/news/route.ts
+export async function GET(request: Request) {
+  await connectDB();
+  const schoolSlug = request.headers.get('x-school-slug');
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get('page') || '1');
+  const limit = parseInt(searchParams.get('limit') || '20');
+
+  const filter: any = { schoolSlug, isPublished: true };
+  const category = searchParams.get('category');
+  if (category) filter.category = category;
+
+  const [data, total] = await Promise.all([
+    News.find(filter).sort({ publishedAt: -1 }).skip((page-1)*limit).limit(limit),
+    News.countDocuments(filter),
+  ]);
+
+  return NextResponse.json({
+    success: true, data,
+    pagination: { page, limit, total, pages: Math.ceil(total/limit) },
+  });
+}
+        </pre>
+    </div>
+</section>
+
+<hr />
+
+<!-- ═══════════════════ 8. EXECUTION ORDER ═══════════════════ -->
+<section>
+    <h2>8. Prompt Execution Order</h2>
+    <table>
+        <thead><tr><th>#</th><th>Prompt</th><th>Produces</th><th>Day</th><th>Time</th></tr></thead>
+        <tbody>
+            <tr><td>1</td><td>D1-B1-P1</td><td>Project skeleton, config, middleware, DB</td><td><span class="tag tag-day1">D1</span></td><td>45m</td></tr>
+            <tr><td>2</td><td>D1-B1-P2</td><td>All 13 Mongoose models</td><td><span class="tag tag-day1">D1</span></td><td>45m</td></tr>
+            <tr><td>3</td><td>D1-B2-P1</td><td>Auth + seed script (schools + default CMS pages)</td><td><span class="tag tag-day1">D1</span></td><td>1.5h</td></tr>
+            <tr><td>4</td><td>D1-B3-P1</td><td>All CRUD API routes</td><td><span class="tag tag-day1">D1</span></td><td>2.5h</td></tr>
+            <tr><td>5</td><td>D1-B4-P1</td><td>School context, file upload</td><td><span class="tag tag-day1">D1</span></td><td>1h</td></tr>
+            <tr><td>6</td><td>D1-B5-P1</td><td>Layout, Header, Footer, 5 themes</td><td><span class="tag tag-day1">D1</span></td><td>2h</td></tr>
+            <tr><td>7</td><td>D1-B6-P1</td><td>Home page (11 sections)</td><td><span class="tag tag-day1">D1</span></td><td>1.5h</td></tr>
+            <tr><td>8</td><td>D1-B6-P2</td><td>About (5) + Structure (5) CMS pages</td><td><span class="tag tag-day1">D1</span></td><td>1.5h</td></tr>
+            <tr><td>9</td><td>D2-B1-P1</td><td>Academy (5) + Facilities + AICU</td><td><span class="tag tag-day2">D2</span></td><td>2h</td></tr>
+            <tr><td>10</td><td>D2-B2-P1</td><td>News, Gallery, Toppers pages</td><td><span class="tag tag-day2">D2</span></td><td>1.5h</td></tr>
+            <tr><td>11</td><td>D2-B3-P1</td><td>Contact, Alumni, Careers, Apply Online</td><td><span class="tag tag-day2">D2</span></td><td>1.5h</td></tr>
+            <tr><td>12</td><td>D2-B4-P1</td><td>Admin layout + login + dashboard</td><td><span class="tag tag-day2">D2</span></td><td>1.5h</td></tr>
+            <tr><td>13</td><td>D2-B4-P2</td><td>All admin CMS pages + shared components</td><td><span class="tag tag-day2">D2</span></td><td>2.5h</td></tr>
+            <tr><td>14</td><td>D2-B5-P1</td><td>Security + deployment + DNS</td><td><span class="tag tag-day2">D2</span></td><td>2h</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<hr />
+
+<!-- ═══════════════════ 9. CHECKLIST ═══════════════════ -->
+<section>
+    <h2>9. Requirements Checklist</h2>
+    <table>
+        <thead><tr><th>Requirement</th><th>Prompt</th><th>How</th></tr></thead>
+        <tbody>
+            <tr><td colspan="3" style="background:#1a2744;color:var(--accent);font-weight:700;">Domains &amp; SSL</td></tr>
+            <tr><td>apsfatehpur.com (group)</td><td>D1-B1-P1, D2-B5-P1</td><td>✅ Multi-tenant middleware</td></tr>
+            <tr><td>apsgirls.apsfatehpur.com</td><td>D1-B4-P1</td><td>✅ Hostname mapping</td></tr>
+            <tr><td>apsboys.apsfatehpur.com</td><td>D1-B4-P1</td><td>✅ Hostname mapping</td></tr>
+            <tr><td>madrasa.apsfatehpur.com</td><td>D1-B4-P1</td><td>✅ Hostname mapping</td></tr>
+            <tr><td>azadschool.in</td><td>D1-B4-P1</td><td>✅ External domain mapping</td></tr>
+            <tr><td>DNS + SSL</td><td>D2-B5-P1</td><td>✅ Vercel auto-SSL</td></tr>
+            <tr><td colspan="3" style="background:#1a2744;color:var(--accent);font-weight:700;">Website Pages</td></tr>
+            <tr><td>Home Page</td><td>D1-B6-P1</td><td>✅ 11 dynamic sections</td></tr>
+            <tr><td>About (mission, director, chairman, principal, infrastructure)</td><td>D1-B6-P2</td><td>✅ CMS + Person model</td></tr>
+            <tr><td>Structure (uniforms, bus routes, calendar, counseling, awards)</td><td>D1-B6-P2</td><td>✅ CMS pages</td></tr>
+            <tr><td>Academy (admissions, curriculum, affiliation, RTE, fees)</td><td>D2-B1-P1</td><td>✅ CMS pages (fees = rich text)</td></tr>
+            <tr><td>Facilities + galleries</td><td>D2-B1-P1</td><td>✅ CMS + Gallery</td></tr>
+            <tr><td>News &amp; Media</td><td>D2-B2-P1</td><td>✅ News model + video gallery</td></tr>
+            <tr><td>Top Rank Students</td><td>D2-B2-P1</td><td>✅ Topper model</td></tr>
+            <tr><td>AICU</td><td>D2-B1-P1</td><td>✅ AICU model</td></tr>
+            <tr><td>Contact + enquiry form</td><td>D2-B3-P1</td><td>✅ Enquiry model</td></tr>
+            <tr><td>Alumni</td><td>D2-B3-P1</td><td>✅ Alumni model</td></tr>
+            <tr><td>Careers + application</td><td>D2-B3-P1</td><td>✅ Career + CareerApplication</td></tr>
+            <tr><td>Apply Online (admission)</td><td>D2-B3-P1</td><td>✅ Multi-step wizard</td></tr>
+            <tr><td colspan="3" style="background:#1a2744;color:var(--accent);font-weight:700;">Customization</td></tr>
+            <tr><td>Unique design per school</td><td>D1-B5-P1</td><td>✅ 5 themes via CSS vars</td></tr>
+            <tr><td>Custom tabs/links</td><td>D1-B5-P1</td><td>✅ Config-driven nav</td></tr>
+            <tr><td>Photo/video galleries</td><td>D2-B2-P1</td><td>✅ Gallery + Cloudinary</td></tr>
+            <tr><td colspan="3" style="background:#1a2744;color:var(--accent);font-weight:700;">Admin / CMS</td></tr>
+            <tr><td>Centralized admin panel</td><td>D2-B4</td><td>✅ /admin routes</td></tr>
+            <tr><td>User management</td><td>D2-B4-P2</td><td>✅ CRUD + roles</td></tr>
+            <tr><td>CMS (manage all content)</td><td>D2-B4-P2</td><td>✅ Rich text page editor</td></tr>
+            <tr><td>Security</td><td>D2-B5-P1</td><td>✅ JWT, rate limit, headers</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<hr />
+
+<!-- ═══════════════════ 10. PACKAGES ═══════════════════ -->
+<section>
+    <h2>10. Package Reference</h2>
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-title">Production</div>
+            <pre>
+next@14             react@18
+mongoose            bcryptjs
+jsonwebtoken        cloudinary
+react-hook-form     @hookform/resolvers
+zod                 react-quill
+lucide-react        recharts (admin charts)
+sharp
+            </pre>
+        </div>
+        <div class="card">
+            <div class="card-title">Dev + UI</div>
+            <pre>
+typescript          tailwindcss
+postcss             autoprefixer
+eslint              eslint-config-next
+@types/bcryptjs     @types/jsonwebtoken
+
+shadcn/ui: button card dialog table
+  input select textarea badge tabs
+  sheet dropdown-menu separator
+  skeleton alert-dialog
+            </pre>
+        </div>
+    </div>
+</section>
+
+<hr />
+
+<!-- ═══════════════════ 11. TIPS ═══════════════════ -->
+<section>
+    <h2>11. Speed Tips &amp; Pitfalls</h2>
+    <div class="card">
+        <div class="card-title">Speed Tips</div>
+        <ul>
+            <li><strong>CmsPage component is king:</strong> Build it once → 14+ pages become one-liners.</li>
+            <li><strong>Seed script = your demo:</strong> Create default pages with realistic placeholder text.</li>
+            <li><strong>Admin CRUD is repetitive:</strong> Build News admin first (DataTable + editor). Clone for Toppers, Careers, Alumni.</li>
+            <li><strong>shadcn/ui saves hours:</strong> Don't build UI from scratch.</li>
+            <li><strong>Deploy after Day 1:</strong> Push to Vercel early. Catch issues fast.</li>
+            <li><strong>Get it working, then polish.</strong></li>
+        </ul>
+    </div>
+    <div class="card">
+        <div class="card-title">Common Pitfalls</div>
+        <ul>
+            <li><strong>Mongoose hot-reload:</strong> Use <code>mongoose.models.X || mongoose.model(...)</code></li>
+            <li><strong>localhost hostname:</strong> Always have ?school= fallback in middleware</li>
+            <li><strong>react-quill SSR crash:</strong> Use <code>dynamic(() =&gt; import('react-quill'), { ssr: false })</code></li>
+            <li><strong>XSS via dangerouslySetInnerHTML:</strong> Always sanitize CMS HTML with DOMPurify</li>
+            <li><strong>Cloudinary in next.config:</strong> Add to images.remotePatterns</li>
+            <li><strong>MongoDB connection pool:</strong> Cache globally for serverless (lib/db.ts)</li>
+        </ul>
+    </div>
+</section>
+
+</div>
+
+<footer>
+    <p>APS Fatehpur Developer Guide v2.0 — CMS-Driven, English Only, Content Managed from Backend</p>
+    <p style="margin-top:6px;">Next.js 14 · Node.js · MongoDB · Tailwind CSS · Cloudinary · Centralized Admin CMS</p>
+</footer>
+
+</body>
+</html>
