@@ -95,6 +95,407 @@
     </div>
 </section>
 
+<!-- ═══════════════════ UI/UX REFERENCE ═══════════════════ -->
+<section id="ui-reference">
+    <h2>UI/UX Design Reference (Based on spslosal.com — Modernized)</h2>
+    <p class="section-desc">Structure inspired by <strong>spslosal.com</strong>, but rebuilt with modern, premium design. Every weak point from the reference has been addressed below.</p>
+
+    <div class="note">Include these UI specifications in every frontend prompt. They define the visual language for the entire project.</div>
+
+    <div class="card">
+        <div class="card-title">Overall Design Philosophy</div>
+        <ul>
+            <li><strong>Premium school aesthetic</strong> — Clean, modern, trustworthy. Think top-tier international school website, not a basic template.</li>
+            <li><strong>Dark header / light body</strong> — Dark gradient header (school primary + dark navy), clean white/light-gray body sections, alternating white and very light gray (#f8fafc) section backgrounds for visual rhythm.</li>
+            <li><strong>Typography hierarchy</strong> — Font: Inter (Google Fonts). Headings: bold 700, large. Body: 400/500, comfortable line-height. Section headings: centered, with a small colored underline accent bar.</li>
+            <li><strong>Micro-interactions</strong> — Smooth hover effects on cards (lift + shadow), button hover scale, section fade-in on scroll (framer-motion), smooth dropdown animations.</li>
+            <li><strong>Whitespace</strong> — Generous padding between sections (80-120px vertical). No cramming. Let the design breathe.</li>
+            <li><strong>Consistent card design</strong> — Rounded corners (12px), subtle shadow (shadow-md), hover lift (translateY -4px + shadow-lg transition), white background, colored accent borders or top bars.</li>
+        </ul>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-title">1. Header / Navbar</div>
+            <pre>
+┌──────────────────────────────────────────────────┐
+│ 📍 Top Info Bar (subtle, dark)                   │
+│ Phone: xxx | Email: xxx  |  Social Icons (right) │
+├──────────────────────────────────────────────────┤
+│ [LOGO]  School Name     NAV LINKS        [APPLY] │
+│                     Home About▾ Structure▾        │
+│                     Academy▾ Facilities News▾     │
+│                     Toppers AICU Alumni Careers   │
+│                     Contact                       │
+└──────────────────────────────────────────────────┘
+
+Design specs:
+- TWO rows:
+  Row 1: Thin top info bar (dark bg, school primary
+  color), phone + email left, social icons right.
+  Font: 13px, white text.
+  Row 2: Main navbar — white/light bg, school logo
+  (left), nav links (center), "Apply Now" CTA button
+  (right, school primary color, rounded, bold).
+- Dropdowns: smooth fade-in (150ms), rounded shadow,
+  slight offset. Items have hover bg highlight.
+- Sticky: on scroll, top info bar hides, main navbar
+  becomes sticky with subtle shadow.
+- Mobile: hamburger icon → full-screen or slide-in
+  drawer with accordion menus.
+- Active page indicator: colored bottom border on
+  active nav item.
+            </pre>
+        </div>
+
+        <div class="card">
+            <div class="card-title">2. Hero Slider</div>
+            <pre>
+┌──────────────────────────────────────────────────┐
+│                                                   │
+│        [FULL WIDTH BACKGROUND IMAGE]              │
+│        dark gradient overlay (left → right)       │
+│                                                   │
+│   WELCOME TO                                      │
+│   APS Girls School                                │
+│   "Empowering futures through education"          │
+│                                                   │
+│   [Explore More]  [Apply Now]                     │
+│                                                   │
+│   ○ ○ ● ○ ○  (slide indicators)                  │
+└──────────────────────────────────────────────────┘
+
+Design specs:
+- Full viewport width, height: 85vh (not full screen)
+- Dark gradient overlay: linear-gradient from
+  rgba(0,0,0,0.7) left to rgba(0,0,0,0.2) right
+- Text: left-aligned (not centered), white, large
+  heading (48-64px), sub-text (18-20px)
+- TWO CTA buttons side by side:
+  Primary: "Apply Now" (filled, school primary color)
+  Secondary: "Explore More" (outlined, white border)
+- Auto-play (5s interval), smooth crossfade/slide
+- Dot indicators at bottom center
+- 3-5 slides loaded from Gallery category="hero"
+- Responsive: text shrinks, single CTA on mobile
+            </pre>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-title">3. Announcement Ticker</div>
+            <pre>
+┌──────────────────────────────────────────────────┐
+│ 📢 Latest:  "Admission Open 2026-27" ←scroll→   │
+│             "Annual Day on 15th May" ←scroll→    │
+└──────────────────────────────────────────────────┘
+
+Design specs:
+- Full-width bar below hero slider
+- Background: school primary color (bold)
+- Left: "Latest" label with 📢 icon, static
+- Right: scrolling marquee of latest 5 news
+  titles, smooth infinite horizontal scroll
+- Items are links → click goes to /news/[slug]
+- White text, 14-15px, medium weight
+- Slight gap/separator between items (" | ")
+- Pause on hover
+            </pre>
+        </div>
+
+        <div class="card">
+            <div class="card-title">4. Welcome / About Section</div>
+            <pre>
+┌────────────────────┬─────────────────────────────┐
+│                    │  Welcome to APS Girls School │
+│   [Director or     │                             │
+│    School Photo]   │  Brief about text from CMS  │
+│                    │  (2-3 paragraphs, trimmed)   │
+│   rounded corners  │                             │
+│   subtle shadow    │  ✔ Mission   ✔ Vision       │
+│                    │  ✔ Excellence ✔ Values       │
+│                    │                             │
+│                    │  [ Read More → ]             │
+└────────────────────┴─────────────────────────────┘
+
+Design specs:
+- Two-column layout (40% image, 60% text)
+- Light background (#ffffff)
+- Section heading: "Welcome to [School Name]"
+  with colored underline accent bar (40px wide)
+- Director photo or school building photo
+  (rounded-xl, shadow-lg)
+- Bullet points with checkmark icons (colored)
+- "Read More" link button with arrow
+- Padding: 80px vertical
+            </pre>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-title">5. Stats Counter Bar</div>
+            <pre>
+┌──────────────────────────────────────────────────┐
+│  Background: school primary gradient or dark bg  │
+│  with subtle pattern overlay                     │
+│                                                   │
+│   🎓 1200+      👨‍🏫 80+      📅 25+      🏆 50+   │
+│   Students     Teachers    Years     Awards      │
+│                                                   │
+└──────────────────────────────────────────────────┘
+
+Design specs:
+- Full-width, bg: --primary → --primary-dark gradient
+- White text on dark bg
+- 4 stat boxes in a row (grid cols)
+- Animated count-up on scroll into view
+  (0 → target number with easing, 2s duration)
+- Large numbers (48px, bold 800), color: --accent-yellow
+- Labels below (14px, lighter weight, white)
+- Icons above each number (lucide-react)
+- Accent: --accent-yellow for numbers or icon circles
+- Padding: 60px vertical
+            </pre>
+        </div>
+
+        <div class="card">
+            <div class="card-title">6. Feature Highlights Cards</div>
+            <pre>
+┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
+│  🏫 icon │ │  ⚗️ icon │ │  💻 icon │ │  📚 icon │
+│          │ │          │ │          │ │          │
+│  Smart   │ │ Science  │ │ Computer │ │ Library  │
+│  Classes │ │ Labs     │ │ Lab      │ │          │
+│          │ │          │ │          │ │          │
+│ Short    │ │ Short    │ │ Short    │ │ Short    │
+│ desc...  │ │ desc...  │ │ desc...  │ │ desc...  │
+└──────────┘ └──────────┘ └──────────┘ └──────────┘
+
+Design specs:
+- 4 cards in a row (responsive: 2 on tablet, 1 mobile)
+- White card, rounded-xl, shadow-sm
+- Icon: 48px, in a colored circle (school accent
+  color bg, white icon), centered at top
+- Title: 18px bold, centered below icon
+- Description: 14px, muted color, centered, 2-3 lines
+- Hover: lift (translateY -6px), shadow-lg, smooth 300ms
+- Section bg: --bg-light (#F5F7FA)
+- Section heading: "Why Choose Us" centered with
+  underline accent
+            </pre>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-title">7. News Cards</div>
+            <pre>
+┌────────────────────────┐
+│ [Image - 16:10 ratio]  │
+├────────────────────────┤
+│ 📅 April 28, 2026      │
+│ 🏷️ Announcement         │
+│                        │
+│ News Title Goes Here   │
+│ Brief excerpt text...  │
+│                        │
+│ Read More →            │
+└────────────────────────┘
+
+Design specs:
+- 3 cards in a row (grid)
+- Image at top (object-cover, rounded top corners)
+- Date + category badge below image
+- Title: 18px, semibold, 2-line clamp
+- Excerpt: 14px, muted, 3-line clamp
+- "Read More" link with arrow icon
+- Card: white bg, rounded-xl, shadow-sm
+- Hover: image slight zoom (scale 1.05), card lift
+            </pre>
+        </div>
+
+        <div class="card">
+            <div class="card-title">8. Gallery Grid</div>
+            <pre>
+┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐
+│       │ │       │ │       │ │       │
+│ photo │ │ photo │ │ photo │ │ photo │
+│       │ │       │ │       │ │       │
+├───────┤ ├───────┤ ├───────┤ ├───────┤
+│       │ │       │ │       │ │       │
+│ photo │ │ photo │ │ photo │ │ photo │
+│       │ │       │ │       │ │       │
+└───────┘ └───────┘ └───────┘ └───────┘
+         [ View All Gallery → ]
+
+Design specs:
+- 4-column grid (3 on tablet, 2 on mobile)
+- Square/4:3 aspect ratio, rounded-lg
+- Hover: dark overlay with zoom icon +
+  slight scale (1.05), smooth 300ms
+- Click: lightbox modal (full-screen preview
+  with prev/next navigation)
+- "View All" button below (outlined, centered)
+- Category filter tabs above (optional):
+  All | Infrastructure | Events | Sports
+            </pre>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-title">9. Topper Cards</div>
+            <pre>
+┌──────────────┐
+│   ⭐ Rank 1  │  ← gold badge for top 3
+│  ┌────────┐  │
+│  │ Photo  │  │
+│  │(circle)│  │
+│  └────────┘  │
+│  Student Name│
+│  Class X     │
+│  95.6%       │
+│  Board Exam  │
+└──────────────┘
+
+Design specs:
+- Horizontal scrollable row OR grid
+- Circular student photo (120px, border: 3px
+  school primary)
+- Name: bold, centered
+- Class + percentage: muted
+- Top 3: special gold/silver/bronze badge/ribbon
+- Card: white, rounded-xl, subtle shadow
+- Hover: flip/expand to show subject marks
+- Year filter dropdown above the section
+            </pre>
+        </div>
+
+        <div class="card">
+            <div class="card-title">10. Footer</div>
+            <pre>
+┌──────────────────────────────────────────────────┐
+│  Dark background (school primary dark shade)      │
+│                                                   │
+│  [LOGO] School    Quick Links    Academics  Contact│
+│  Name &amp; brief    Home           Admissions  Phone │
+│  about text      About          Curriculum  Email │
+│  (3-4 lines)     Structure      Fees        Address│
+│                  News           RTE               │
+│  Social Icons    Facilities                       │
+│  [fb][ig][yt]    AICU                            │
+│                                                   │
+├──────────────────────────────────────────────────┤
+│  © 2026 School Name | Part of APS Fatehpur Group │
+│  Designed by ___   |   Privacy   |   Terms       │
+└──────────────────────────────────────────────────┘
+
+Design specs:
+- Dark bg: school primary darkened (#0f172a or
+  school color at 90% darkness)
+- 4-column layout: About, Quick Links,
+  Academics, Contact
+- Logo + school name + 3-line description
+- Social icons: circular, white border, hover fill
+- Bottom bar: darker shade, copyright + credits
+- White text, muted links that highlight on hover
+- Google Maps embed or link in contact column
+- Padding: 60px top, 20px bottom bar
+            </pre>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Color System Per School (CSS Variables)</div>
+        <p style="margin-bottom:12px;color:var(--muted);">Base palette shared across all schools. Each school overrides <code>--primary</code> and accents to get its own identity.</p>
+        <pre>
+/* ── Base Palette (shared) ── */
+:root {
+  --primary: #2F3E8F;         /* Royal Blue — main brand color */
+  --accent-yellow: #F4D21F;   /* Gold/Yellow — highlights, CTAs */
+  --accent-red: #C0392B;      /* Red — alerts, important badges */
+  --accent-green: #3FA34D;    /* Green — success, achievements */
+
+  --bg: #FFFFFF;              /* Page background */
+  --bg-light: #F5F7FA;       /* Alternating section backgrounds */
+
+  --text-dark: #1F2937;       /* Headings, primary text */
+  --text-muted: #6B7280;      /* Secondary text, labels */
+
+  --primary-dark: #1a2556;    /* Header/footer dark bg */
+}
+        </pre>
+        <table>
+            <thead><tr><th>School</th><th>--primary</th><th>--accent-yellow</th><th>--accent-red</th><th>--accent-green</th><th>--primary-dark</th><th>Vibe</th></tr></thead>
+            <tbody>
+                <tr><td>APS Group</td><td>#2F3E8F (Royal Blue)</td><td>#F4D21F (Gold)</td><td>#C0392B</td><td>#3FA34D</td><td>#1a2556</td><td>Professional, authoritative</td></tr>
+                <tr><td>APS Girls</td><td>#6b21a8 (Purple)</td><td>#F4D21F (Gold)</td><td>#C0392B</td><td>#3FA34D</td><td>#3b0764</td><td>Elegant, empowering</td></tr>
+                <tr><td>APS Boys</td><td>#1e40af (Blue)</td><td>#F4D21F (Gold)</td><td>#C0392B</td><td>#3FA34D</td><td>#172554</td><td>Strong, academic</td></tr>
+                <tr><td>Madrasa</td><td>#047857 (Emerald)</td><td>#F4D21F (Gold)</td><td>#C0392B</td><td>#3FA34D</td><td>#022c22</td><td>Traditional, scholarly</td></tr>
+                <tr><td>Azad School</td><td>#ea580c (Orange)</td><td>#F4D21F (Gold)</td><td>#C0392B</td><td>#3FA34D</td><td>#431407</td><td>Energetic, modern</td></tr>
+            </tbody>
+        </table>
+        <p style="margin-top:10px;color:var(--muted);">Each school overrides only <code>--primary</code> and <code>--primary-dark</code>. The accent colors (<code>--accent-yellow</code>, <code>--accent-red</code>, <code>--accent-green</code>) stay consistent across all schools for brand unity. <code>--bg</code> (#FFF) and <code>--bg-light</code> (#F5F7FA) alternate between sections.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Fonts &amp; Typography Scale</div>
+        <pre>
+Font: Inter (Google Fonts) — load via next/font/google
+
+Scale:
+  Hero heading:    48-64px / bold 800 / tracking tight
+  Section heading: 32-36px / bold 700 / centered + underline accent
+  Card title:      18-20px / semibold 600
+  Body text:       16px   / regular 400 / line-height 1.7
+  Small/meta:      13-14px / medium 500 / muted color
+  Nav links:       15px   / medium 500
+  CTA buttons:     16px   / bold 700 / uppercase tracking wide
+
+Colors:
+  Headings:   #1F2937 (--text-dark)
+  Body:       #1F2937
+  Muted/Meta: #6B7280 (--text-muted)
+  Links:      var(--primary)
+  Backgrounds: #FFFFFF (--bg) and #F5F7FA (--bg-light) alternating
+        </pre>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Inner Page Template (used by all CMS pages)</div>
+        <pre>
+┌──────────────────────────────────────────────────┐
+│  PAGE BANNER                                      │
+│  Background: school primary gradient or image     │
+│  Height: 200-250px                                │
+│                                                   │
+│       Page Title (white, 36px, bold)              │
+│       Home &gt; Academy &gt; Fees  (breadcrumbs)        │
+└──────────────────────────────────────────────────┘
+│                                                   │
+│  CONTENT AREA                                     │
+│  Max-width: 900px, centered                       │
+│  Padding: 60px vertical                           │
+│  Rich HTML from CMS (Tailwind prose styling)      │
+│  Images: rounded, responsive                      │
+│                                                   │
+└──────────────────────────────────────────────────┘
+
+Design specs:
+- PageBanner: gradient background using
+  school primary → primary-dark,
+  OR background image with dark overlay
+- Breadcrumbs: white/muted, small font,
+  "Home &gt; Section &gt; Page" with links
+- Content uses Tailwind @tailwindcss/typography
+  plugin (prose class) for nice rich text styling
+- Sidebar (optional): recent news or quick links
+        </pre>
+    </div>
+</section>
+
 <!-- ═══════════════════ 1. ARCHITECTURE ═══════════════════ -->
 <section id="architecture">
     <h2>1. Architecture Overview</h2>
@@ -445,13 +846,16 @@ Requirements:
    - react-hook-form, zod, @hookform/resolvers
    - lucide-react (icons), sharp (image optimization)
    - react-quill (rich text editor — will be dynamic-imported with ssr:false)
+   - framer-motion (scroll reveal animations, smooth transitions)
+   - @tailwindcss/typography (prose styling for CMS rich text content)
    - @types/bcryptjs, @types/jsonwebtoken
 3. Run: npx shadcn-ui@latest init, then add: button, card, dialog, table, input, select, textarea, badge, tabs, dropdown-menu, sheet, separator, skeleton, alert-dialog
 4. Create .env.local with placeholders: MONGODB_URI, JWT_SECRET, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, NEXT_PUBLIC_SITE_URL
 5. Create lib/db.ts — cached MongoDB connection via Mongoose (reuse in serverless/dev).
 6. Create config/schools.ts — array of 5 school configs:
    Each: { id, name, slug, domain/subdomain, theme: { primary, secondary, accent }, logo, features }
-   Schools: apsfatehpur (navy/gold), apsgirls (purple/pink), apsboys (blue/green), madrasa (emerald/gold), azadschool (orange/white)
+   Schools: apsfatehpur (royal-blue/gold), apsgirls (purple/gold), apsboys (blue/gold), madrasa (emerald/gold), azadschool (orange/gold)
+   All share: --accent-yellow #F4D21F, --accent-red #C0392B, --accent-green #3FA34D, --bg #FFF, --bg-light #F5F7FA
 7. Create middleware.ts — reads hostname, maps to schoolSlug, sets x-school-slug header. localhost fallback: ?school= query param.
 
 No pages yet — only foundation files.
@@ -569,34 +973,58 @@ Implement multi-tenant context and file uploads:
         <span class="prompt-label">Prompt D1-B5-P1 — Layout, Header, Footer, Theming</span>
 
 Build root layout, header, footer, and theming. English only.
+UI Reference: spslosal.com layout structure, but modernized with premium design (see UI/UX section in the guide).
 
 1. Root Layout (app/layout.tsx):
    - Wrap in SchoolProvider
-   - Apply school theme as CSS variables (--primary, --secondary, --accent)
+   - Apply school theme as CSS variables: --primary, --primary-dark, --accent-yellow (#F4D21F), --accent-red (#C0392B), --accent-green (#3FA34D), --bg (#FFFFFF), --bg-light (#F5F7FA), --text-dark (#1F2937), --text-muted (#6B7280)
+   - Load Inter font via next/font/google
    - Meta tags with school name
+   - Install @tailwindcss/typography plugin for prose styling on CMS content
 
-2. 5 Themes in config/schools.ts:
-   apsfatehpur: Navy #1e3a5f + Gold #d4a843
-   apsgirls: Purple #6b21a8 + Pink #ec4899
-   apsboys: Blue #1e40af + Green #16a34a
-   madrasa: Emerald #047857 + Gold #d4a843
-   azadschool: Orange #ea580c + White #f8fafc
+2. 5 Themes in config/schools.ts (each school gets unique identity):
+   Base CSS vars (ALL schools): --accent-yellow: #F4D21F, --accent-red: #C0392B, --accent-green: #3FA34D, --bg: #FFFFFF, --bg-light: #F5F7FA, --text-dark: #1F2937, --text-muted: #6B7280
+   Per-school overrides (only --primary and --primary-dark change):
+   apsfatehpur: primary #2F3E8F (Royal Blue), primary-dark #1a2556
+   apsgirls: primary #6b21a8 (Purple), primary-dark #3b0764
+   apsboys: primary #1e40af (Blue), primary-dark #172554
+   madrasa: primary #047857 (Emerald), primary-dark #022c22
+   azadschool: primary #ea580c (Orange), primary-dark #431407
 
-3. Header (components/school/Header.tsx):
-   - Logo + school name
-   - Nav (data-driven from config/navigation.ts):
+3. Header — TWO-ROW design (components/school/Header.tsx):
+   ROW 1 — Top Info Bar:
+   - Thin bar (40px height), dark bg (--primary-dark)
+   - Left: phone + email with icons (13px, white)
+   - Right: social media icon links (Facebook, Instagram, YouTube, Twitter)
+   - Hides on scroll down
+
+   ROW 2 — Main Navbar:
+   - White/light bg, school logo (left, 48px), school name text
+   - Center: nav links (15px, medium weight), data-driven from config/navigation.ts:
      Home, About (dropdown: Mission &amp; Vision, Director, Chairman, Principal, Infrastructure),
      Structure (dropdown: Uniforms, Bus Routes, Calendar, Counseling, Awards),
      Academy (dropdown: Admissions, Curriculum, Affiliation, RTE, Fees),
      Facilities, News (dropdown: Announcements, Tours, Videos),
      Toppers, AICU, Alumni, Careers, Contact
-   - "Apply Online" CTA button
-   - Mobile: hamburger → slide-out sheet
-   - Sticky, shrink on scroll
+   - Right: "Apply Now" CTA button (bg: --primary, white text, rounded-full, bold, px-6 py-2)
+   - Dropdown: smooth fade-in (150ms ease), rounded-lg shadow-xl, items have hover bg highlight
+   - Active page: colored bottom border indicator on active nav item
+   - Sticky: on scroll, top bar hides, navbar gets subtle shadow, becomes sticky
+   - Mobile: hamburger icon → slide-out sheet (shadcn Sheet) with accordion nav groups
 
-4. Footer: contact info, quick links (4 cols), social icons, copyright
+4. Footer — Dark, 4-column layout (components/school/Footer.tsx):
+   - Dark background using --primary-dark
+   - 4 columns: (1) Logo + school name + short description + social icons in circles, (2) Quick Links, (3) Academics links, (4) Contact info (phone, email, address, map link)
+   - Social icons: circular, white border, fill on hover with brand colors
+   - Bottom bar: even darker shade, copyright + "Part of APS Fatehpur Group" + designer credit
+   - White text, muted links (#94a3b8) brightening on hover
 
-5. PageBanner component: title + breadcrumbs + optional background image. Used on every inner page.
+5. PageBanner component (for all inner pages):
+   - Height: 200-250px
+   - Background: gradient using --primary → --primary-dark, OR CMS background image with dark overlay
+   - Page title: white, 36px, bold, centered
+   - Breadcrumbs: white/muted, small (14px): "Home > Section > Page" with links
+   - Reused on every inner page
     </div>
 
     <!-- D1-B6 -->
@@ -605,22 +1033,95 @@ Build root layout, header, footer, and theming. English only.
     <div class="prompt-block">
         <span class="prompt-label">Prompt D1-B6-P1 — Home Page</span>
 
-Build the Home Page — all content fetched from backend CMS.
+Build the Home Page — visually impressive, premium school website. All content fetched from backend CMS.
+UI reference: spslosal.com structure but with modern, premium design. See UI/UX section for exact visual specs.
 
-Sections (each a separate component):
-1. Hero Slider — full-width image carousel from Gallery where category="hero", auto-play
-2. Welcome Snippet — About text from Page slug="about" (trimmed), Director photo from Person, "Read More"
-3. Quick Stats Bar — animated counters from school.stats
-4. Announcements Ticker — scrolling marquee of latest 5 News items
-5. Highlights — 4 feature cards from Page slug="highlights" or hardcoded
-6. Top Rankers — horizontal scroll of top 5 Topper cards
-7. AICU Banner — title + description from AICU model + CTA
-8. Photo Gallery Preview — 6-8 photos from Gallery
-9. Latest News — 3 cards from News
-10. Testimonials — alumni testimonial carousel
-11. CTA Banner — "Apply Now" full-width section → /apply
+Sections (each is a SEPARATE reusable component, in this order):
 
-Server-side fetch, revalidate: 3600. School-scoped. Responsive, mobile-first.
+1. Hero Slider (components/school/HeroSlider.tsx):
+   - Full viewport width, 85vh height
+   - Background images from Gallery where category="hero" (3-5 slides)
+   - Dark gradient overlay: linear-gradient from rgba(0,0,0,0.7) left to rgba(0,0,0,0.2) right
+   - Content LEFT-ALIGNED (not centered): school welcome text (48-64px heading, white), subtitle (18px)
+   - TWO CTA buttons: "Apply Now" (filled, --primary bg) + "Explore More" (outlined, white border)
+   - Auto-play 5s interval, smooth crossfade transition
+   - Dot indicators at bottom center
+   - Responsive: single CTA on mobile, smaller text
+
+2. Announcement Ticker (components/school/AnnouncementTicker.tsx):
+   - Full-width bar, bg: --primary (bold colored)
+   - Left: "📢 Latest" label, static white text
+   - Right: smooth infinite horizontal scroll of latest 5 News titles
+   - Items are links (click → /news/[slug]), white text, separated by " | "
+   - Pause on hover
+
+3. Welcome Section (components/school/WelcomeSection.tsx):
+   - Two columns (40% image, 60% text) on white background
+   - Left: Director/school photo (rounded-xl, shadow-lg) from Person or Gallery
+   - Right: Section heading "Welcome to [School Name]" with colored underline bar (40px)
+   - About text from Page slug="about" (trimmed to ~200 chars)
+   - 4 check-mark bullet points (mission/vision/excellence/values) with colored ✔ icons
+   - "Read More →" link button
+   - Padding: 80px vertical
+
+4. Quick Stats Bar (components/school/StatsBar.tsx):
+   - Full-width, bg: --primary gradient (--primary → --primary-dark)
+   - 4 stats in a row: Students, Teachers, Years, Awards
+   - Icons above each number (lucide-react: GraduationCap, Users, Calendar, Trophy)
+   - Animated count-up on scroll into view (0 → target, 2s easing)
+   - Numbers: 48px, bold 800, --accent-yellow (#F4D21F). Labels: 14px, white. Padding: 60px vertical
+   - Data from school.stats in config
+
+5. Highlights / Why Choose Us (components/school/Highlights.tsx):
+   - Section bg: --bg-light (#F5F7FA)
+   - Heading: "Why Choose Us" centered with underline accent
+   - 4 cards in a row (responsive grid)
+   - Each card: white bg, rounded-xl, shadow-sm, centered content
+   - Icon in colored circle (48px, --accent bg, white icon) at top
+   - Title (18px bold) + description (14px muted, 2-3 lines)
+   - Hover: translateY(-6px) + shadow-lg, 300ms transition
+   - Content from Page slug="highlights" or hardcoded
+
+6. Top Rankers (components/school/TopRankers.tsx):
+   - Heading: "Our Top Achievers" with underline accent
+   - Horizontal scrollable row (or grid) of top 5 Topper cards
+   - Circular student photo (120px, 3px border in --primary)
+   - Name bold, class + % below, exam name muted
+   - Top 3 get gold/silver/bronze badge ribbon
+   - Data from GET /api/toppers?limit=5&sort=-percentage
+
+7. AICU Banner (components/school/AICUBanner.tsx):
+   - Full-width, bg: --primary-dark or dark gradient with pattern
+   - White text, title + description, "Learn More" outlined button → /aicu
+   - Content from GET /api/aicu
+
+8. Photo Gallery Preview (components/school/GalleryPreview.tsx):
+   - 4-column grid (8 photos), square/4:3 ratio, rounded-lg
+   - Hover: dark overlay + zoom icon + scale(1.05), 300ms
+   - Click: lightbox modal (full preview)
+   - "View All Gallery →" button below (outlined, centered)
+   - Data from GET /api/gallery?type=photo&limit=8
+
+9. Latest News (components/school/LatestNews.tsx):
+   - 3 cards in a row (responsive grid)
+   - Card: image top (16:10, object-cover, rounded top), date + category badge, title (18px semibold, 2-line clamp), excerpt (14px muted, 3-line clamp), "Read More →"
+   - Hover: image zoom(1.05), card lift
+   - Data from GET /api/news?limit=3
+
+10. Testimonials (components/school/Testimonials.tsx):
+    - Alumni quote carousel, auto-rotate
+    - Quote text in large italic, alumni name + batch below, photo circle
+    - Data from GET /api/alumni?isApproved=true&limit=5
+
+11. CTA Banner (components/school/CTABanner.tsx):
+    - Full-width, bg: --primary gradient
+    - "Admissions Open for [Year]" large white heading
+    - "Apply Now" large CTA button (white bg, --primary text)
+    - Link to /apply
+
+Server-side fetch (Next.js fetch, revalidate: 3600). School-scoped via x-school-slug.
+Responsive, mobile-first. Each section has generous vertical padding (60-100px).
+Smooth scroll-reveal animations on section enter (framer-motion or Intersection Observer).
     </div>
 
     <div class="prompt-block">
@@ -1035,7 +1536,8 @@ jsonwebtoken        cloudinary
 react-hook-form     @hookform/resolvers
 zod                 react-quill
 lucide-react        recharts (admin charts)
-sharp
+sharp               framer-motion
+@tailwindcss/typography
             </pre>
         </div>
         <div class="card">
