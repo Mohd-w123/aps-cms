@@ -45,7 +45,7 @@ export default function RootLayout({
                 "--school-primary-dark": theme.primaryDark,
                 "--accent-yellow": theme.accentYellow,
                 "--accent-red": theme.accentRed,
-                "--accent-green": theme.accentGreen,
+                "--accent-blue": theme.accentBlue,
                 "--bg-light": theme.bgLight,
                 "--text-dark": theme.textDark,
                 "--text-muted": theme.textMuted,

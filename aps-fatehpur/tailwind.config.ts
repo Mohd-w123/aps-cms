@@ -55,7 +55,7 @@ const config: Config = {
         "school-primary-dark": "var(--school-primary-dark)",
         "accent-yellow": "var(--accent-yellow)",
         "accent-red": "var(--accent-red)",
-        "accent-green": "var(--accent-green)",
+        "accent-blue": "var(--accent-blue)",
         "bg-light": "var(--bg-light)",
         "text-dark": "var(--text-dark)",
         "text-muted-color": "var(--text-muted-color)",
