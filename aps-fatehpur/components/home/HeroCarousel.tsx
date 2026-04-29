@@ -50,7 +50,6 @@ export function HeroCarousel() {
       <div
         className="absolute inset-0 transition-all duration-700"
         style={{
-          backgroundColor: "var(--school-primary)",
           backgroundImage: `url(${slide.image})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
@@ -74,7 +73,7 @@ export function HeroCarousel() {
               className="inline-block rounded-full px-8 py-3 font-semibold text-base transition-transform hover:scale-105"
               style={{
                 backgroundColor: "var(--accent-yellow)",
-                color: "var(--text-dark)",
+                color: "var(--school-primary)",
               }}
             >
               {slide.cta.label}

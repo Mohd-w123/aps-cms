@@ -3,7 +3,7 @@ export interface SchoolTheme {
   primaryDark: string;
   accentYellow: string;
   accentRed: string;
-  accentGreen: string;
+  accentBlue: string;
   bg: string;
   bgLight: string;
   textDark: string;
@@ -22,11 +22,11 @@ export interface SchoolConfig {
 }
 
 const sharedAccents = {
-  accentYellow: "#F4D21F",
+  accentYellow: "#F4D03F",
   accentRed: "#C0392B",
-  accentGreen: "#3FA34D",
+  accentBlue: "#2F3C8F",
   bg: "#FFFFFF",
-  bgLight: "#F5F7FA",
+  bgLight: "#F8F9FA",
   textDark: "#1F2937",
   textMuted: "#6B7280",
 };
@@ -38,8 +38,8 @@ export const schools: SchoolConfig[] = [
     slug: "apsfatehpur",
     domain: "apsfatehpur.com",
     theme: {
-      primary: "#2F3E8F",
-      primaryDark: "#1a2556",
+      primary: "#3FA34D",
+      primaryDark: "#2d7a38",
       ...sharedAccents,
     },
     logo: "/logos/apsfatehpur.png",
