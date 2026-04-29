@@ -47,7 +47,7 @@ export function Header() {
           </div>
           <div className="flex items-center gap-1.5">
             <MapPin className="h-3.5 w-3.5" />
-            Fatehpur, Uttar Pradesh
+            APS SCHOOL, FATEHPUR, SIKAR.-332301
           </div>
         </div>
       </div>

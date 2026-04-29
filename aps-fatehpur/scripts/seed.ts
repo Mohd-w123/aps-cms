@@ -104,9 +104,9 @@ const schoolsData = [
       accentColor: "#F4D21F",
     },
     contactInfo: {
-      phone: "+91 9876543210",
+      phone: "+91 7023190190",
       email: "info@apsfatehpur.com",
-      address: "Fatehpur, Uttar Pradesh, India",
+      address: "APS SCHOOL, FATEHPUR, SIKAR.-332301",
     },
     stats: { students: 1200, teachers: 80, years: 25, awards: 50 },
   },
@@ -123,7 +123,7 @@ const schoolsData = [
     contactInfo: {
       phone: "+91 9876543211",
       email: "girls@apsfatehpur.com",
-      address: "Fatehpur, Uttar Pradesh, India",
+      address: "APS SCHOOL, FATEHPUR, SIKAR.-332301",
     },
     stats: { students: 450, teachers: 30, years: 15, awards: 20 },
   },
@@ -140,7 +140,7 @@ const schoolsData = [
     contactInfo: {
       phone: "+91 9876543212",
       email: "boys@apsfatehpur.com",
-      address: "Fatehpur, Uttar Pradesh, India",
+      address: "APS SCHOOL, FATEHPUR, SIKAR.-332301",
     },
     stats: { students: 500, teachers: 35, years: 15, awards: 25 },
   },
@@ -157,7 +157,7 @@ const schoolsData = [
     contactInfo: {
       phone: "+91 9876543213",
       email: "madrasa@apsfatehpur.com",
-      address: "Fatehpur, Uttar Pradesh, India",
+      address: "APS SCHOOL, FATEHPUR, SIKAR.-332301",
     },
     stats: { students: 300, teachers: 20, years: 20, awards: 10 },
   },
@@ -172,9 +172,9 @@ const schoolsData = [
       accentColor: "#F4D21F",
     },
     contactInfo: {
-      phone: "+91 9876543214",
+      phone: "+91 7023190190",
       email: "info@azadschool.in",
-      address: "Fatehpur, Uttar Pradesh, India",
+      address: "APS SCHOOL, FATEHPUR, SIKAR.-332301",
     },
     stats: { students: 350, teachers: 25, years: 10, awards: 15 },
   },
