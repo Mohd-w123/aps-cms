@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 
 const images = [
@@ -42,16 +43,15 @@ export function GalleryPreview() {
                 i === 0 ? "md:row-span-2" : ""
               }`}
             >
-              <div
-                className={`w-full ${
+              <Image
+                src={img.src}
+                alt={img.alt}
+                width={600}
+                height={i === 0 ? 800 : 450}
+                className={`w-full h-full object-cover ${
                   i === 0 ? "aspect-[3/4]" : "aspect-[4/3]"
                 } transition-transform group-hover:scale-105`}
-                style={{ backgroundColor: "var(--school-primary)" }}
-              >
-                <div className="w-full h-full flex items-center justify-center text-white/40 text-sm">
-                  📷 {img.alt}
-                </div>
-              </div>
+              />
               {/* Overlay */}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-end">
                 <p className="text-white text-sm font-medium p-3 translate-y-full group-hover:translate-y-0 transition-transform">
