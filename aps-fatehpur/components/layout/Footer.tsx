@@ -118,11 +118,11 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2.5">
                 <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                <span>Fatehpur, Uttar Pradesh, India</span>
+                <span>APS SCHOOL, FATEHPUR, SIKAR.-332301</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="h-4 w-4 shrink-0" />
-                <span>+91-123-456-7890</span>
+                <span>+91 7023190190</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="h-4 w-4 shrink-0" />

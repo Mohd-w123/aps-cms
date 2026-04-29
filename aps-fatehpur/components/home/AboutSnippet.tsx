@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSchool } from "@/hooks/useSchool";
 
 export function AboutSnippet() {
@@ -11,17 +12,16 @@ export function AboutSnippet() {
     <section className="py-16" style={{ backgroundColor: "var(--bg-light)" }}>
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-12 items-center">
-          {/* Left: Image placeholder */}
-          <div
-            className="aspect-[4/3] rounded-2xl overflow-hidden"
-            style={{ backgroundColor: "var(--school-primary)" }}
-          >
-            <div className="w-full h-full flex items-center justify-center text-white/60 text-lg">
-              <div className="text-center">
-                <div className="text-6xl mb-2">🏫</div>
-                <p>School Campus</p>
-              </div>
-            </div>
+          {/* Left: Campus Image */}
+          <div className="aspect-[4/3] rounded-2xl overflow-hidden">
+            <Image
+              src="/images/school-campus.jpg"
+              alt={`${school?.name || "APS Fatehpur"} Campus`}
+              width={800}
+              height={600}
+              className="w-full h-full object-cover"
+              priority
+            />
           </div>
 
           {/* Right: Content */}
