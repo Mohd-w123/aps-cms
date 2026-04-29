@@ -4,6 +4,9 @@ import { headers } from "next/headers";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { getSchoolBySlug } from "@/config/schools";
+import { SchoolProvider } from "@/hooks/useSchool";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -50,7 +53,11 @@ export default function RootLayout({
             : undefined
         }
       >
-        {children}
+        <SchoolProvider>
+          <Header />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
+        </SchoolProvider>
       </body>
     </html>
   );

@@ -1,0 +1,27 @@
+export { default as School } from "./School";
+export { default as User } from "./User";
+export { default as Page } from "./Page";
+export { default as Person } from "./Person";
+export { default as News } from "./News";
+export { default as Gallery } from "./Gallery";
+export { default as Topper } from "./Topper";
+export { default as AICU } from "./AICU";
+export { default as Admission } from "./Admission";
+export { default as Enquiry } from "./Enquiry";
+export { default as Career } from "./Career";
+export { default as CareerApplication } from "./CareerApplication";
+export { default as Alumni } from "./Alumni";
+
+export type { ISchool } from "./School";
+export type { IUser } from "./User";
+export type { IPage } from "./Page";
+export type { IPerson } from "./Person";
+export type { INews } from "./News";
+export type { IGallery } from "./Gallery";
+export type { ITopper } from "./Topper";
+export type { IAICU } from "./AICU";
+export type { IAdmission } from "./Admission";
+export type { IEnquiry } from "./Enquiry";
+export type { ICareer } from "./Career";
+export type { ICareerApplication } from "./CareerApplication";
+export type { IAlumni } from "./Alumni";
