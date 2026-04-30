@@ -1,112 +1,87 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, ArrowRight, Trophy } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 const toppers = [
-  { name: "Aarav Sharma", class: "XII", percent: "98.6%", year: "2025" },
-  { name: "Priya Singh", class: "XII", percent: "97.8%", year: "2025" },
-  { name: "Mohd Faiz", class: "X", percent: "97.2%", year: "2025" },
-  { name: "Ananya Gupta", class: "XII", percent: "96.4%", year: "2025" },
-  { name: "Ravi Kumar", class: "X", percent: "96.0%", year: "2025" },
-  { name: "Sara Khan", class: "XII", percent: "95.8%", year: "2025" },
+  "/images/toppers/topper-1.jpg",
+  "/images/toppers/topper-2.jpg",
+  "/images/toppers/topper-3.jpg",
+  "/images/toppers/topper-4.jpg",
+  "/images/toppers/topper-5.jpg",
+  "/images/toppers/topper-6.jpg",
+  "/images/toppers/topper-7.jpg",
+  "/images/toppers/topper-8.jpg",
+  "/images/toppers/topper-9.jpg",
 ];
 
 export function ToppersCarousel() {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const checkScroll = () => {
+  // Auto-scroll left continuously
+  useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 0);
-    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
-  };
 
-  const scroll = (dir: "left" | "right") => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir === "left" ? -280 : 280, behavior: "smooth" });
-    setTimeout(checkScroll, 400);
-  };
+    const interval = setInterval(() => {
+      if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 5) {
+        el.scrollLeft = 0;
+      } else {
+        el.scrollBy({ left: 2 });
+      }
+    }, 30);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const openLightbox = (i: number) => setLightboxIndex(i);
+  const closeLightbox = () => setLightboxIndex(null);
+  const prev = () =>
+    setLightboxIndex((c) => (c !== null ? (c - 1 + toppers.length) % toppers.length : null));
+  const next = () =>
+    setLightboxIndex((c) => (c !== null ? (c + 1) % toppers.length : null));
 
   return (
     <section className="py-16" style={{ backgroundColor: "var(--bg-light)" }}>
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="flex items-end justify-between mb-10">
-          <div>
-            <p
-              className="text-sm font-semibold uppercase tracking-wider mb-2"
-              style={{ color: "var(--school-primary)" }}
-            >
-              Achievements
-            </p>
-            <h2
-              className="text-3xl md:text-4xl font-bold"
-              style={{ color: "var(--text-dark)" }}
-            >
-              Our Toppers
-            </h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => scroll("left")}
-              disabled={!canScrollLeft}
-              className="hidden sm:flex h-9 w-9 items-center justify-center rounded-full border disabled:opacity-30 transition-colors"
-              style={{ borderColor: "var(--school-primary)", color: "var(--school-primary)" }}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => scroll("right")}
-              disabled={!canScrollRight}
-              className="hidden sm:flex h-9 w-9 items-center justify-center rounded-full border disabled:opacity-30 transition-colors"
-              style={{ borderColor: "var(--school-primary)", color: "var(--school-primary)" }}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+        <div className="text-center mb-10">
+          <p
+            className="text-sm font-semibold uppercase tracking-wider mb-2"
+            style={{ color: "var(--school-primary)" }}
+          >
+            Achievements
+          </p>
+          <h2
+            className="text-3xl md:text-4xl font-bold"
+            style={{ color: "var(--text-dark)" }}
+          >
+            Our Toppers
+          </h2>
         </div>
 
-        {/* Carousel */}
+        {/* Auto-scrolling Carousel */}
         <div
           ref={scrollRef}
-          onScroll={checkScroll}
-          className="flex gap-5 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory"
+          className="flex gap-5 overflow-x-auto scrollbar-hide pb-2"
           style={{ scrollbarWidth: "none" }}
         >
-          {toppers.map((t, i) => (
+          {toppers.map((src, i) => (
             <div
               key={i}
-              className="flex-shrink-0 w-56 snap-start rounded-xl bg-white shadow-sm hover:shadow-lg transition-all p-5 text-center"
+              className="flex-shrink-0 w-56 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer"
+              onClick={() => openLightbox(i)}
             >
-              <div
-                className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full text-white text-2xl"
-                style={{ backgroundColor: "var(--school-primary)" }}
-              >
-                {t.name.charAt(0)}
-              </div>
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <Trophy className="h-4 w-4" style={{ color: "var(--accent-yellow)" }} />
-                <span
-                  className="text-xl font-bold"
-                  style={{ color: "var(--school-primary)" }}
-                >
-                  {t.percent}
-                </span>
-              </div>
-              <h3
-                className="font-semibold text-base mb-0.5"
-                style={{ color: "var(--text-dark)" }}
-              >
-                {t.name}
-              </h3>
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                Class {t.class} · {t.year}
-              </p>
+              <Image
+                src={src}
+                alt={`Topper ${i + 1}`}
+                width={224}
+                height={300}
+                className="w-full h-auto object-contain"
+              />
             </div>
           ))}
         </div>
@@ -121,6 +96,48 @@ export function ToppersCarousel() {
           </Link>
         </div>
       </div>
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90"
+          onClick={closeLightbox}
+        >
+          <button
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            aria-label="Close"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); prev(); }}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            aria-label="Previous"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); next(); }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            aria-label="Next"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+          <div
+            className="relative max-w-[90vw] max-h-[85vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={toppers[lightboxIndex]}
+              alt={`Topper ${lightboxIndex + 1}`}
+              width={800}
+              height={1000}
+              className="max-h-[85vh] w-auto object-contain rounded-lg"
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 }

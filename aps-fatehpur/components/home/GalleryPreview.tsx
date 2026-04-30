@@ -6,8 +6,6 @@ import Image from "next/image";
 import { ArrowRight, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 const images = [
-  { src: "/images/gallery-1.jpg", alt: "Annual Day Celebration" },
-  { src: "/images/gallery-2.jpg", alt: "Science Exhibition" },
   { src: "/images/gallery-3.jpg", alt: "Sports Day" },
   { src: "/images/gallery-4.jpg", alt: "Republic Day" },
   { src: "/images/gallery-5.jpg", alt: "Cultural Program" },
