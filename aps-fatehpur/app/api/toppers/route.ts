@@ -12,18 +12,14 @@ export async function GET(request: NextRequest) {
     if (!schoolId) return errorResponse("School not found", 404);
 
     const { searchParams } = new URL(request.url);
-    const year = searchParams.get("year");
-    const cls = searchParams.get("class");
     const { page, limit, skip } = parsePagination(searchParams);
 
     await connectDB();
 
     const filter: Record<string, unknown> = { schoolId, isPublished: true };
-    if (year) filter.year = Number(year);
-    if (cls) filter.class = cls;
 
     const [items, total] = await Promise.all([
-      Topper.find(filter).sort({ rank: 1 }).skip(skip).limit(limit),
+      Topper.find(filter).sort({ order: 1 }).skip(skip).limit(limit),
       Topper.countDocuments(filter),
     ]);
 

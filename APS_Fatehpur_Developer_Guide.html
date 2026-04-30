@@ -728,16 +728,12 @@ aps-fatehpur/
 
 // ─── Gallery ───
 {
-  _id, schoolId, type: "photo" | "video",
-  title, url, thumbnailUrl, category,
-  order, isPublished, createdAt
+  _id, schoolId, image, order, isPublished, createdAt
 }
 
 // ─── Topper ───
 {
-  _id, schoolId, studentName, photo, class,
-  year, rank, percentage, examName,
-  subjects: [{ name, marks }], isPublished, createdAt
+  _id, schoolId, image, order, isPublished, createdAt
 }
 
 // ─── AICU ───
@@ -873,8 +869,8 @@ Create these 13 models with full schemas, indexes, timestamps:
 3. Page — schoolId+slug (compound unique index), title (String), content (String — rich HTML), featuredImage, seo: { metaTitle, metaDescription }, isPublished, updatedBy (ref User)
 4. Person — schoolId, role (enum: director, chairman, principal), name, designation, bio (string — rich text), photo, qualifications, order, isActive
 5. News — schoolId, title, slug (unique per school), content (rich HTML), category (enum: announcement, event, tour), featuredImage, images [], isPublished, publishedAt
-6. Gallery — schoolId, type (enum: photo, video), title, url, thumbnailUrl, category, order, isPublished
-7. Topper — schoolId, studentName, photo, class, year, rank, percentage, examName, subjects [{name, marks}], isPublished
+6. Gallery — schoolId, image, order, isPublished
+7. Topper — schoolId, image, order, isPublished
 8. AICU — schoolId, title, description (rich text), services [{name, description, icon}], images [], schedule, isActive
 9. Admission — schoolId, studentName, parentName, phone, email, class, dob, gender, address, previousSchool, documents [{name, url}], status (enum: pending/reviewed/accepted/rejected), appliedAt, reviewedBy, reviewedAt
 10. Enquiry — schoolId, name, email, phone, subject, message, status (enum: new/read/replied)
@@ -925,8 +921,8 @@ ROUTES:
    This is the CORE CMS endpoint.
 4. /api/persons — GET by schoolId+role (public), POST/PUT/DELETE (admin)
 5. /api/news — GET (paginated, filter by category), GET by slug, POST/PUT/DELETE (admin)
-6. /api/gallery — GET (filter by type/category), POST with Cloudinary upload, PUT, DELETE (admin)
-7. /api/toppers — GET (filter by year/class), POST/PUT/DELETE (admin)
+6. /api/gallery — GET (paginated), POST image URL, PUT, DELETE (admin)
+7. /api/toppers — GET (paginated), POST image URL, PUT/DELETE (admin)
 8. /api/aicu — GET by schoolId, POST/PUT (admin)
 9. /api/admissions — POST (public: submit), GET (admin: list by status), PUT (admin: update status)
 10. /api/enquiries — POST (public: contact form), GET (admin: list), PUT (admin: mark read/replied)

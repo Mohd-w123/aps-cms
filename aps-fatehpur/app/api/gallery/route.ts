@@ -12,15 +12,11 @@ export async function GET(request: NextRequest) {
     if (!schoolId) return errorResponse("School not found", 404);
 
     const { searchParams } = new URL(request.url);
-    const type = searchParams.get("type");
-    const category = searchParams.get("category");
     const { page, limit, skip } = parsePagination(searchParams);
 
     await connectDB();
 
     const filter: Record<string, unknown> = { schoolId, isPublished: true };
-    if (type) filter.type = type;
-    if (category) filter.category = category;
 
     const [items, total] = await Promise.all([
       Gallery.find(filter).sort({ order: 1 }).skip(skip).limit(limit),

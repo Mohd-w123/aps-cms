@@ -42,11 +42,7 @@ export const newsUpdateSchema = newsCreateSchema.partial();
 
 // ── Gallery ──
 export const galleryCreateSchema = z.object({
-  type: z.enum(["photo", "video"]).optional().default("photo"),
-  title: z.string().max(200).optional().default(""),
-  url: z.string().min(1),
-  thumbnailUrl: z.string().optional(),
-  category: z.string().max(100).optional().default("general"),
+  image: z.string().min(1),
   order: z.number().int().optional().default(0),
   isPublished: z.boolean().optional().default(true),
 });
@@ -54,18 +50,9 @@ export const galleryUpdateSchema = galleryCreateSchema.partial();
 
 // ── Toppers ──
 export const topperCreateSchema = z.object({
-  studentName: z.string().min(1).max(200),
-  photo: z.string().optional(),
-  class: z.string().min(1).max(50),
-  year: z.number().int().min(2000).max(2100),
-  rank: z.number().int().min(1),
-  percentage: z.number().min(0).max(100),
-  examName: z.string().max(200).optional().default(""),
-  subjects: z.array(z.object({
-    name: z.string().min(1),
-    marks: z.number().min(0),
-  })).optional().default([]),
-  isPublished: z.boolean().optional().default(false),
+  image: z.string().min(1),
+  order: z.number().int().optional().default(0),
+  isPublished: z.boolean().optional().default(true),
 });
 export const topperUpdateSchema = topperCreateSchema.partial();
 
