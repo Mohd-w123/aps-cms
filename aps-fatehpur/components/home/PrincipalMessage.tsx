@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { Quote } from "lucide-react";
 
 export function PrincipalMessage() {
@@ -11,19 +12,20 @@ export function PrincipalMessage() {
           <div className="grid md:grid-cols-[240px_1fr] gap-8 items-start">
             {/* Principal Photo */}
             <div className="flex flex-col items-center text-center">
-              <div
-                className="w-48 h-48 rounded-full overflow-hidden mb-4"
-                style={{ backgroundColor: "var(--school-primary)" }}
-              >
-                <div className="w-full h-full flex items-center justify-center text-white text-5xl">
-                  👤
-                </div>
+              <div className="w-48 h-48 rounded-full overflow-hidden mb-4">
+                <Image
+                  src="/images/principal.jpg"
+                  alt="Nazneen Bano - Principal"
+                  width={192}
+                  height={192}
+                  className="w-full h-full object-cover"
+                />
               </div>
               <h3
                 className="font-bold text-lg"
                 style={{ color: "var(--text-dark)" }}
               >
-                Dr. Principal Name
+                Nazneen Bano
               </h3>
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                 Principal
