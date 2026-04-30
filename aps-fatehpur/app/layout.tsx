@@ -19,8 +19,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const school = getSchoolBySlug(slug);
 
   return {
-    title: school?.name || "APS Fatehpur",
-    description: `Welcome to ${school?.name || "APS Fatehpur"} — Excellence in Education`,
+    title: school?.name || "APS girls school fatehpur",
+    description: `Welcome to ${school?.name || "APS girls school fatehpur"} — Excellence in Education`,
   };
 }
 
