@@ -18,12 +18,12 @@ const images = [
   { src: "/images/gallery-12.jpg", alt: "Annual Function" },
   { src: "/images/gallery-13.jpg", alt: "Outdoor Activity" },
   { src: "/images/gallery-14.jpg", alt: "Campus Life" },
-  { src: "/images/gallery-15.jpg", alt: "Celebration" },
-  { src: "/images/gallery-16.jpg", alt: "Workshop" },
+  // { src: "/images/gallery-15.jpg", alt: "Celebration" },
+  // { src: "/images/gallery-16.jpg", alt: "Workshop" },
   { src: "/images/gallery-17.jpg", alt: "Cultural Event" },
-  { src: "/images/gallery-18.jpg", alt: "Prize Distribution" },
-  { src: "/images/gallery-19.jpg", alt: "School Tour" },
-  { src: "/images/gallery-20.jpg", alt: "Independence Day" },
+  // { src: "/images/gallery-18.jpg", alt: "Prize Distribution" },
+  // { src: "/images/gallery-19.jpg", alt: "School Tour" },
+  // { src: "/images/gallery-20.jpg", alt: "Independence Day" },
   { src: "/images/gallery-21.jpg", alt: "Science Fair" },
 ];
 

@@ -33,6 +33,7 @@ export default function RootLayout({
   const slug = headersList.get("x-school-slug") || "apsfatehpur";
   const school = getSchoolBySlug(slug);
   const theme = school?.theme;
+  const isGroupSite = slug === "apsfatehpur";
 
   return (
     <html lang="en" className={cn("font-sans", inter.variable)}>
@@ -54,9 +55,9 @@ export default function RootLayout({
         }
       >
         <SchoolProvider>
-          <Header />
+          {!isGroupSite && <Header />}
           <main className="min-h-screen">{children}</main>
-          <Footer />
+          {!isGroupSite && <Footer />}
         </SchoolProvider>
       </body>
     </html>
