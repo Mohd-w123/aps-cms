@@ -18,6 +18,9 @@ export async function GET(request: NextRequest) {
 
     const filter: Record<string, unknown> = { schoolId, isPublished: true };
 
+    const type = searchParams.get("type");
+    if (type === "image" || type === "video") filter.type = type;
+
     const [items, total] = await Promise.all([
       Gallery.find(filter).sort({ order: 1 }).skip(skip).limit(limit),
       Gallery.countDocuments(filter),

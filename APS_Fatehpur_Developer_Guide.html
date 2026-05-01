@@ -74,7 +74,7 @@
     <div class="card">
         <div class="card-title">What This Project IS</div>
         <ul>
-            <li><strong>CMS-driven dynamic website</strong> — All content (text, images, pages) is managed from the Admin Panel.</li>
+            <li><strong>CMS-driven dynamic website</strong> — All content (text, images, pages) is managed from the Admin Panel. This includes the group landing page (apsfatehpur.com) and all 4 school websites.</li>
             <li><strong>English only</strong> — No multi-language, no i18n, no RTL. All 5 sites in English.</li>
             <li><strong>Fee structure</strong> = just a CMS page. Admin types fee info in the rich-text editor → renders on the website. No separate fee model.</li>
             <li><strong>Multi-tenant</strong> — One codebase, one DB, one admin panel manages all 5 school websites. Content scoped by <code>schoolId</code>.</li>
@@ -176,7 +176,7 @@ Design specs:
   Secondary: "Explore More" (outlined, white border)
 - Auto-play (5s interval), smooth crossfade/slide
 - Dot indicators at bottom center
-- 3-5 slides loaded from Gallery category="hero"
+- 3-5 slides loaded from Gallery images
 - Responsive: text shrinks, single CTA on mobile
             </pre>
         </div>
@@ -338,8 +338,9 @@ Design specs:
 - Click: lightbox modal (full-screen preview
   with prev/next navigation)
 - "View All" button below (outlined, centered)
-- Category filter tabs above (optional):
-  All | Infrastructure | Events | Sports
+- Model: image + video support (type, image URL, videoUrl for YouTube embeds, order, isPublished)
+- Admin uploads images via CMS, stores URL
+- For videos: admin provides YouTube embed URL + thumbnail image
             </pre>
         </div>
     </div>
@@ -349,27 +350,22 @@ Design specs:
             <div class="card-title">9. Topper Cards</div>
             <pre>
 ┌──────────────┐
-│   ⭐ Rank 1  │  ← gold badge for top 3
 │  ┌────────┐  │
-│  │ Photo  │  │
-│  │(circle)│  │
+│  │ Topper │  │
+│  │ Image  │  │
+│  │(result)│  │
 │  └────────┘  │
-│  Student Name│
-│  Class X     │
-│  95.6%       │
-│  Board Exam  │
 └──────────────┘
 
 Design specs:
-- Horizontal scrollable row OR grid
-- Circular student photo (120px, border: 3px
-  school primary)
-- Name: bold, centered
-- Class + percentage: muted
-- Top 3: special gold/silver/bronze badge/ribbon
-- Card: white, rounded-xl, subtle shadow
-- Hover: flip/expand to show subject marks
-- Year filter dropdown above the section
+- Horizontal auto-scrolling carousel
+- Each card: image-only (result card photo)
+- Rounded-xl, subtle shadow
+- Click: lightbox modal (full-screen preview)
+- Model: image-only (image URL, order, isPublished)
+- Admin uploads topper result images via CMS
+- No student name/class/rank fields —
+  all info is embedded in the uploaded image
             </pre>
         </div>
 
@@ -413,7 +409,7 @@ Design specs:
         <pre>
 /* ── Base Palette (shared) ── */
 :root {
-  --primary: #2F3E8F;         /* Royal Blue — main brand color */
+  --primary: #3FA34D;         /* Green — main brand color (overridden per school) */
   --accent-yellow: #F4D21F;   /* Gold/Yellow — highlights, CTAs */
   --accent-red: #C0392B;      /* Red — alerts, important badges */
   --accent-green: #3FA34D;    /* Green — success, achievements */
@@ -424,7 +420,7 @@ Design specs:
   --text-dark: #1F2937;       /* Headings, primary text */
   --text-muted: #6B7280;      /* Secondary text, labels */
 
-  --primary-dark: #1a2556;    /* Header/footer dark bg */
+  --primary-dark: #2d7a38;    /* Header/footer dark bg */
 }
         </pre>
         <table>
@@ -505,7 +501,7 @@ Design specs:
         <table>
             <thead><tr><th>School</th><th>Domain / Subdomain</th><th>Identity</th></tr></thead>
             <tbody>
-                <tr><td>Group (Landing)</td><td>apsfatehpur.com</td><td>Landing page with 4 school cards — click to visit each school</td></tr>
+                <tr><td>Group (Landing)</td><td>apsfatehpur.com</td><td>Landing page with nav, hero slider, about Welfare Society, flip-card branches, toppers carousel, footer. Content managed via CMS (schoolId = apsfatehpur).</td></tr>
                 <tr><td>APS Girls</td><td>apsgirls.apsfatehpur.com</td><td>Default school — Girls-specific theme &amp; content</td></tr>
                 <tr><td>APS Boys</td><td>apsboys.apsfatehpur.com</td><td>Boys-specific theme &amp; content</td></tr>
                 <tr><td>Ashrafululum (Madrasa)</td><td>madrasa.apsfatehpur.com</td><td>Madrasa-specific theme</td></tr>
@@ -651,7 +647,9 @@ aps-fatehpur/
 │
 ├── components/
 │   ├── ui/                            # shadcn/ui components
-│   ├── school/                        # Header, Footer, Hero, PageBanner, CmsPage
+│   ├── home/                          # Home page sections (HeroCarousel, AboutSnippet, ToppersCarousel, GroupLanding, etc.)
+│   ├── layout/                        # Header, Footer, MobileNav, PageBanner
+│   ├── shared/                        # CmsPage, PersonPage (reusable)
 │   ├── admin/                         # Sidebar, DataTable, RichTextEditor
 │   └── forms/                         # EnquiryForm, AdmissionForm, CareerForm
 │
@@ -731,7 +729,7 @@ aps-fatehpur/
 
 // ─── Gallery ───
 {
-  _id, schoolId, image, order, isPublished, createdAt
+  _id, schoolId, type: "image" | "video", image, videoUrl, order, isPublished, createdAt
 }
 
 // ─── Topper ───
@@ -787,6 +785,10 @@ aps-fatehpur/
 
     <div class="note">
         <strong>Key insight:</strong> Fee structure, bus routes, academic calendar, uniforms, curriculum, affiliation, RTE, career counseling — ALL just <code>Page</code> documents with different slugs. Admin uses the rich-text editor to compose, frontend renders the HTML. No separate models needed.
+    </div>
+
+    <div class="note">
+        <strong>Group landing page (apsfatehpur.com):</strong> The group site is also CMS-managed. It uses the same models (Topper, Gallery, News, Page) scoped by the <code>apsfatehpur</code> schoolId. Admin selects the "APS Fatehpur Group" school in the CMS to manage: hero slider images, about content (Page slug="about"), toppers (image-only uploads), and news. The GroupLanding component fetches from APIs with <code>x-school-slug: apsfatehpur</code>.
     </div>
 </section>
 
@@ -853,7 +855,7 @@ Requirements:
 5. Create lib/db.ts — cached MongoDB connection via Mongoose (reuse in serverless/dev).
 6. Create config/schools.ts — array of 5 school configs:
    Each: { id, name, slug, domain/subdomain, theme: { primary, secondary, accent }, logo, features }
-   Schools: apsfatehpur (royal-blue/gold), apsgirls (purple/gold), apsboys (blue/gold), madrasa (emerald/gold), azadschool (orange/gold)
+   Schools: apsfatehpur (green #3FA34D), apsgirls (green #3FA34D, shares group logo), apsboys (green #3FA34D, shares group logo), madrasa (emerald #047857), azadschool (orange #ea580c)
    All share: --accent-yellow #F4D21F, --accent-red #C0392B, --accent-green #3FA34D, --bg #FFF, --bg-light #F5F7FA
 7. Create middleware.ts — reads hostname, maps to schoolSlug, sets x-school-slug header. localhost fallback: ?school= query param.
 
@@ -872,7 +874,7 @@ Create these 13 models with full schemas, indexes, timestamps:
 3. Page — schoolId+slug (compound unique index), title (String), content (String — rich HTML), featuredImage, seo: { metaTitle, metaDescription }, isPublished, updatedBy (ref User)
 4. Person — schoolId, role (enum: director, chairman, principal), name, designation, bio (string — rich text), photo, qualifications, order, isActive
 5. News — schoolId, title, slug (unique per school), content (rich HTML), category (enum: announcement, event, tour), featuredImage, images [], isPublished, publishedAt
-6. Gallery — schoolId, image, order, isPublished
+6. Gallery — schoolId, type (enum: image, video), image, videoUrl, order, isPublished
 7. Topper — schoolId, image, order, isPublished
 8. AICU — schoolId, title, description (rich text), services [{name, description, icon}], images [], schedule, isActive
 9. Admission — schoolId, studentName, parentName, phone, email, class, dob, gender, address, previousSchool, documents [{name, url}], status (enum: pending/reviewed/accepted/rejected), appliedAt, reviewedBy, reviewedAt
@@ -899,10 +901,12 @@ Build admin authentication for the APS Fatehpur CMS.
    - withAuth(handler, allowedRoles?) — HOC wrapping API handlers, verifies JWT, optional role check
    - withSchoolScope(handler) — ensures user can only access their school's data (superadmin exempt)
 4. Seed script (scripts/seed.ts):
-   - Create 5 School documents matching config/schools.ts
+   - Create 5 School documents matching config/schools.ts (including apsfatehpur as the group school)
    - Create 1 superadmin (admin@apsfatehpur.com)
    - Create 1 school_admin per school
    - Create default CMS Page documents for each school with placeholder content for these slugs: about, fees, bus-routes, calendar, uniforms, curriculum, affiliation, rte, career-counseling, facilities, tours, highlights, awards, infrastructure
+   - For the apsfatehpur (group) school: create Topper, Gallery, News, and Page documents so the group landing page has CMS-managed content
+   - Group site uses same models (Topper, Gallery, News, Page) scoped by apsfatehpur schoolId
 5. Password: bcryptjs, 12 rounds. NEVER return passwordHash in responses.
 6. Error format: { success: false, error: "message" }
     </div>
@@ -924,7 +928,7 @@ ROUTES:
    This is the CORE CMS endpoint.
 4. /api/persons — GET by schoolId+role (public), POST/PUT/DELETE (admin)
 5. /api/news — GET (paginated, filter by category), GET by slug, POST/PUT/DELETE (admin)
-6. /api/gallery — GET (paginated), POST image URL, PUT, DELETE (admin)
+6. /api/gallery — GET (paginated, filter by type: image|video), POST image/video URL, PUT, DELETE (admin)
 7. /api/toppers — GET (paginated), POST image URL, PUT/DELETE (admin)
 8. /api/aicu — GET by schoolId, POST/PUT (admin)
 9. /api/admissions — POST (public: submit), GET (admin: list by status), PUT (admin: update status)
@@ -990,7 +994,7 @@ UI Reference: spslosal.com layout structure, but modernized with premium design 
    madrasa: primary #047857 (Emerald), primary-dark #022c22
    azadschool: primary #ea580c (Orange), primary-dark #431407
 
-3. Header — TWO-ROW design (components/school/Header.tsx):
+3. Header — TWO-ROW design (components/layout/Header.tsx):
    ROW 1 — Top Info Bar:
    - Thin bar (40px height), dark bg (--primary-dark)
    - Left: phone + email with icons (13px, white)
@@ -1011,7 +1015,7 @@ UI Reference: spslosal.com layout structure, but modernized with premium design 
    - Sticky: on scroll, top bar hides, navbar gets subtle shadow, becomes sticky
    - Mobile: hamburger icon → slide-out sheet (shadcn Sheet) with accordion nav groups
 
-4. Footer — Dark, 4-column layout (components/school/Footer.tsx):
+4. Footer — Dark, 4-column layout (components/layout/Footer.tsx):
    - Dark background using --primary-dark
    - 4 columns: (1) Logo + school name + short description + social icons in circles, (2) Quick Links, (3) Academics links, (4) Contact info (phone, email, address, map link)
    - Social icons: circular, white border, fill on hover with brand colors
@@ -1035,11 +1039,27 @@ UI Reference: spslosal.com layout structure, but modernized with premium design 
 Build the Home Page — visually impressive, premium school website. All content fetched from backend CMS.
 UI reference: spslosal.com structure but with modern, premium design. See UI/UX section for exact visual specs.
 
+IMPORTANT: app/page.tsx checks the current school slug:
+- If slug === "apsfatehpur" → render GroupLanding component (full standalone page, no Header/Footer from layout)
+- Otherwise → render the school home page with all sections below
+
+GROUP LANDING PAGE (components/home/GroupLanding.tsx):
+- Self-contained page with its own nav, hero, content, and footer (layout.tsx hides Header/Footer for group site)
+- GroupNav: sticky transparent navbar → white on scroll, hamburger on mobile, logo + "APS Fatehpur" text
+- HeroSlider: 3+ slides with hero images, auto-play 5s, dark overlay, CTA buttons
+- AboutSection: Welfare Society history (fetched from Page slug="about" with schoolId=apsfatehpur)
+- BranchesSection: 4 flip-cards (front: building image, back: logo + "Visit" button linking to school subdomain)
+- ToppersSection: auto-scrolling carousel of topper images with lightbox (fetched from /api/toppers with x-school-slug: apsfatehpur)
+- GallerySection: filter tabs (All / Photos / Videos), 4-column grid with lightbox. Videos show YouTube iframe in lightbox, images show full preview. Data from /api/gallery with x-school-slug: apsfatehpur
+- GroupFooter: dark, 3 columns (about, branch links, contact info), copyright bar
+- All content CMS-driven via the "apsfatehpur" schoolId — admin manages group content in CMS panel
+
+SCHOOL HOME PAGE (for apsgirls, apsboys, madrasa, azadschool):
 Sections (each is a SEPARATE reusable component, in this order):
 
-1. Hero Slider (components/school/HeroSlider.tsx):
+1. Hero Slider (components/home/HeroCarousel.tsx):
    - Full viewport width, 85vh height
-   - Background images from Gallery where category="hero" (3-5 slides)
+   - Background images from Gallery (3-5 slides)
    - Dark gradient overlay: linear-gradient from rgba(0,0,0,0.7) left to rgba(0,0,0,0.2) right
    - Content LEFT-ALIGNED (not centered): school welcome text (48-64px heading, white), subtitle (18px)
    - TWO CTA buttons: "Apply Now" (filled, --primary bg) + "Explore More" (outlined, white border)
@@ -1047,14 +1067,14 @@ Sections (each is a SEPARATE reusable component, in this order):
    - Dot indicators at bottom center
    - Responsive: single CTA on mobile, smaller text
 
-2. Announcement Ticker (components/school/AnnouncementTicker.tsx):
+2. Announcement Ticker (components/home/RunningNotice.tsx):
    - Full-width bar, bg: --primary (bold colored)
    - Left: "📢 Latest" label, static white text
    - Right: smooth infinite horizontal scroll of latest 5 News titles
    - Items are links (click → /news/[slug]), white text, separated by " | "
    - Pause on hover
 
-3. Welcome Section (components/school/WelcomeSection.tsx):
+3. Welcome Section (components/home/AboutSnippet.tsx):
    - Two columns (40% image, 60% text) on white background
    - Left: Director/school photo (rounded-xl, shadow-lg) from Person or Gallery
    - Right: Section heading "Welcome to [School Name]" with colored underline bar (40px)
@@ -1063,7 +1083,7 @@ Sections (each is a SEPARATE reusable component, in this order):
    - "Read More →" link button
    - Padding: 80px vertical
 
-4. Quick Stats Bar (components/school/StatsBar.tsx):
+4. Quick Stats Bar (components/home/QuickStats.tsx):
    - Full-width, bg: --primary gradient (--primary → --primary-dark)
    - 4 stats in a row: Students, Teachers, Years, Awards
    - Icons above each number (lucide-react: GraduationCap, Users, Calendar, Trophy)
@@ -1071,7 +1091,7 @@ Sections (each is a SEPARATE reusable component, in this order):
    - Numbers: 48px, bold 800, --accent-yellow (#F4D21F). Labels: 14px, white. Padding: 60px vertical
    - Data from school.stats in config
 
-5. Highlights / Why Choose Us (components/school/Highlights.tsx):
+5. Highlights / Why Choose Us (components/home/FeaturesGrid.tsx):
    - Section bg: --bg-light (#F5F7FA)
    - Heading: "Why Choose Us" centered with underline accent
    - 4 cards in a row (responsive grid)
@@ -1081,38 +1101,39 @@ Sections (each is a SEPARATE reusable component, in this order):
    - Hover: translateY(-6px) + shadow-lg, 300ms transition
    - Content from Page slug="highlights" or hardcoded
 
-6. Top Rankers (components/school/TopRankers.tsx):
+6. Top Rankers (components/home/ToppersCarousel.tsx):
    - Heading: "Our Top Achievers" with underline accent
-   - Horizontal scrollable row (or grid) of top 5 Topper cards
-   - Circular student photo (120px, 3px border in --primary)
-   - Name bold, class + % below, exam name muted
-   - Top 3 get gold/silver/bronze badge ribbon
-   - Data from GET /api/toppers?limit=5&sort=-percentage
+   - Horizontal auto-scrolling carousel of topper result images
+   - Each card: image-only (result card photo), rounded-xl, shadow
+   - Click: lightbox modal (full-screen preview)
+   - Data from GET /api/toppers?limit=10
+   - Model is image-only — no student name/class/rank fields
 
-7. AICU Banner (components/school/AICUBanner.tsx):
+7. AICU Banner (components/home/PrincipalMessage.tsx or dedicated AICUBanner):
    - Full-width, bg: --primary-dark or dark gradient with pattern
    - White text, title + description, "Learn More" outlined button → /aicu
    - Content from GET /api/aicu
 
-8. Photo Gallery Preview (components/school/GalleryPreview.tsx):
+8. Photo Gallery Preview (components/home/GalleryPreview.tsx):
    - 4-column grid (8 photos), square/4:3 ratio, rounded-lg
    - Hover: dark overlay + zoom icon + scale(1.05), 300ms
    - Click: lightbox modal (full preview)
    - "View All Gallery →" button below (outlined, centered)
-   - Data from GET /api/gallery?type=photo&limit=8
+   - Data from GET /api/gallery?limit=8
+   - Model supports images + YouTube videos (type, image, videoUrl)
 
-9. Latest News (components/school/LatestNews.tsx):
+9. Latest News (components/home/NewsEvents.tsx):
    - 3 cards in a row (responsive grid)
    - Card: image top (16:10, object-cover, rounded top), date + category badge, title (18px semibold, 2-line clamp), excerpt (14px muted, 3-line clamp), "Read More →"
    - Hover: image zoom(1.05), card lift
    - Data from GET /api/news?limit=3
 
-10. Testimonials (components/school/Testimonials.tsx):
+10. Testimonials (components/home/TestimonialsSlider.tsx):
     - Alumni quote carousel, auto-rotate
     - Quote text in large italic, alumni name + batch below, photo circle
     - Data from GET /api/alumni?isApproved=true&limit=5
 
-11. CTA Banner (components/school/CTABanner.tsx):
+11. CTA Banner (components/home/CTABanner.tsx):
     - Full-width, bg: --primary gradient
     - "Admissions Open for [Year]" large white heading
     - "Apply Now" large CTA button (white bg, --primary text)
@@ -1128,25 +1149,23 @@ Smooth scroll-reveal animations on section enter (framer-motion or Intersection 
 
 Build About and Structure pages. Most are CMS-rendered.
 
-First, create a reusable CmsPage component:
-- Takes slug prop
-- Fetches Page content from /api/pages?slug=X&amp;school=Y (server-side)
-- Renders: PageBanner (title, breadcrumb) + rich HTML content (dangerouslySetInnerHTML with DOMPurify sanitization)
-- Shows "Content coming soon..." if page not found
+First, create reusable shared components (components/shared/):
+- CmsPage: Takes slug prop, fetches Page content from /api/pages?slug=X&amp;school=Y (server-side), renders PageBanner + rich HTML (sanitized). Shows "Coming soon" if not found.
+- PersonPage: Takes role prop, fetches Person from /api/persons?role=X, renders photo + name + designation + bio layout.
 
 ABOUT PAGES:
 1. /about — CmsPage slug="about"
-2. /about/director — Fetch Person role="director" → photo, name, designation, bio
-3. /about/chairman — Same, role="chairman"
-4. /about/principal — Same, role="principal"
-5. /about/infrastructure — CmsPage slug="infrastructure" + Gallery category="infrastructure"
+2. /about/director — PersonPage role="director" → photo, name, designation, bio
+3. /about/chairman — PersonPage role="chairman"
+4. /about/principal — PersonPage role="principal"
+5. /about/infrastructure — CmsPage slug="infrastructure"
 
 STRUCTURE PAGES (all CMS):
 6. /structure/uniforms — CmsPage slug="uniforms"
 7. /structure/bus-routes — CmsPage slug="bus-routes"
 8. /structure/calendar — CmsPage slug="calendar"
 9. /structure/career-counseling — CmsPage slug="career-counseling"
-10. /structure/awards — CmsPage slug="awards" + Gallery category="awards"
+10. /structure/awards — CmsPage slug="awards"
 
 Every page: PageBanner, SSR, school-scoped, responsive.
     </div>
@@ -1167,7 +1186,7 @@ ACADEMY (all CMS pages using CmsPage component):
 5. /academy/fees — CmsPage slug="fees" (admin writes fee table in rich text editor, renders as HTML)
 
 FACILITIES:
-6. /facilities — CmsPage slug="facilities" + Gallery grid where category="facilities" (photo cards with lightbox)
+6. /facilities — CmsPage slug="facilities" + Gallery image grid (lightbox)
 
 AICU:
 7. /aicu — Custom layout: hero, description (rich text from AICU model), services grid (icon cards), schedule, photo gallery, CTA → /contact
@@ -1184,8 +1203,9 @@ All pages: PageBanner, SSR, school-scoped.
 1. /news — Listing: filter tabs (All, Announcements, Events, Tours), card grid, pagination. GET /api/news
 2. /news/[slug] — Single article: rich text, featured image, date, category badge, related news
 3. /news/tours — CmsPage slug="tours"
-4. /news/videos — Video gallery: YouTube embeds grid. GET /api/gallery?type=video
-5. /toppers — Year filter dropdown, card grid (photo, name, class, rank, %), top 3 highlighted, expandable subject marks. GET /api/toppers
+4. /news/videos — CmsPage slug="videos" OR gallery listing filtered by type=video (YouTube embeds in lightbox)
+5. /toppers — Image gallery: auto-scrolling carousel of topper result images with lightbox. GET /api/toppers
+   Model is image-only — no year filter, no student details. Admin uploads result card images.
 
 SSR with revalidate: 3600, responsive.
     </div>
@@ -1263,10 +1283,15 @@ Admin Pages:
    - DataTable + Create/Edit (title, rich text, category, images, publish)
 
 3. GALLERY (/admin/gallery):
-   - Grid view, drag-drop upload, set title + category + type, reorder, delete
+   - Grid view of uploaded images and videos, drag-drop upload via Cloudinary
+   - Set type (image/video), image thumbnail, YouTube embed URL for videos
+   - Set order, toggle published, delete
+   - Model: type (image|video), image URL, videoUrl (YouTube embed), order, isPublished
 
 4. TOPPERS (/admin/toppers):
-   - DataTable + Create/Edit (all fields, photo, dynamic subject rows)
+   - Grid view of topper result card images, upload via Cloudinary
+   - Set order, toggle published, delete
+   - Model: image-only (image URL, order, isPublished)
 
 5. AICU (/admin/aicu):
    - Edit: title, description (rich text), services list, images, schedule
@@ -1361,7 +1386,7 @@ Pages using this pattern:
     <div class="card">
         <div class="card-title">CmsPage Component (the reusable pattern)</div>
         <pre>
-// components/school/CmsPage.tsx
+// components/shared/CmsPage.tsx
 export default async function CmsPage({ slug, schoolSlug }) {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_SITE_URL}/api/pages?slug=${slug}&amp;school=${schoolSlug}`,
@@ -1495,13 +1520,13 @@ export async function GET(request: Request) {
             <tr><td>azadschool.in</td><td>D1-B4-P1</td><td>✅ External domain mapping</td></tr>
             <tr><td>DNS + SSL</td><td>D2-B5-P1</td><td>✅ Vercel auto-SSL</td></tr>
             <tr><td colspan="3" style="background:#1a2744;color:var(--accent);font-weight:700;">Website Pages</td></tr>
-            <tr><td>Home Page</td><td>D1-B6-P1</td><td>✅ 11 dynamic sections</td></tr>
+            <tr><td>Home Page</td><td>D1-B6-P1</td><td>✅ 11 dynamic sections (school) + Group Landing (apsfatehpur)</td></tr>
             <tr><td>About (mission, director, chairman, principal, infrastructure)</td><td>D1-B6-P2</td><td>✅ CMS + Person model</td></tr>
             <tr><td>Structure (uniforms, bus routes, calendar, counseling, awards)</td><td>D1-B6-P2</td><td>✅ CMS pages</td></tr>
             <tr><td>Academy (admissions, curriculum, affiliation, RTE, fees)</td><td>D2-B1-P1</td><td>✅ CMS pages (fees = rich text)</td></tr>
             <tr><td>Facilities + galleries</td><td>D2-B1-P1</td><td>✅ CMS + Gallery</td></tr>
             <tr><td>News &amp; Media</td><td>D2-B2-P1</td><td>✅ News model + video gallery</td></tr>
-            <tr><td>Top Rank Students</td><td>D2-B2-P1</td><td>✅ Topper model</td></tr>
+            <tr><td>Top Rank Students</td><td>D2-B2-P1</td><td>✅ Topper model (image-only carousel with lightbox)</td></tr>
             <tr><td>AICU</td><td>D2-B1-P1</td><td>✅ AICU model</td></tr>
             <tr><td>Contact + enquiry form</td><td>D2-B3-P1</td><td>✅ Enquiry model</td></tr>
             <tr><td>Alumni</td><td>D2-B3-P1</td><td>✅ Alumni model</td></tr>
@@ -1510,11 +1535,11 @@ export async function GET(request: Request) {
             <tr><td colspan="3" style="background:#1a2744;color:var(--accent);font-weight:700;">Customization</td></tr>
             <tr><td>Unique design per school</td><td>D1-B5-P1</td><td>✅ 5 themes via CSS vars</td></tr>
             <tr><td>Custom tabs/links</td><td>D1-B5-P1</td><td>✅ Config-driven nav</td></tr>
-            <tr><td>Photo/video galleries</td><td>D2-B2-P1</td><td>✅ Gallery + Cloudinary</td></tr>
+            <tr><td>Photo/video galleries</td><td>D2-B2-P1</td><td>✅ Gallery (image + YouTube video) + Cloudinary</td></tr>
             <tr><td colspan="3" style="background:#1a2744;color:var(--accent);font-weight:700;">Admin / CMS</td></tr>
             <tr><td>Centralized admin panel</td><td>D2-B4</td><td>✅ /admin routes</td></tr>
             <tr><td>User management</td><td>D2-B4-P2</td><td>✅ CRUD + roles</td></tr>
-            <tr><td>CMS (manage all content)</td><td>D2-B4-P2</td><td>✅ Rich text page editor</td></tr>
+            <tr><td>CMS (manage all content)</td><td>D2-B4-P2</td><td>✅ Rich text page editor + group site CMS</td></tr>
             <tr><td>Security</td><td>D2-B5-P1</td><td>✅ JWT, rate limit, headers</td></tr>
         </tbody>
     </table>
@@ -1588,7 +1613,7 @@ shadcn/ui: button card dialog table
 </div>
 
 <footer>
-    <p>APS Fatehpur Developer Guide v2.0 — CMS-Driven, English Only, Content Managed from Backend</p>
+    <p>APS Fatehpur Developer Guide v3.0 — CMS-Driven, English Only, Content Managed from Backend (including Group Landing Page)</p>
     <p style="margin-top:6px;">Next.js 14 · Node.js · MongoDB · Tailwind CSS · Cloudinary · Centralized Admin CMS</p>
 </footer>
 
