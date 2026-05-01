@@ -20,10 +20,12 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   // Hide Header/Footer when showing group landing:
   // - On production: slug is "apsfatehpur" (hostname-based)
   // - On localhost: root path "/" without ?school= param
+  // Also hide for admin panel routes
   const isRootPath = pathname === "/";
-  const hideChrome = isLocalhost
+  const isAdminRoute = pathname.startsWith("/admin");
+  const hideChrome = isAdminRoute || (isLocalhost
     ? isRootPath && !schoolParam
-    : slug === "apsfatehpur";
+    : slug === "apsfatehpur");
 
   return (
     <>
