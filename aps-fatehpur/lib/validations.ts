@@ -42,7 +42,9 @@ export const newsUpdateSchema = newsCreateSchema.partial();
 
 // ── Gallery ──
 export const galleryCreateSchema = z.object({
+  type: z.enum(["image", "video"]).optional().default("image"),
   image: z.string().min(1),
+  videoUrl: z.string().url().optional(),
   order: z.number().int().optional().default(0),
   isPublished: z.boolean().optional().default(true),
 });

@@ -14,16 +14,29 @@ export function middleware(request: NextRequest) {
   const host = request.headers.get("host") || "";
   let slug = SCHOOL_MAP[host];
 
-  // Localhost fallback: use ?school= query param
+  // Localhost fallback: use ?school= query param, then existing cookie for inner pages, then default
   if (!slug && host.includes("localhost")) {
-    slug = request.nextUrl.searchParams.get("school") || "apsfatehpur";
+    const paramSchool = request.nextUrl.searchParams.get("school");
+    const isRootPath = request.nextUrl.pathname === "/";
+
+    if (paramSchool) {
+      // Explicit ?school= param always wins
+      slug = paramSchool;
+    } else if (isRootPath) {
+      // Root path without ?school= → always show group landing
+      slug = "apsfatehpur";
+    } else {
+      // Inner pages → preserve school from cookie
+      slug = request.cookies.get("school-slug")?.value || "apsfatehpur";
+    }
   }
 
+  const finalSlug = slug || "apsfatehpur";
   const response = NextResponse.next();
-  response.headers.set("x-school-slug", slug || "apsfatehpur");
+  response.headers.set("x-school-slug", finalSlug);
 
   // Set cookie so client components can read it
-  response.cookies.set("school-slug", slug || "apsfatehpur", {
+  response.cookies.set("school-slug", finalSlug, {
     path: "/",
     httpOnly: false,
     sameSite: "lax",
