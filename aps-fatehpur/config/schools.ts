@@ -55,12 +55,12 @@ export const schools: SchoolConfig[] = [
     slug: "apsgirls",
     domain: "apsgirls.apsfatehpur.com",
     theme: {
-      primary: "#6b21a8",
-      primaryDark: "#3b0764",
+      primary: "#3FA34D",
+      primaryDark: "#2d7a38",
       ...sharedAccents,
     },
-    logo: "/logos/apsgirls.png",
-    favicon: "/favicons/apsgirls.ico",
+    logo: "/logos/apsfatehpur.png",
+    favicon: "/favicons/apsfatehpur.ico",
     features: [
       "home", "about", "structure", "academy", "facilities",
       "news", "toppers", "aicu", "alumni", "careers", "contact", "apply",
@@ -72,12 +72,12 @@ export const schools: SchoolConfig[] = [
     slug: "apsboys",
     domain: "apsboys.apsfatehpur.com",
     theme: {
-      primary: "#1e40af",
-      primaryDark: "#172554",
+      primary: "#3FA34D",
+      primaryDark: "#2d7a38",
       ...sharedAccents,
     },
-    logo: "/logos/apsboys.png",
-    favicon: "/favicons/apsboys.ico",
+    logo: "/logos/apsfatehpur.png",
+    favicon: "/favicons/apsfatehpur.ico",
     features: [
       "home", "about", "structure", "academy", "facilities",
       "news", "toppers", "aicu", "alumni", "careers", "contact", "apply",
