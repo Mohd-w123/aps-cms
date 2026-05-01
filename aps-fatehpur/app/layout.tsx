@@ -5,8 +5,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { getSchoolBySlug } from "@/config/schools";
 import { SchoolProvider } from "@/hooks/useSchool";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { LayoutShell } from "@/components/layout/LayoutShell";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -33,7 +32,6 @@ export default function RootLayout({
   const slug = headersList.get("x-school-slug") || "apsfatehpur";
   const school = getSchoolBySlug(slug);
   const theme = school?.theme;
-  const isGroupSite = slug === "apsfatehpur";
 
   return (
     <html lang="en" className={cn("font-sans", inter.variable)}>
@@ -55,9 +53,7 @@ export default function RootLayout({
         }
       >
         <SchoolProvider>
-          {!isGroupSite && <Header />}
-          <main className="min-h-screen">{children}</main>
-          {!isGroupSite && <Footer />}
+          <LayoutShell>{children}</LayoutShell>
         </SchoolProvider>
       </body>
     </html>
