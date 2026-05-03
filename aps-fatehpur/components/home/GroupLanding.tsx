@@ -135,10 +135,10 @@ function GroupNav({ groupName }: { groupName: string }) {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? "bg-white shadow-md" : "bg-transparent"
+        scrolled || mobileOpen ? "bg-white shadow-md" : "bg-transparent"
       }`}
     >
-      <div className="container mx-auto px-4 flex items-center justify-between h-16">
+      <div className="container mx-auto px-4 flex items-center justify-between h-14 md:h-16">
         {/* Logo + Name */}
         <Link href="#home" className="flex items-center gap-3">
           <Image
@@ -149,8 +149,8 @@ function GroupNav({ groupName }: { groupName: string }) {
             className="rounded-full"
           />
           <span
-            className={`font-bold text-sm md:text-base transition-colors ${
-              scrolled ? "text-gray-900" : "text-white"
+            className={`font-bold text-xs md:text-base transition-colors ${
+              scrolled || mobileOpen ? "text-gray-900" : "text-white"
             }`}
           >
             {groupName}
@@ -175,7 +175,7 @@ function GroupNav({ groupName }: { groupName: string }) {
         {/* Mobile hamburger */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className={`md:hidden ${scrolled ? "text-gray-900" : "text-white"}`}
+          className={`md:hidden ${scrolled || mobileOpen ? "text-gray-900" : "text-white"}`}
         >
           {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
@@ -214,7 +214,7 @@ function HeroSlider({ slides }: { slides: SlideData[] }) {
   const slide = slides[current];
 
   return (
-    <section id="home" className="relative h-[85vh] overflow-hidden">
+    <section id="home" className="relative h-[60vh] md:h-[85vh] overflow-hidden">
       <div
         className="absolute inset-0 transition-all duration-700"
         style={{
@@ -367,6 +367,11 @@ function BranchesSection({ branches }: { branches: BranchCard[] }) {
 
 function FlipCard({ school }: { school: BranchCard }) {
   const [flipped, setFlipped] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  useEffect(() => {
+    setIsTouchDevice("ontouchstart" in window || navigator.maxTouchPoints > 0);
+  }, []);
 
   const handleVisit = () => {
     if (school.websiteUrl) {
@@ -382,12 +387,12 @@ function FlipCard({ school }: { school: BranchCard }) {
     <div
       className="group cursor-pointer"
       style={{ perspective: "1000px" }}
-      onMouseEnter={() => setFlipped(true)}
-      onMouseLeave={() => setFlipped(false)}
+      onMouseEnter={() => { if (!isTouchDevice) setFlipped(true); }}
+      onMouseLeave={() => { if (!isTouchDevice) setFlipped(false); }}
       onClick={() => setFlipped(!flipped)}
     >
       <div
-        className="relative w-full h-72 transition-transform duration-700"
+        className="relative w-full h-56 sm:h-64 md:h-72 transition-transform duration-700"
         style={{
           transformStyle: "preserve-3d",
           transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
