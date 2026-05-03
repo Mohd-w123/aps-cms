@@ -376,7 +376,7 @@ function FlipCard({ school }: { school: BranchCard }) {
   const handleVisit = () => {
     if (school.websiteUrl) {
       window.location.href = school.websiteUrl;
-    } else if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+    } else if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname.includes("vercel.app"))) {
       window.location.href = `/?school=${school.slug}`;
     } else {
       window.location.href = `https://${school.domain}`;
@@ -755,7 +755,7 @@ function GroupFooter({ branches, contactInfo, groupName }: { branches: BranchCar
                   <a
                     href={`https://${school.domain}`}
                     onClick={(e) => {
-                      if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+                      if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname.includes("vercel.app"))) {
                         e.preventDefault();
                         window.location.href = `/?school=${school.slug}`;
                       }
