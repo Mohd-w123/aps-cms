@@ -14,8 +14,8 @@ export function middleware(request: NextRequest) {
   const host = request.headers.get("host") || "";
   let slug = SCHOOL_MAP[host];
 
-  // Localhost fallback: use ?school= query param, then existing cookie for inner pages, then default
-  if (!slug && host.includes("localhost")) {
+  // Localhost/Vercel fallback: use ?school= query param, then existing cookie for inner pages, then default
+  if (!slug && (host.includes("localhost") || host.includes("vercel.app"))) {
     const paramSchool = request.nextUrl.searchParams.get("school");
     const isRootPath = request.nextUrl.pathname === "/";
 
