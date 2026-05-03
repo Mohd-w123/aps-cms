@@ -1,10 +1,32 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { Quote } from "lucide-react";
 
+interface PersonData {
+  name: string; designation: string; bio: string; photo?: string;
+}
+
 export function PrincipalMessage() {
+  const [person, setPerson] = useState<PersonData>({
+    name: "Nazneen Bano",
+    designation: "Principal",
+    bio: "<p>&ldquo;Education is not just about academics — it is about building character, instilling values, and preparing young minds to face the challenges of tomorrow. At our school, every child is valued and nurtured to reach their fullest potential.&rdquo;</p><p>&ldquo;We believe in holistic development — academics, sports, arts, and community service — all play an integral role in shaping well-rounded individuals. I invite parents and students to join our family and experience a journey of growth and discovery.&rdquo;</p>",
+    photo: "/images/principal.jpg",
+  });
+
+  useEffect(() => {
+    fetch("/api/persons?role=principal")
+      .then(r => r.json())
+      .then(r => {
+        if (r.success && r.data?.length) {
+          const p = r.data[0];
+          setPerson({ name: p.name, designation: p.designation || "Principal", bio: p.bio || "", photo: p.photo || "/images/principal.jpg" });
+        }
+      })
+      .catch(() => {});
+  }, []);
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
@@ -14,8 +36,8 @@ export function PrincipalMessage() {
             <div className="flex flex-col items-center text-center">
               <div className="w-48 h-48 rounded-full overflow-hidden mb-4">
                 <Image
-                  src="/images/principal.jpg"
-                  alt="Nazneen Bano - Principal"
+                  src={person.photo || "/images/principal.jpg"}
+                  alt={`${person.name} - ${person.designation}`}
                   width={192}
                   height={192}
                   className="w-full h-full object-cover"
@@ -25,10 +47,10 @@ export function PrincipalMessage() {
                 className="font-bold text-lg"
                 style={{ color: "var(--text-dark)" }}
               >
-                Nazneen Bano
+                {person.name}
               </h3>
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                Principal
+                {person.designation}
               </p>
             </div>
 
@@ -42,27 +64,13 @@ export function PrincipalMessage() {
                 className="text-2xl md:text-3xl font-bold mb-4"
                 style={{ color: "var(--text-dark)" }}
               >
-                Principal&apos;s Message
+                {person.designation}&apos;s Message
               </h2>
-              <p
-                className="text-base leading-relaxed mb-4"
+              <div
+                className="text-base leading-relaxed prose prose-gray max-w-none"
                 style={{ color: "var(--text-muted)" }}
-              >
-                &ldquo;Education is not just about academics — it is about
-                building character, instilling values, and preparing young minds
-                to face the challenges of tomorrow. At our school, every child
-                is valued and nurtured to reach their fullest potential.&rdquo;
-              </p>
-              <p
-                className="text-base leading-relaxed"
-                style={{ color: "var(--text-muted)" }}
-              >
-                &ldquo;We believe in holistic development — academics, sports,
-                arts, and community service — all play an integral role in
-                shaping well-rounded individuals. I invite parents and students
-                to join our family and experience a journey of growth and
-                discovery.&rdquo;
-              </p>
+                dangerouslySetInnerHTML={{ __html: person.bio }}
+              />
             </div>
           </div>
         </div>

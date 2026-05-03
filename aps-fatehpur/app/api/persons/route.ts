@@ -39,8 +39,13 @@ export async function POST(request: NextRequest) {
       return errorResponse(parsed.error.issues.map((e) => e.message).join(", "));
     }
 
+    const schoolId = await getSchoolId(request) || payload.schoolId;
+    if (!canAccessSchool(payload, schoolId)) {
+      return errorResponse("Forbidden", 403);
+    }
+
     await connectDB();
-    const person = await Person.create({ ...parsed.data, schoolId: payload.schoolId });
+    const person = await Person.create({ ...parsed.data, schoolId });
     return successResponse(person, 201);
   } catch (error) {
     console.error("Persons POST error:", error);

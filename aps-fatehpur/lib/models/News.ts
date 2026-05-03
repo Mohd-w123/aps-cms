@@ -5,7 +5,7 @@ export interface INews extends Document {
   title: string;
   slug: string;
   content: string;
-  category: "announcement" | "event" | "tour";
+  category: "announcement" | "event" | "tour" | "notice";
   featuredImage?: string;
   images: string[];
   isPublished: boolean;
@@ -20,7 +20,7 @@ const NewsSchema = new Schema<INews>(
     content: { type: String, default: "" },
     category: {
       type: String,
-      enum: ["announcement", "event", "tour"],
+      enum: ["announcement", "event", "tour", "notice"],
       default: "announcement",
     },
     featuredImage: { type: String },

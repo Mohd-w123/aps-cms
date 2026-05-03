@@ -8,15 +8,20 @@ import { topperCreateSchema, topperUpdateSchema } from "@/lib/validations";
 // GET /api/toppers — public, paginated
 export async function GET(request: NextRequest) {
   try {
-    const schoolId = await getSchoolId(request);
-    if (!schoolId) return errorResponse("School not found", 404);
-
     const { searchParams } = new URL(request.url);
+    const scope = searchParams.get("scope");
     const { page, limit, skip } = parsePagination(searchParams);
 
     await connectDB();
 
-    const filter: Record<string, unknown> = { schoolId, isPublished: true };
+    const filter: Record<string, unknown> = { isPublished: true };
+
+    // scope=all → fetch from all schools (for group landing)
+    if (scope !== "all") {
+      const schoolId = await getSchoolId(request);
+      if (!schoolId) return errorResponse("School not found", 404);
+      filter.schoolId = schoolId;
+    }
 
     const [items, total] = await Promise.all([
       Topper.find(filter).sort({ order: 1 }).skip(skip).limit(limit),
@@ -39,11 +44,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = topperCreateSchema.safeParse(body);
     if (!parsed.success) {
-      return errorResponse(parsed.error.issues.map((e) => e.message).join(", "));
+      return errorResponse("Invalid input: " + parsed.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join(", "));
+    }
+
+    const schoolId = await getSchoolId(request) || payload.schoolId;
+    if (!canAccessSchool(payload, schoolId)) {
+      return errorResponse("Forbidden", 403);
     }
 
     await connectDB();
-    const topper = await Topper.create({ ...parsed.data, schoolId: payload.schoolId });
+    const topper = await Topper.create({ ...parsed.data, schoolId });
     return successResponse(topper, 201);
   } catch (error) {
     console.error("Toppers POST error:", error);

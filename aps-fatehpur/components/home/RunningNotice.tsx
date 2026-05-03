@@ -1,18 +1,24 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Megaphone } from "lucide-react";
 
-const notices = [
+const fallbackNotices = [
   "Admissions open for 2026-27 session — Apply before 31st May!",
   "Annual Sports Day on 15th May 2026 — All are welcome!",
   "Board exam results: 100% pass rate — Congratulations!",
-  "Summer vacation from 1st June to 30th June 2026.",
-  "Parent-Teacher meeting scheduled for 10th May 2026.",
 ];
 
 export function RunningNotice() {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [notices, setNotices] = useState<string[]>(fallbackNotices);
+
+  useEffect(() => {
+    fetch("/api/news?category=notice&limit=10")
+      .then(r => r.json())
+      .then(r => { if (r.success && r.data?.length) setNotices(r.data.map((n: { title: string }) => n.title)); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const el = scrollRef.current;

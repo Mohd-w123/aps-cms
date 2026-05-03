@@ -11,6 +11,7 @@ export { default as Enquiry } from "./Enquiry";
 export { default as Career } from "./Career";
 export { default as CareerApplication } from "./CareerApplication";
 export { default as Alumni } from "./Alumni";
+export { default as Slider } from "./Slider";
 
 export type { ISchool } from "./School";
 export type { IUser } from "./User";
@@ -25,3 +26,4 @@ export type { IEnquiry } from "./Enquiry";
 export type { ICareer } from "./Career";
 export type { ICareerApplication } from "./CareerApplication";
 export type { IAlumni } from "./Alumni";
+export type { ISlider } from "./Slider";

@@ -33,8 +33,13 @@ export async function POST(request: NextRequest) {
       return errorResponse(parsed.error.issues.map((e) => e.message).join(", "));
     }
 
+    const schoolId = await getSchoolId(request) || payload.schoolId;
+    if (!canAccessSchool(payload, schoolId)) {
+      return errorResponse("Forbidden", 403);
+    }
+
     await connectDB();
-    const aicu = await AICU.create({ ...parsed.data, schoolId: payload.schoolId });
+    const aicu = await AICU.create({ ...parsed.data, schoolId });
     return successResponse(aicu, 201);
   } catch (error) {
     console.error("AICU POST error:", error);

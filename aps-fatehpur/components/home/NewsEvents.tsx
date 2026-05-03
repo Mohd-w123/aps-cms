@@ -1,45 +1,35 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Calendar, ArrowRight } from "lucide-react";
 
-const newsItems = [
-  {
-    title: "Annual Sports Day 2026",
-    date: "May 15, 2026",
-    excerpt:
-      "Join us for a day of athletic excellence. Students from all sections will compete in various events.",
-    slug: "annual-sports-day-2026",
-    category: "Event",
-  },
-  {
-    title: "Board Exam Results Announced",
-    date: "April 20, 2026",
-    excerpt:
-      "Congratulations to our students for achieving 100% pass rate in CBSE board examinations.",
-    slug: "board-exam-results-2026",
-    category: "Announcement",
-  },
-  {
-    title: "Science Exhibition Winners",
-    date: "April 10, 2026",
-    excerpt:
-      "Students showcased innovative projects at the inter-school science exhibition and won multiple awards.",
-    slug: "science-exhibition-winners",
-    category: "Achievement",
-  },
-  {
-    title: "New Computer Lab Inaugurated",
-    date: "March 28, 2026",
-    excerpt:
-      "State-of-the-art computer lab with 40 workstations inaugurated by the education minister.",
-    slug: "new-computer-lab",
-    category: "News",
-  },
+interface NewsItem {
+  _id: string;
+  title: string;
+  slug: string;
+  category: string;
+  excerpt?: string;
+  publishedAt?: string;
+}
+
+const fallbackItems: NewsItem[] = [
+  { _id: "f1", title: "Annual Sports Day 2026", slug: "annual-sports-day-2026", category: "Event", excerpt: "Join us for a day of athletic excellence.", publishedAt: "2026-05-15" },
+  { _id: "f2", title: "Board Exam Results Announced", slug: "board-exam-results-2026", category: "Announcement", excerpt: "Congratulations to our students for 100% pass rate.", publishedAt: "2026-04-20" },
+  { _id: "f3", title: "Science Exhibition Winners", slug: "science-exhibition-winners", category: "Achievement", excerpt: "Students showcased innovative projects.", publishedAt: "2026-04-10" },
+  { _id: "f4", title: "New Computer Lab Inaugurated", slug: "new-computer-lab", category: "News", excerpt: "State-of-the-art computer lab with 40 workstations.", publishedAt: "2026-03-28" },
 ];
 
 export function NewsEvents() {
+  const [items, setItems] = useState<NewsItem[]>(fallbackItems);
+
+  useEffect(() => {
+    fetch("/api/news?limit=4")
+      .then(r => r.json())
+      .then(r => { if (r.success && r.data?.length) setItems(r.data); })
+      .catch(() => {});
+  }, []);
+
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
@@ -70,9 +60,9 @@ export function NewsEvents() {
 
         {/* News Grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {newsItems.map((item) => (
+          {items.map((item) => (
             <article
-              key={item.slug}
+              key={item._id}
               className="group rounded-xl border bg-white shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 overflow-hidden"
             >
               {/* Category header */}
@@ -85,7 +75,7 @@ export function NewsEvents() {
               <div className="p-5">
                 <div className="flex items-center gap-1.5 text-xs mb-3" style={{ color: "var(--text-muted)" }}>
                   <Calendar className="h-3.5 w-3.5" />
-                  {item.date}
+                  {item.publishedAt ? new Date(item.publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : ""}
                 </div>
                 <h3
                   className="font-semibold text-base mb-2 line-clamp-2"

@@ -4,37 +4,34 @@ import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-const slides = [
-  {
-    image: "/images/hero-1.jpg",
-    title: "Welcome to Excellence in Education",
-    subtitle: "Nurturing minds, building futures since 1995",
-    cta: { label: "Apply Now", href: "/academy/admissions" },
-  },
-  {
-    image: "/images/hero-2.jpg",
-    title: "State-of-the-Art Infrastructure",
-    subtitle: "Modern classrooms, labs, and sports facilities",
-    cta: { label: "View Facilities", href: "/facilities" },
-  },
-  {
-    image: "/images/hero-3.jpg",
-    title: "100% Board Results Every Year",
-    subtitle: "Our students consistently achieve top ranks",
-    cta: { label: "Meet Our Toppers", href: "/toppers" },
-  },
+interface Slide {
+  _id: string; image: string; title: string; subtitle: string; ctaLabel?: string; ctaLink?: string;
+}
+
+const fallbackSlides: Slide[] = [
+  { _id: "f1", image: "/images/hero-1.jpg", title: "Welcome to Excellence in Education", subtitle: "Nurturing minds, building futures since 1995", ctaLabel: "Apply Now", ctaLink: "/academy/admissions" },
+  { _id: "f2", image: "/images/hero-2.jpg", title: "State-of-the-Art Infrastructure", subtitle: "Modern classrooms, labs, and sports facilities", ctaLabel: "View Facilities", ctaLink: "/facilities" },
+  { _id: "f3", image: "/images/hero-3.jpg", title: "100% Board Results Every Year", subtitle: "Our students consistently achieve top ranks", ctaLabel: "Meet Our Toppers", ctaLink: "/toppers" },
 ];
 
 export function HeroCarousel() {
+  const [slides, setSlides] = useState<Slide[]>(fallbackSlides);
   const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/sliders?scope=school&limit=10")
+      .then(r => r.json())
+      .then(r => { if (r.success && r.data?.length) setSlides(r.data); })
+      .catch(() => {});
+  }, []);
 
   const next = useCallback(
     () => setCurrent((c) => (c + 1) % slides.length),
-    []
+    [slides.length]
   );
   const prev = useCallback(
     () => setCurrent((c) => (c - 1 + slides.length) % slides.length),
-    []
+    [slides.length]
   );
 
   useEffect(() => {
@@ -68,16 +65,18 @@ export function HeroCarousel() {
             <p className="text-lg md:text-xl opacity-90 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
               {slide.subtitle}
             </p>
-            <Link
-              href={slide.cta.href}
-              className="inline-block rounded-full px-8 py-3 font-semibold text-base transition-transform hover:scale-105"
-              style={{
-                backgroundColor: "var(--accent-yellow)",
-                color: "var(--school-primary)",
-              }}
-            >
-              {slide.cta.label}
-            </Link>
+            {slide.ctaLabel && slide.ctaLink && (
+              <Link
+                href={slide.ctaLink}
+                className="inline-block rounded-full px-8 py-3 font-semibold text-base transition-transform hover:scale-105"
+                style={{
+                  backgroundColor: "var(--accent-yellow)",
+                  color: "var(--school-primary)",
+                }}
+              >
+                {slide.ctaLabel}
+              </Link>
+            )}
           </div>
         </div>
       </div>

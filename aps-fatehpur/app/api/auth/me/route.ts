@@ -8,7 +8,15 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse();
     }
 
-    return Response.json({ success: true, data: { user } });
+    const userObj = user.toJSON();
+    // Add schoolSlug from populated schoolId
+    const schoolDoc = user.schoolId as unknown as { slug?: string; _id?: unknown };
+    if (schoolDoc && typeof schoolDoc === "object" && "slug" in schoolDoc) {
+      userObj.schoolSlug = schoolDoc.slug;
+      userObj.schoolId = (schoolDoc._id || userObj.schoolId)?.toString();
+    }
+
+    return Response.json({ success: true, data: { user: userObj } });
   } catch (error) {
     console.error("Auth me error:", error);
     return Response.json(
