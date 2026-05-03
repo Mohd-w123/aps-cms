@@ -5,6 +5,7 @@ import React, { useState, useEffect, useCallback, useContext, createContext } fr
 interface AuthUser {
   _id: string;
   schoolId: string;
+  schoolSlug?: string;
   name: string;
   email: string;
   role: "superadmin" | "school_admin" | "editor";

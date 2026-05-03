@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSchool } from "@/hooks/useSchool";
 import { PageBanner } from "@/components/layout/PageBanner";
 import {
@@ -28,6 +28,43 @@ export default function ContactPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+
+  const [contactInfo, setContactInfo] = useState({
+    address: "",
+    phone: "",
+    email: "",
+    mapEmbed: "",
+    officeHours: "",
+  });
+  const [socialLinks, setSocialLinks] = useState({ facebook: "", instagram: "", youtube: "" });
+
+  useEffect(() => {
+    fetch("/api/schools")
+      .then(r => r.json())
+      .then(r => {
+        if (r.success) {
+          const list = Array.isArray(r.data) ? r.data : [r.data];
+          const school = list.find((s: { slug: string }) => s.slug === schoolSlug) || list[0];
+          if (school?.contactInfo) {
+            setContactInfo(prev => ({
+              address: school.contactInfo.address || prev.address,
+              phone: school.contactInfo.phone || prev.phone,
+              email: school.contactInfo.email || prev.email,
+              mapEmbed: school.contactInfo.mapEmbed || prev.mapEmbed,
+              officeHours: school.contactInfo.officeHours || prev.officeHours,
+            }));
+          }
+          if (school?.socialLinks) {
+            setSocialLinks(prev => ({
+              facebook: school.socialLinks.facebook || prev.facebook,
+              instagram: school.socialLinks.instagram || prev.instagram,
+              youtube: school.socialLinks.youtube || prev.youtube,
+            }));
+          }
+        }
+      })
+      .catch(() => {});
+  }, [schoolSlug]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -73,10 +110,10 @@ export default function ContactPage() {
           {/* Contact info cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
             {[
-              { icon: MapPin, label: "Address", value: "Fatehpur Shekhawati, Rajasthan, India" },
-              { icon: Phone, label: "Phone", value: "+91-XXXX-XXXXXX" },
-              { icon: Mail, label: "Email", value: "info@apsfatehpur.com" },
-              { icon: Clock, label: "Office Hours", value: "Mon - Sat: 8:00 AM - 3:00 PM" },
+              { icon: MapPin, label: "Address", value: contactInfo.address },
+              { icon: Phone, label: "Phone", value: contactInfo.phone },
+              { icon: Mail, label: "Email", value: contactInfo.email },
+              { icon: Clock, label: "Office Hours", value: contactInfo.officeHours || "Contact for hours" },
             ].map((item, i) => (
               <div
                 key={i}
@@ -102,7 +139,7 @@ export default function ContactPage() {
             {/* Google Maps */}
             <div className="rounded-xl overflow-hidden shadow-sm border border-gray-100 h-[400px] lg:h-auto">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d28288.2!2d75.05!3d27.98!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x396b9f4c7c3e0001%3A0x1!2sFatehpur%20Shekhawati!5e0!3m2!1sen!2sin!4v1"
+                src={contactInfo.mapEmbed || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d28288.2!2d75.05!3d27.98!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x396b9f4c7c3e0001%3A0x1!2sFatehpur%20Shekhawati!5e0!3m2!1sen!2sin!4v1"}
                 width="100%"
                 height="100%"
                 style={{ border: 0, minHeight: "400px" }}
@@ -214,9 +251,9 @@ export default function ContactPage() {
             </h3>
             <div className="flex justify-center gap-4">
               {[
-                { label: "Facebook", href: "#", path: "M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" },
-                { label: "Instagram", href: "#", path: "M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37zM17.5 6.5h.01M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9a5.5 5.5 0 0 1-5.5 5.5h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2z" },
-                { label: "YouTube", href: "#", path: "M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33zM9.75 15.02V8.48l5.75 3.27-5.75 3.27z" },
+                { label: "Facebook", href: socialLinks.facebook || "#", path: "M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" },
+                { label: "Instagram", href: socialLinks.instagram || "#", path: "M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37zM17.5 6.5h.01M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9a5.5 5.5 0 0 1-5.5 5.5h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2z" },
+                { label: "YouTube", href: socialLinks.youtube || "#", path: "M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33zM9.75 15.02V8.48l5.75 3.27-5.75 3.27z" },
               ].map((social, i) => (
                 <a
                   key={i}

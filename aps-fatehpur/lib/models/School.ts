@@ -7,6 +7,11 @@ export interface ISchool extends Document {
   subdomain?: string;
   logo: string;
   favicon: string;
+  cardImage?: string;
+  cardBgColor?: string;
+  websiteUrl?: string;
+  description?: string;
+  tagline?: string;
   theme: {
     primaryColor: string;
     secondaryColor: string;
@@ -17,6 +22,7 @@ export interface ISchool extends Document {
     email: string;
     address: string;
     mapEmbed?: string;
+    officeHours?: string;
   };
   socialLinks: {
     facebook?: string;
@@ -41,6 +47,11 @@ const SchoolSchema = new Schema<ISchool>(
     subdomain: { type: String },
     logo: { type: String, default: "" },
     favicon: { type: String, default: "" },
+    cardImage: { type: String, default: "" },
+    cardBgColor: { type: String, default: "" },
+    websiteUrl: { type: String, default: "" },
+    description: { type: String, default: "" },
+    tagline: { type: String, default: "" },
     theme: {
       primaryColor: { type: String, default: "#2F3E8F" },
       secondaryColor: { type: String, default: "#1a2556" },
@@ -51,6 +62,7 @@ const SchoolSchema = new Schema<ISchool>(
       email: { type: String, default: "" },
       address: { type: String, default: "" },
       mapEmbed: { type: String },
+      officeHours: { type: String, default: "" },
     },
     socialLinks: {
       facebook: { type: String },

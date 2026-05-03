@@ -32,10 +32,16 @@ export function middleware(request: NextRequest) {
   }
 
   const finalSlug = slug || "apsfatehpur";
-  const response = NextResponse.next();
-  response.headers.set("x-school-slug", finalSlug);
 
-  // Set cookie so client components can read it
+  // Set the slug as a REQUEST header so API route handlers can read it
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-school-slug", finalSlug);
+
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+
+  // Set cookie so client components and subsequent requests can read it
   response.cookies.set("school-slug", finalSlug, {
     path: "/",
     httpOnly: false,

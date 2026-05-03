@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Users, GraduationCap, Award, BookOpen } from "lucide-react";
 
-const stats = [
+const defaultStats = [
   { icon: Users, label: "Students", target: 3500, suffix: "+" },
   { icon: GraduationCap, label: "Teachers", target: 180, suffix: "+" },
   { icon: Award, label: "Years of Excellence", target: 30, suffix: "+" },
@@ -62,6 +62,26 @@ function StatCard({
 export function QuickStats() {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
+  const [stats, setStats] = useState(defaultStats);
+
+  useEffect(() => {
+    fetch("/api/schools")
+      .then(r => r.json())
+      .then(r => {
+        if (r.success) {
+          const school = Array.isArray(r.data) ? r.data[0] : r.data;
+          if (school?.stats) {
+            setStats([
+              { icon: Users, label: "Students", target: school.stats.students || 3500, suffix: "+" },
+              { icon: GraduationCap, label: "Teachers", target: school.stats.teachers || 180, suffix: "+" },
+              { icon: Award, label: "Years of Excellence", target: school.stats.years || 30, suffix: "+" },
+              { icon: BookOpen, label: "Board Results", target: 100, suffix: "%" },
+            ]);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const el = ref.current;

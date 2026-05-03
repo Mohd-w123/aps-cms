@@ -34,7 +34,7 @@ const sharedAccents = {
 export const schools: SchoolConfig[] = [
   {
     id: "apsfatehpur",
-    name: "APS Girls School Fatehpur",
+    name: "APS Fatehpur (Group)",
     slug: "apsfatehpur",
     domain: "apsfatehpur.com",
     theme: {

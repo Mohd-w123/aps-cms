@@ -2,7 +2,12 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface ITopper extends Document {
   schoolId: Types.ObjectId;
-  image: string;
+  name: string;
+  photo: string;
+  percentage: number;
+  year: string;
+  exam: string;
+  rank: number;
   order: number;
   isPublished: boolean;
 }
@@ -10,7 +15,12 @@ export interface ITopper extends Document {
 const TopperSchema = new Schema<ITopper>(
   {
     schoolId: { type: Schema.Types.ObjectId, ref: "School", required: true, index: true },
-    image: { type: String, required: true },
+    name: { type: String, required: true },
+    photo: { type: String, default: "" },
+    percentage: { type: Number, default: 0 },
+    year: { type: String, default: "" },
+    exam: { type: String, default: "Board" },
+    rank: { type: Number, default: 1 },
     order: { type: Number, default: 0 },
     isPublished: { type: Boolean, default: true },
   },

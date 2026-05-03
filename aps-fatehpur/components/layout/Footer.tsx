@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Phone,
@@ -33,6 +33,25 @@ const academicLinks = [
 export function Footer() {
   const { school } = useSchool();
   const year = new Date().getFullYear();
+  const [contactInfo, setContactInfo] = useState({ phone: "", email: "", address: "" });
+  const [socialLinks, setSocialLinks] = useState({ facebook: "", instagram: "", youtube: "", twitter: "" });
+  const [description, setDescription] = useState("");
+
+  useEffect(() => {
+    fetch("/api/schools")
+      .then(r => r.json())
+      .then(r => {
+        if (r.success && r.data?.length) {
+          const arr = Array.isArray(r.data) ? r.data : [r.data];
+          const slug = document.cookie.match(/school-slug=([^;]+)/)?.[1] || "apsfatehpur";
+          const s = arr.find((sc: { slug: string }) => sc.slug === slug) || arr[0];
+          if (s?.contactInfo) setContactInfo({ phone: s.contactInfo.phone || "", email: s.contactInfo.email || "", address: s.contactInfo.address || "" });
+          if (s?.socialLinks) setSocialLinks({ facebook: s.socialLinks.facebook || "", instagram: s.socialLinks.instagram || "", youtube: s.socialLinks.youtube || "", twitter: s.socialLinks.twitter || "" });
+          if (s?.description) setDescription(s.description);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <footer className="bg-gray-900 text-gray-300">
@@ -47,28 +66,32 @@ export function Footer() {
                 {school?.name || "APS Fatehpur"}
               </h3>
             </div>
-            <p className="text-sm leading-relaxed mb-4">
-              Committed to nurturing young minds with academic excellence,
-              moral values, and holistic development since 1995.
-            </p>
+            {description && (
+              <p className="text-sm leading-relaxed mb-4">
+                {description}
+              </p>
+            )}
             <div className="flex gap-3">
-              {[
-                { icon: Globe, href: "#", label: "Facebook" },
-                { icon: ExternalLink, href: "#", label: "Twitter" },
-                { icon: Globe, href: "#", label: "Instagram" },
-                { icon: ExternalLink, href: "#", label: "YouTube" },
-              ].map(({ icon: Icon, href, label }, i) => (
-                <a
-                  key={i}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                >
-                  <Icon className="h-4 w-4" />
+              {socialLinks.facebook && (
+                <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                  <Globe className="h-4 w-4" />
                 </a>
-              ))}
+              )}
+              {socialLinks.instagram && (
+                <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                  <Globe className="h-4 w-4" />
+                </a>
+              )}
+              {socialLinks.youtube && (
+                <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              )}
+              {socialLinks.twitter && (
+                <a href={socialLinks.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              )}
             </div>
           </div>
 
@@ -116,18 +139,24 @@ export function Footer() {
               Contact Us
             </h4>
             <ul className="space-y-3 text-sm">
-              <li className="flex items-start gap-2.5">
-                <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                <span>APS SCHOOL, FATEHPUR, SIKAR.-332301</span>
-              </li>
-              <li className="flex items-center gap-2.5">
-                <Phone className="h-4 w-4 shrink-0" />
-                <span>+91 7023190190</span>
-              </li>
-              <li className="flex items-center gap-2.5">
-                <Mail className="h-4 w-4 shrink-0" />
-                <span>info@apsfatehpur.com</span>
-              </li>
+              {contactInfo.address && (
+                <li className="flex items-start gap-2.5">
+                  <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
+                  <span>{contactInfo.address}</span>
+                </li>
+              )}
+              {contactInfo.phone && (
+                <li className="flex items-center gap-2.5">
+                  <Phone className="h-4 w-4 shrink-0" />
+                  <span>{contactInfo.phone}</span>
+                </li>
+              )}
+              {contactInfo.email && (
+                <li className="flex items-center gap-2.5">
+                  <Mail className="h-4 w-4 shrink-0" />
+                  <span>{contactInfo.email}</span>
+                </li>
+              )}
             </ul>
           </div>
         </div>

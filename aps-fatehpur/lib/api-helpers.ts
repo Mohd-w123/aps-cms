@@ -1,12 +1,33 @@
 import { NextRequest } from "next/server";
 import connectDB from "@/lib/db";
 import School from "@/lib/models/School";
+import { getAuthPayload } from "@/lib/auth";
 
 /**
- * Get schoolId from the x-school-slug header (set by middleware).
- * Returns the MongoDB _id for the school.
+ * Get schoolId for a request.
+ * Priority:
+ *  1. ?school=slug query param — allows admin panel to target a specific school
+ *  2. Auth token schoolId — for authenticated admin requests to their own school
+ *  3. x-school-slug header (set by middleware) — for public pages
  */
 export async function getSchoolId(request: NextRequest): Promise<string | null> {
+  const { searchParams } = new URL(request.url);
+  const schoolParam = searchParams.get("school");
+
+  // If explicit school slug is provided, resolve it
+  if (schoolParam) {
+    await connectDB();
+    const school = await School.findOne({ slug: schoolParam, isActive: true }).select("_id");
+    return school?._id?.toString() || null;
+  }
+
+  // For authenticated requests, use JWT schoolId
+  const authPayload = getAuthPayload(request);
+  if (authPayload?.schoolId) {
+    return authPayload.schoolId;
+  }
+
+  // Public request fallback: resolve from middleware header
   const slug = request.headers.get("x-school-slug");
   if (!slug) return null;
   await connectDB();

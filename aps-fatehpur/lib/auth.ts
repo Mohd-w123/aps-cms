@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import connectDB from "@/lib/db";
 import User, { IUser } from "@/lib/models/User";
+import "@/lib/models/School"; // ensure School model is registered for populate
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 const SALT_ROUNDS = 12;
@@ -46,7 +47,7 @@ export async function getAuthUser(request: NextRequest): Promise<IUser | null> {
   const payload = getAuthPayload(request);
   if (!payload) return null;
   await connectDB();
-  const user = await User.findById(payload.userId).select("-passwordHash");
+  const user = await User.findById(payload.userId).select("-passwordHash").populate("schoolId", "slug name");
   if (!user || !user.isActive) return null;
   return user;
 }

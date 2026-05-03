@@ -8,15 +8,20 @@ import { galleryCreateSchema, galleryUpdateSchema } from "@/lib/validations";
 // GET /api/gallery — public, paginated
 export async function GET(request: NextRequest) {
   try {
-    const schoolId = await getSchoolId(request);
-    if (!schoolId) return errorResponse("School not found", 404);
-
     const { searchParams } = new URL(request.url);
+    const scope = searchParams.get("scope");
     const { page, limit, skip } = parsePagination(searchParams);
 
     await connectDB();
 
-    const filter: Record<string, unknown> = { schoolId, isPublished: true };
+    const filter: Record<string, unknown> = { isPublished: true };
+
+    // scope=all → fetch from all schools (for group landing)
+    if (scope !== "all") {
+      const schoolId = await getSchoolId(request);
+      if (!schoolId) return errorResponse("School not found", 404);
+      filter.schoolId = schoolId;
+    }
 
     const type = searchParams.get("type");
     if (type === "image" || type === "video") filter.type = type;
@@ -45,8 +50,13 @@ export async function POST(request: NextRequest) {
       return errorResponse(parsed.error.issues.map((e) => e.message).join(", "));
     }
 
+    const schoolId = await getSchoolId(request) || payload.schoolId;
+    if (!canAccessSchool(payload, schoolId)) {
+      return errorResponse("Forbidden", 403);
+    }
+
     await connectDB();
-    const gallery = await Gallery.create({ ...parsed.data, schoolId: payload.schoolId });
+    const gallery = await Gallery.create({ ...parsed.data, schoolId });
     return successResponse(gallery, 201);
   } catch (error) {
     console.error("Gallery POST error:", error);

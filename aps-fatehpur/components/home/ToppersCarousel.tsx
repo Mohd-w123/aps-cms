@@ -5,21 +5,36 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, X, ChevronLeft, ChevronRight } from "lucide-react";
 
-const toppers = [
-  "/images/toppers/topper-1.jpg",
-  "/images/toppers/topper-2.jpg",
-  "/images/toppers/topper-3.jpg",
-  "/images/toppers/topper-4.jpg",
-  "/images/toppers/topper-5.jpg",
-  "/images/toppers/topper-6.jpg",
-  "/images/toppers/topper-7.jpg",
-  "/images/toppers/topper-8.jpg",
-  "/images/toppers/topper-9.jpg",
+interface TopperData {
+  _id: string;
+  name: string;
+  photo?: string;
+  percentage?: number;
+  year?: string;
+  exam?: string;
+  rank?: number;
+}
+
+const fallbackToppers: TopperData[] = [
+  { _id: "f1", name: "Topper 1", photo: "/images/toppers/topper-1.jpg" },
+  { _id: "f2", name: "Topper 2", photo: "/images/toppers/topper-2.jpg" },
+  { _id: "f3", name: "Topper 3", photo: "/images/toppers/topper-3.jpg" },
+  { _id: "f4", name: "Topper 4", photo: "/images/toppers/topper-4.jpg" },
+  { _id: "f5", name: "Topper 5", photo: "/images/toppers/topper-5.jpg" },
+  { _id: "f6", name: "Topper 6", photo: "/images/toppers/topper-6.jpg" },
 ];
 
 export function ToppersCarousel() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [toppers, setToppers] = useState<TopperData[]>(fallbackToppers);
+
+  useEffect(() => {
+    fetch("/api/toppers?limit=20")
+      .then(r => r.json())
+      .then(r => { if (r.success && r.data?.length) setToppers(r.data); })
+      .catch(() => {});
+  }, []);
 
   // Auto-scroll left continuously
   useEffect(() => {
@@ -69,19 +84,29 @@ export function ToppersCarousel() {
           className="flex gap-5 overflow-x-auto scrollbar-hide pb-2"
           style={{ scrollbarWidth: "none" }}
         >
-          {toppers.map((src, i) => (
+          {toppers.map((t, i) => (
             <div
-              key={i}
+              key={t._id}
               className="flex-shrink-0 w-56 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer"
               onClick={() => openLightbox(i)}
             >
-              <Image
-                src={src}
-                alt={`Topper ${i + 1}`}
-                width={224}
-                height={300}
-                className="w-full h-auto object-contain"
-              />
+              {t.photo ? (
+                <Image
+                  src={t.photo}
+                  alt={t.name}
+                  width={224}
+                  height={300}
+                  className="w-full h-auto object-contain"
+                />
+              ) : (
+                <div className="w-full h-[300px] bg-gray-100 flex items-center justify-center">
+                  <span className="text-4xl font-bold text-gray-300">{t.name?.charAt(0)}</span>
+                </div>
+              )}
+              <div className="p-2 text-center bg-white">
+                <p className="text-sm font-semibold text-gray-900 truncate">{t.name}</p>
+                {t.percentage && <p className="text-xs text-gray-500">{t.percentage}%{t.year ? ` • ${t.year}` : ""}</p>}
+              </div>
             </div>
           ))}
         </div>
@@ -129,12 +154,16 @@ export function ToppersCarousel() {
             onClick={(e) => e.stopPropagation()}
           >
             <Image
-              src={toppers[lightboxIndex]}
-              alt={`Topper ${lightboxIndex + 1}`}
+              src={toppers[lightboxIndex].photo || "/images/toppers/topper-1.jpg"}
+              alt={toppers[lightboxIndex].name}
               width={800}
               height={1000}
               className="max-h-[85vh] w-auto object-contain rounded-lg"
             />
+            <p className="text-center text-white text-sm mt-3">
+              {toppers[lightboxIndex].name}
+              {toppers[lightboxIndex].percentage ? ` — ${toppers[lightboxIndex].percentage}%` : ""}
+            </p>
           </div>
         </div>
       )}

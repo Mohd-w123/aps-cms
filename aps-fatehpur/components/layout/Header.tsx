@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -21,6 +21,30 @@ export function Header() {
   const pathname = usePathname();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [contactInfo, setContactInfo] = useState({ phone: "", email: "", address: "" });
+  const [tagline, setTagline] = useState("");
+
+  useEffect(() => {
+    fetch("/api/schools")
+      .then(r => r.json())
+      .then(r => {
+        if (r.success && r.data?.length) {
+          const arr = Array.isArray(r.data) ? r.data : [r.data];
+          // Find current school by slug from cookie
+          const slug = document.cookie.match(/school-slug=([^;]+)/)?.[1] || "apsfatehpur";
+          const s = arr.find((sc: { slug: string }) => sc.slug === slug) || arr[0];
+          if (s?.contactInfo) {
+            setContactInfo({
+              phone: s.contactInfo.phone || "",
+              email: s.contactInfo.email || "",
+              address: s.contactInfo.address || "",
+            });
+          }
+          if (s?.tagline) setTagline(s.tagline);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -36,19 +60,25 @@ export function Header() {
       >
         <div className="container mx-auto flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-6">
-            <span className="flex items-center gap-1.5">
-              <Phone className="h-3.5 w-3.5" />
-              +91 7023190190
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Mail className="h-3.5 w-3.5" />
-              info@apsfatehpur.com
-            </span>
+            {contactInfo.phone && (
+              <span className="flex items-center gap-1.5">
+                <Phone className="h-3.5 w-3.5" />
+                {contactInfo.phone}
+              </span>
+            )}
+            {contactInfo.email && (
+              <span className="flex items-center gap-1.5">
+                <Mail className="h-3.5 w-3.5" />
+                {contactInfo.email}
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-1.5">
-            <MapPin className="h-3.5 w-3.5" />
-            APS SCHOOL, FATEHPUR, SIKAR.-332301
-          </div>
+          {contactInfo.address && (
+            <div className="flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5" />
+              {contactInfo.address}
+            </div>
+          )}
         </div>
       </div>
 
@@ -75,7 +105,7 @@ export function Header() {
               <p className="font-bold text-lg leading-tight">
                 {school?.name || "APS Fatehpur"}
               </p>
-              <p className="text-xs opacity-80">Excellence in Education</p>
+              <p className="text-xs opacity-80">{tagline || school?.name || ""}</p>
             </div>
           </Link>
 

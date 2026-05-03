@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import connectDB from "@/lib/db";
 import User from "@/lib/models/User";
+import "@/lib/models/School"; // ensure School model is registered for populate
 import { comparePassword, signToken } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
@@ -45,8 +46,16 @@ export async function POST(request: NextRequest) {
       role: user.role,
     });
 
-    // Return user without passwordHash
+    // Populate school to get slug
+    await user.populate("schoolId", "slug name");
+
+    // Return user without passwordHash, add schoolSlug
     const userObj = user.toJSON();
+    const schoolDoc = user.schoolId as unknown as { slug?: string; _id?: unknown };
+    if (schoolDoc && typeof schoolDoc === "object" && "slug" in schoolDoc) {
+      userObj.schoolSlug = schoolDoc.slug;
+      userObj.schoolId = (schoolDoc._id || userObj.schoolId)?.toString();
+    }
 
     const response = Response.json(
       { success: true, data: { token, user: userObj } },

@@ -44,7 +44,15 @@ export async function POST(request: NextRequest) {
       return errorResponse(parsed.error.issues.map((e) => e.message).join(", "));
     }
 
-    const data: Record<string, unknown> = { ...parsed.data, schoolId: payload.schoolId };
+    const schoolId = await getSchoolId(request) || payload.schoolId;
+    if (!canAccessSchool(payload, schoolId)) {
+      return errorResponse("Forbidden", 403);
+    }
+
+    const data: Record<string, unknown> = { ...parsed.data, schoolId };
+    if (!data.slug) {
+      data.slug = parsed.data.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Date.now();
+    }
     if (parsed.data.isPublished && !parsed.data.publishedAt) {
       data.publishedAt = new Date();
     }

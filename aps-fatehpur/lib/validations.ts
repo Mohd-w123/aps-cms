@@ -30,9 +30,9 @@ export const personUpdateSchema = personSchema.partial();
 // ── News ──
 export const newsCreateSchema = z.object({
   title: z.string().min(1).max(500),
-  slug: z.string().min(1).max(200),
+  slug: z.string().max(200).optional().default(""),
   content: z.string().optional().default(""),
-  category: z.enum(["announcement", "event", "tour"]).optional().default("announcement"),
+  category: z.enum(["announcement", "event", "tour", "notice"]).optional().default("announcement"),
   featuredImage: z.string().optional().or(z.literal("")),
   images: z.array(z.string()).optional().default([]),
   isPublished: z.boolean().optional().default(false),
@@ -43,7 +43,9 @@ export const newsUpdateSchema = newsCreateSchema.partial();
 // ── Gallery ──
 export const galleryCreateSchema = z.object({
   type: z.enum(["image", "video"]).optional().default("image"),
+  category: z.string().optional().default("general"),
   image: z.string().min(1),
+  title: z.string().optional().default(""),
   videoUrl: z.string().url().optional(),
   order: z.number().int().optional().default(0),
   isPublished: z.boolean().optional().default(true),
@@ -52,7 +54,12 @@ export const galleryUpdateSchema = galleryCreateSchema.partial();
 
 // ── Toppers ──
 export const topperCreateSchema = z.object({
-  image: z.string().min(1),
+  name: z.string().min(1),
+  photo: z.string().optional().default(""),
+  percentage: z.number().optional().default(0),
+  year: z.string().optional().default(""),
+  exam: z.string().optional().default("Board"),
+  rank: z.number().int().optional().default(1),
   order: z.number().int().optional().default(0),
   isPublished: z.boolean().optional().default(true),
 });
@@ -159,11 +166,29 @@ export const userUpdateSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+// ── Sliders ──
+export const sliderCreateSchema = z.object({
+  image: z.string().min(1),
+  title: z.string().min(1).max(500),
+  subtitle: z.string().max(500).optional().default(""),
+  ctaLabel: z.string().max(100).optional(),
+  ctaLink: z.string().max(500).optional(),
+  order: z.number().int().optional().default(0),
+  isPublished: z.boolean().optional().default(true),
+  scope: z.enum(["school", "group"]).optional().default("school"),
+});
+export const sliderUpdateSchema = sliderCreateSchema.partial();
+
 // ── Schools ──
 export const schoolUpdateSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   logo: z.string().optional(),
   favicon: z.string().optional(),
+  cardImage: z.string().optional(),
+  cardBgColor: z.string().optional(),
+  websiteUrl: z.string().optional(),
+  description: z.string().optional(),
+  tagline: z.string().optional(),
   theme: z.object({
     primaryColor: z.string().optional(),
     secondaryColor: z.string().optional(),
@@ -174,6 +199,7 @@ export const schoolUpdateSchema = z.object({
     email: z.string().optional(),
     address: z.string().optional(),
     mapEmbed: z.string().optional(),
+    officeHours: z.string().optional(),
   }).optional(),
   socialLinks: z.object({
     facebook: z.string().optional(),

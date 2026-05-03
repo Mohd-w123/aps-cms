@@ -1,0 +1,137 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useAdminApi } from "@/hooks/useAdminApi";
+import { StatusBadge } from "@/components/admin/StatusBadge";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { FileUploader } from "@/components/admin/FileUploader";
+import { Plus, Pencil, Trash2, X, Loader2, Search } from "lucide-react";
+
+interface NewsItem {
+  _id: string; title: string; slug: string; content: string; category: string;
+  featuredImage?: string; images: string[]; isPublished: boolean; publishedAt?: string; updatedAt: string;
+}
+
+interface Form { title: string; slug: string; content: string; category: string; featuredImage: string; images: string[]; isPublished: boolean; publishedAt: string; }
+
+const empty: Form = { title: "", slug: "", content: "", category: "announcement", featuredImage: "", images: [], isPublished: false, publishedAt: "" };
+
+export default function AdminNewsPage() {
+  const api = useAdminApi();
+  const [items, setItems] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [form, setForm] = useState<Form>(empty);
+  const [saving, setSaving] = useState(false);
+  const [delId, setDelId] = useState<string | null>(null);
+
+  const load = async () => { const r = await api.get("/api/news?limit=100"); if (r.success) setItems(r.data); setLoading(false); };
+  useEffect(() => { if (api.token) load(); }, [api.token]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const doCreate = () => { setEditId(null); setForm(empty); setOpen(true); };
+  const doEdit = (n: NewsItem) => {
+    setEditId(n._id);
+    setForm({ title: n.title, slug: n.slug, content: n.content || "", category: n.category,
+      featuredImage: n.featuredImage || "", images: n.images || [], isPublished: n.isPublished,
+      publishedAt: n.publishedAt ? new Date(n.publishedAt).toISOString().slice(0, 16) : "" });
+    setOpen(true);
+  };
+  const close = () => { setOpen(false); setEditId(null); setForm(empty); };
+
+  const save = async () => {
+    setSaving(true);
+    const body = { ...form, publishedAt: form.publishedAt ? new Date(form.publishedAt).toISOString() : undefined };
+    const r = editId ? await api.put("/api/news", { id: editId, ...body }) : await api.post("/api/news", body);
+    if (r.success) { close(); load(); }
+    setSaving(false);
+  };
+
+  const remove = async () => { if (!delId) return; await api.del(`/api/news?id=${delId}`); setDelId(null); load(); };
+
+  const list = items.filter(n => n.title.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div><h2 className="text-2xl font-bold text-gray-900">News</h2><p className="text-sm text-gray-500 mt-1">Manage news & events</p></div>
+        <button onClick={doCreate} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700"><Plus className="h-4 w-4" /> Add News</button>
+      </div>
+
+      <div className="relative max-w-sm"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
+
+      {loading ? <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div> : (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b border-gray-200"><tr>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Title</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Category</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Published</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Date</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
+            </tr></thead>
+            <tbody className="divide-y divide-gray-100">
+              {list.map(n => (
+                <tr key={n._id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 font-medium text-gray-900 max-w-[200px] truncate">{n.title}</td>
+                  <td className="px-4 py-3"><StatusBadge status={n.category} /></td>
+                  <td className="px-4 py-3"><StatusBadge status={String(n.isPublished)} /></td>
+                  <td className="px-4 py-3 text-gray-500">{new Date(n.updatedAt).toLocaleDateString("en-IN")}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={() => doEdit(n)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500"><Pencil className="h-4 w-4" /></button>
+                    <button onClick={() => setDelId(n._id)} className="p-1.5 rounded hover:bg-gray-100 text-red-500 ml-1"><Trash2 className="h-4 w-4" /></button>
+                  </td>
+                </tr>))}
+              {list.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">No news found</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {open && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-3xl my-8">
+            <div className="flex items-center justify-between p-5 border-b">
+              <h3 className="text-lg font-bold text-gray-900">{editId ? "Edit News" : "Create News"}</h3>
+              <button onClick={close} className="p-1 rounded hover:bg-gray-100"><X className="h-5 w-5 text-gray-500" /></button>
+            </div>
+            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                  <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
+                <div><label className="block text-sm font-medium text-gray-700 mb-1">Slug *</label>
+                  <input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <option value="announcement">Announcement</option><option value="event">Event</option><option value="tour">Tour</option><option value="notice">Notice (Ticker)</option>
+                  </select></div>
+                <div><label className="block text-sm font-medium text-gray-700 mb-1">Publish Date</label>
+                  <input type="datetime-local" value={form.publishedAt} onChange={e => setForm(f => ({ ...f, publishedAt: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
+              </div>
+              <div><label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                <RichTextEditor value={form.content} onChange={v => setForm(f => ({ ...f, content: v }))} /></div>
+              <div><label className="block text-sm font-medium text-gray-700 mb-1">Featured Image</label>
+                <FileUploader value={form.featuredImage} onChange={url => setForm(f => ({ ...f, featuredImage: url }))} /></div>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={form.isPublished} onChange={e => setForm(f => ({ ...f, isPublished: e.target.checked }))} className="rounded border-gray-300" />
+                <span className="text-sm font-medium text-gray-700">Published</span>
+              </label>
+            </div>
+            <div className="flex justify-end gap-3 p-5 border-t">
+              <button onClick={close} className="px-4 py-2 rounded-lg border text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+              <button onClick={save} disabled={saving || !form.title || !form.slug} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2">
+                {saving && <Loader2 className="h-4 w-4 animate-spin" />}{editId ? "Update" : "Create"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ConfirmDialog open={!!delId} onOpenChange={() => setDelId(null)} title="Delete News" description="This will permanently delete this article." confirmLabel="Delete" onConfirm={remove} destructive />
+    </div>
+  );
+}

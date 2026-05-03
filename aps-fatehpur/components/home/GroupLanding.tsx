@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { schools } from "@/config/schools";
+import { schools as configSchools } from "@/config/schools";
 import {
   ChevronLeft,
   ChevronRight,
@@ -17,43 +17,19 @@ import {
   Play,
 } from "lucide-react";
 
-const branches = schools.filter((s) => s.slug !== "apsfatehpur");
+/* ── Fallbacks (used until API data loads) ── */
+const fallbackBranches = configSchools.filter((s) => s.slug !== "apsfatehpur");
 
-const slides = [
-  {
-    image: "/images/hero-1.jpg",
-    title: "Ashraful Uloom Educational & Welfare Society",
-    subtitle: "A legacy of educational excellence since 1940 — Fatehpur Shekhawati",
-  },
-  {
-    image: "/images/hero-2.jpg",
-    title: "Nurturing Minds, Building Futures",
-    subtitle: "Proudly nurturing over 1,500 young minds with 100% results year after year",
-  },
-  {
-    image: "/images/hero-3.jpg",
-    title: "Modern Education, Timeless Values",
-    subtitle: "A network of institutions offering education in Hindi, English, Urdu, and Arabic",
-  },
+const fallbackSlides = [
+  { _id: "f1", image: "/images/hero-1.jpg", title: "Ashraful Uloom Educational & Welfare Society", subtitle: "A legacy of educational excellence since 1940 — Fatehpur Shekhawati" },
+  { _id: "f2", image: "/images/hero-2.jpg", title: "Nurturing Minds, Building Futures", subtitle: "Proudly nurturing over 1,500 young minds with 100% results year after year" },
+  { _id: "f3", image: "/images/hero-3.jpg", title: "Modern Education, Timeless Values", subtitle: "A network of institutions offering education in Hindi, English, Urdu, and Arabic" },
 ];
 
-const branchImages: Record<string, string> = {
-  apsgirls: "/images/hero-1.jpg",
-  apsboys: "/images/hero-2.jpg",
-  madrasa: "/images/hero-3.jpg",
-  azadschool: "/images/hero-4.jpg",
-};
-
-const toppers = [
-  "/images/toppers/topper-1.jpg",
-  "/images/toppers/topper-2.jpg",
-  "/images/toppers/topper-3.jpg",
-  "/images/toppers/topper-4.jpg",
-  "/images/toppers/topper-5.jpg",
-  "/images/toppers/topper-6.jpg",
-  "/images/toppers/topper-7.jpg",
-  "/images/toppers/topper-8.jpg",
-  "/images/toppers/topper-9.jpg",
+const fallbackToppers = [
+  "/images/toppers/topper-1.jpg", "/images/toppers/topper-2.jpg", "/images/toppers/topper-3.jpg",
+  "/images/toppers/topper-4.jpg", "/images/toppers/topper-5.jpg", "/images/toppers/topper-6.jpg",
+  "/images/toppers/topper-7.jpg", "/images/toppers/topper-8.jpg", "/images/toppers/topper-9.jpg",
 ];
 
 const navLinks = [
@@ -66,22 +42,87 @@ const navLinks = [
 ];
 
 /* ───────────────────── GROUP LANDING ───────────────────── */
+interface SlideData { _id: string; image: string; title: string; subtitle: string; ctaLabel?: string; ctaLink?: string; }
+interface BranchData { slug: string; name: string; domain?: string; logo?: string; cardImage?: string; cardBgColor?: string; websiteUrl?: string; theme: { primaryColor?: string }; contactInfo?: { phone?: string; email?: string; address?: string }; isActive: boolean; }
+interface GalleryData { _id: string; type: string; image: string; videoUrl?: string; category?: string; title?: string; }
+
 export function GroupLanding() {
+  const [slides, setSlides] = useState<SlideData[]>(fallbackSlides);
+  const [branches, setBranches] = useState<BranchData[]>([]);
+  const [toppers, setToppers] = useState<string[]>(fallbackToppers);
+  const [gallery, setGallery] = useState<GalleryData[]>([]);
+  const [groupName, setGroupName] = useState("APS Group");
+  const [contactInfo, setContactInfo] = useState({ phone: "+91-XXXX-XXXXXX", email: "info@apsfatehpur.com", address: "Fatehpur Shekhawati, Rajasthan, India" });
+
+  useEffect(() => {
+    // Fetch sliders
+    fetch("/api/sliders?scope=group&limit=10").then(r => r.json())
+      .then(r => { if (r.success && r.data?.length) setSlides(r.data); }).catch(() => {});
+
+    // Fetch schools (branches)
+    fetch("/api/schools").then(r => r.json())
+      .then(r => {
+        if (r.success && r.data?.length) {
+          const list = Array.isArray(r.data) ? r.data : [r.data];
+          const branchList = list.filter((s: BranchData) => s.slug !== "apsfatehpur" && s.isActive);
+          if (branchList.length) setBranches(branchList);
+          // Get contact info from the group school
+          const group = list.find((s: BranchData) => s.slug === "apsfatehpur");
+          if (group?.name) setGroupName(group.name);
+          if (group?.contactInfo) {
+            setContactInfo({
+              phone: group.contactInfo.phone || "+91-XXXX-XXXXXX",
+              email: group.contactInfo.email || "info@apsfatehpur.com",
+              address: group.contactInfo.address || "Fatehpur Shekhawati, Rajasthan, India",
+            });
+          }
+        }
+      }).catch(() => {});
+
+    // Fetch toppers from ALL schools for group landing
+    fetch("/api/toppers?scope=all&limit=20").then(r => r.json())
+      .then(r => { if (r.success && r.data?.length) setToppers(r.data.map((t: { photo?: string; name?: string }) => t.photo || "/images/toppers/topper-1.jpg")); }).catch(() => {});
+
+    // Fetch gallery from ALL schools for group landing
+    fetch("/api/gallery?scope=all&limit=20").then(r => r.json())
+      .then(r => { if (r.success && r.data?.length) setGallery(r.data); }).catch(() => {});
+  }, []);
+
+  // Map DB branches to the format FlipCard expects, falling back to config
+  const branchCards = branches.length > 0
+    ? branches.map(b => {
+        const cfg = configSchools.find(c => c.slug === b.slug);
+        return {
+          slug: b.slug, name: b.name, domain: b.domain || cfg?.domain || "",
+          logo: b.logo || cfg?.logo || "/logos/apsfatehpur.png",
+          theme: { primary: b.theme?.primaryColor || cfg?.theme.primary || "#3FA34D" },
+          image: b.cardImage || (cfg ? `/images/hero-${configSchools.indexOf(cfg)}.jpg` : "/images/school-campus.jpg"),
+          cardBgColor: b.cardBgColor || "",
+          websiteUrl: b.websiteUrl || "",
+        };
+      })
+    : fallbackBranches.map(b => ({
+        slug: b.slug, name: b.name, domain: b.domain,
+        logo: b.logo, theme: { primary: b.theme.primary },
+        image: `/images/hero-${configSchools.indexOf(b)}.jpg`,
+        websiteUrl: "",
+      }));
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <GroupNav />
-      <HeroSlider />
+      <GroupNav groupName={groupName} />
+      <HeroSlider slides={slides} />
       <AboutSection />
-      <BranchesSection />
-      <ToppersSection />
-      <GallerySection />
-      <GroupFooter />
+      <BranchesSection branches={branchCards} />
+      <ToppersSection toppers={toppers} />
+      <GallerySection items={gallery} />
+      <GroupFooter branches={branchCards} contactInfo={contactInfo} groupName={groupName} />
     </div>
   );
 }
 
 /* ───────────────────── NAV ───────────────────── */
-function GroupNav() {
+function GroupNav({ groupName }: { groupName: string }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -112,7 +153,7 @@ function GroupNav() {
               scrolled ? "text-gray-900" : "text-white"
             }`}
           >
-            APS Fatehpur Group
+            {groupName}
           </span>
         </Link>
 
@@ -160,10 +201,10 @@ function GroupNav() {
 }
 
 /* ───────────────────── HERO SLIDER ───────────────────── */
-function HeroSlider() {
+function HeroSlider({ slides }: { slides: SlideData[] }) {
   const [current, setCurrent] = useState(0);
-  const next = useCallback(() => setCurrent((c) => (c + 1) % slides.length), []);
-  const prev = useCallback(() => setCurrent((c) => (c - 1 + slides.length) % slides.length), []);
+  const next = useCallback(() => setCurrent((c) => (c + 1) % slides.length), [slides.length]);
+  const prev = useCallback(() => setCurrent((c) => (c - 1 + slides.length) % slides.length), [slides.length]);
 
   useEffect(() => {
     const timer = setInterval(next, 5000);
@@ -240,13 +281,37 @@ function HeroSlider() {
 
 /* ───────────────────── ABOUT SECTION ───────────────────── */
 function AboutSection() {
+  const [title, setTitle] = useState("A Legacy of Educational Excellence");
+  const [content, setContent] = useState("");
+  const [image, setImage] = useState("/images/school-campus.jpg");
+  const [signoff, setSignoff] = useState("— Chairman, A.P.S School");
+
+  const defaultContent = `<p>Founded in 1940 in Fatehpur Shekhawati, Ashraful Uloom Educational and Welfare Society emerged as a beacon of hope, dedicated to fostering education within an Islamic atmosphere and ideology.</p><p>The journey began with the establishment of Madarsa Islamiya Ashraful Uloom. Recognizing the need for modern education, the society founded Maulana Azad Middle School in 1962, which grew into a senior secondary institution by 1974.</p><p>In 2006, the society established Ashraful Uloom Public School. Today, it proudly nurtures over 1,500 young minds, achieving a remarkable legacy of 100% results year after year.</p>`;
+
+  useEffect(() => {
+    fetch("/api/pages?slug=group-about&school=apsfatehpur")
+      .then(r => r.json())
+      .then(r => {
+        if (r.success && r.data) {
+          const p = r.data;
+          if (p.title) setTitle(p.title);
+          if (p.content) setContent(p.content);
+          if (p.featuredImage) setImage(p.featuredImage);
+          if (p.seo?.metaDescription) setSignoff(p.seo.metaDescription);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const displayContent = content || defaultContent;
+
   return (
     <section id="about" className="py-20 bg-white">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-lg">
             <Image
-              src="/images/school-campus.jpg"
+              src={image}
               alt="Campus"
               width={800}
               height={600}
@@ -258,26 +323,14 @@ function AboutSection() {
               About Us
             </p>
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900">
-              A Legacy of Educational Excellence
+              {title}
             </h2>
-            <p className="text-base leading-relaxed mb-4 text-gray-600">
-              Founded in 1940 in Fatehpur Shekhawati, Ashraful Uloom Educational
-              and Welfare Society emerged as a beacon of hope, dedicated to
-              fostering education within an Islamic atmosphere and ideology.
-            </p>
-            <p className="text-base leading-relaxed mb-4 text-gray-600">
-              The journey began with the establishment of Madarsa Islamiya
-              Ashraful Uloom. Recognizing the need for modern education, the
-              society founded Maulana Azad Middle School in 1962, which grew into
-              a senior secondary institution by 1974.
-            </p>
-            <p className="text-base leading-relaxed mb-4 text-gray-600">
-              In 2006, the society established Ashraful Uloom Public School.
-              Today, it proudly nurtures over 1,500 young minds, achieving a
-              remarkable legacy of 100% results year after year.
-            </p>
-            <p className="text-sm italic text-gray-500">
-              — Chairman, A.P.S School
+            <div
+              className="text-base leading-relaxed text-gray-600 space-y-4 [&>p]:mb-4"
+              dangerouslySetInnerHTML={{ __html: displayContent }}
+            />
+            <p className="text-sm italic text-gray-500 mt-4">
+              {signoff}
             </p>
           </div>
         </div>
@@ -287,7 +340,9 @@ function AboutSection() {
 }
 
 /* ───────────────────── BRANCHES (FLIP CARDS) ───────────────────── */
-function BranchesSection() {
+interface BranchCard { slug: string; name: string; domain: string; logo: string; theme: { primary: string }; image: string; cardBgColor?: string; websiteUrl?: string; }
+
+function BranchesSection({ branches }: { branches: BranchCard[] }) {
   return (
     <section id="branches" className="py-20" style={{ backgroundColor: "#f8fafc" }}>
       <div className="container mx-auto px-4">
@@ -310,11 +365,13 @@ function BranchesSection() {
   );
 }
 
-function FlipCard({ school }: { school: (typeof branches)[number] }) {
+function FlipCard({ school }: { school: BranchCard }) {
   const [flipped, setFlipped] = useState(false);
 
   const handleVisit = () => {
-    if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+    if (school.websiteUrl) {
+      window.location.href = school.websiteUrl;
+    } else if (typeof window !== "undefined" && window.location.hostname === "localhost") {
       window.location.href = `/?school=${school.slug}`;
     } else {
       window.location.href = `https://${school.domain}`;
@@ -339,10 +396,10 @@ function FlipCard({ school }: { school: (typeof branches)[number] }) {
         {/* Front — Building Image */}
         <div
           className="absolute inset-0 rounded-2xl overflow-hidden shadow-lg"
-          style={{ backfaceVisibility: "hidden" }}
+          style={{ backfaceVisibility: "hidden", backgroundColor: school.cardBgColor || undefined }}
         >
           <Image
-            src={branchImages[school.slug] || "/images/school-campus.jpg"}
+            src={school.image || "/images/school-campus.jpg"}
             alt={school.name}
             fill
             className="object-cover"
@@ -360,7 +417,7 @@ function FlipCard({ school }: { school: (typeof branches)[number] }) {
           style={{
             backfaceVisibility: "hidden",
             transform: "rotateY(180deg)",
-            backgroundColor: school.theme.primary,
+            backgroundColor: school.cardBgColor || school.theme.primary,
           }}
         >
           <Image
@@ -393,7 +450,7 @@ function FlipCard({ school }: { school: (typeof branches)[number] }) {
 }
 
 /* ───────────────────── TOPPERS ───────────────────── */
-function ToppersSection() {
+function ToppersSection({ toppers }: { toppers: string[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -506,29 +563,35 @@ function toEmbedUrl(url: string): string {
   return url;
 }
 
-type GalleryItem = {
-  type: "image" | "video";
+type GalleryItemLocal = {
+  type: string;
   src: string;
   videoUrl?: string;
   alt: string;
+  category: string;
 };
 
-const galleryItems: GalleryItem[] = [
-  { type: "image", src: "/images/gallery-3.jpg", alt: "School Event" },
-  { type: "image", src: "/images/gallery-4.jpg", alt: "Annual Function" },
-  { type: "video", src: "/images/gallery-5.jpg", videoUrl: "https://youtu.be/SeKI41D5kyk?si=1wKsNngee5Rdsr-q", alt: "School Promo Video" },
-  { type: "image", src: "/images/gallery-6.jpg", alt: "Classroom Activity" },
-  { type: "image", src: "/images/gallery-7.jpg", alt: "Sports Day" },
-  { type: "video", src: "/images/gallery-8.jpg", videoUrl: "https://youtu.be/SeKI41D5kyk?si=1wKsNngee5Rdsr-q", alt: "Campus Tour" },
-  { type: "image", src: "/images/gallery-9.jpg", alt: "Cultural Program" },
-  { type: "image", src: "/images/gallery-10.jpg", alt: "Award Ceremony" },
+const fallbackGallery: GalleryItemLocal[] = [
+  { type: "image", src: "/images/gallery-3.jpg", alt: "School Event", category: "event" },
+  { type: "image", src: "/images/gallery-4.jpg", alt: "Annual Function", category: "annual function" },
+  { type: "video", src: "/images/gallery-5.jpg", videoUrl: "https://youtu.be/SeKI41D5kyk?si=1wKsNngee5Rdsr-q", alt: "School Promo Video", category: "event" },
+  { type: "image", src: "/images/gallery-6.jpg", alt: "Classroom Activity", category: "classroom" },
+  { type: "image", src: "/images/gallery-7.jpg", alt: "Sports Day", category: "sports" },
+  { type: "video", src: "/images/gallery-8.jpg", videoUrl: "https://youtu.be/SeKI41D5kyk?si=1wKsNngee5Rdsr-q", alt: "Campus Tour", category: "general" },
+  { type: "image", src: "/images/gallery-9.jpg", alt: "Cultural Program", category: "cultural" },
+  { type: "image", src: "/images/gallery-10.jpg", alt: "Award Ceremony", category: "event" },
 ];
 
-function GallerySection() {
+function GallerySection({ items }: { items: GalleryData[] }) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [filter, setFilter] = useState<"all" | "image" | "video">("all");
+  const [catFilter, setCatFilter] = useState("all");
 
-  const filtered = filter === "all" ? galleryItems : galleryItems.filter((g) => g.type === filter);
+  const galleryItems: GalleryItemLocal[] = items.length > 0
+    ? items.map(g => ({ type: g.type, src: g.image, videoUrl: g.videoUrl, alt: g.title || "Gallery", category: g.category || "general" }))
+    : fallbackGallery;
+
+  const categories = ["all", ...Array.from(new Set(galleryItems.map(g => g.category)))];
+  const filtered = catFilter === "all" ? galleryItems : galleryItems.filter((g) => g.category === catFilter);
   const current = lightboxIndex !== null ? filtered[lightboxIndex] : null;
 
   return (
@@ -543,19 +606,19 @@ function GallerySection() {
           </h2>
         </div>
 
-        {/* Filter tabs */}
-        <div className="flex justify-center gap-3 mb-10">
-          {(["all", "image", "video"] as const).map((tab) => (
+        {/* Category Filter tabs */}
+        <div className="flex justify-center gap-2 flex-wrap mb-10">
+          {categories.map((cat) => (
             <button
-              key={tab}
-              onClick={() => { setFilter(tab); setLightboxIndex(null); }}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
-                filter === tab
-                  ? "bg-[#3FA34D] text-white"
+              key={cat}
+              onClick={() => { setCatFilter(cat); setLightboxIndex(null); }}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                catFilter === cat
+                  ? "bg-[#3FA34D] text-white shadow-md"
                   : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
               }`}
             >
-              {tab === "all" ? "All" : tab === "image" ? "Photos" : "Videos"}
+              {cat === "all" ? "All" : cat.charAt(0).toUpperCase() + cat.slice(1)}
             </button>
           ))}
         </div>
@@ -656,7 +719,7 @@ function GallerySection() {
 }
 
 /* ───────────────────── FOOTER ───────────────────── */
-function GroupFooter() {
+function GroupFooter({ branches, contactInfo, groupName }: { branches: BranchCard[]; contactInfo: { phone: string; email: string; address: string }; groupName: string }) {
   return (
     <footer id="contact" className="bg-[#0f172a] text-white">
       <div className="container mx-auto px-4 py-16">
@@ -671,11 +734,10 @@ function GroupFooter() {
                 height={40}
                 className="rounded-full"
               />
-              <span className="font-bold">APS Fatehpur Group</span>
+              <span className="font-bold">{groupName}</span>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">
-              Ashraful Uloom Educational & Welfare Society — A legacy of
-              educational excellence since 1940, Fatehpur Shekhawati.
+              {groupName}
             </p>
           </div>
 
@@ -708,23 +770,22 @@ function GroupFooter() {
             <div className="space-y-3">
               <div className="flex items-start gap-3 text-sm text-gray-400">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <span>Fatehpur Shekhawati, Rajasthan, India</span>
+                <span>{contactInfo.address}</span>
               </div>
               <div className="flex items-center gap-3 text-sm text-gray-400">
                 <Phone className="h-4 w-4 flex-shrink-0" />
-                <span>+91-XXXX-XXXXXX</span>
+                <span>{contactInfo.phone}</span>
               </div>
               <div className="flex items-center gap-3 text-sm text-gray-400">
                 <Mail className="h-4 w-4 flex-shrink-0" />
-                <span>info@apsfatehpur.com</span>
+                <span>{contactInfo.email}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
       <div className="border-t border-gray-800 text-center py-5 text-sm text-gray-500">
-        © {new Date().getFullYear()} Ashraful Uloom Educational & Welfare
-        Society, Fatehpur Shekhawati
+        © {new Date().getFullYear()} {groupName}. All rights reserved.
       </div>
     </footer>
   );
