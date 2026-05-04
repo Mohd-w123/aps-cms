@@ -6,36 +6,43 @@ import {
   Phone,
   Mail,
   MapPin,
-  Globe,
   GraduationCap,
-  ExternalLink,
 } from "lucide-react";
 import { useSchool } from "@/hooks/useSchool";
+import { SocialLinksBar } from "@/components/shared/SocialIcons";
 
-const quickLinks = [
-  { label: "Home", href: "/" },
-  { label: "About Us", href: "/about" },
-  { label: "Admissions", href: "/academy/admissions" },
-  { label: "Facilities", href: "/facilities" },
-  { label: "News", href: "/news" },
-  { label: "Contact", href: "/contact" },
-];
-
-const academicLinks = [
-  { label: "Curriculum", href: "/academy/curriculum" },
-  { label: "Toppers", href: "/toppers" },
-  { label: "AICU", href: "/aicu" },
-  { label: "Alumni", href: "/alumni" },
-  { label: "Careers", href: "/careers" },
-  { label: "Calendar", href: "/structure/calendar" },
+const defaultFooterLinks = [
+  {
+    title: "Quick Links",
+    links: [
+      { label: "Home", href: "/" },
+      { label: "About Us", href: "/about" },
+      { label: "Admissions", href: "/academy/admissions" },
+      { label: "Facilities", href: "/facilities" },
+      { label: "News", href: "/news" },
+      { label: "Contact", href: "/contact" },
+    ],
+  },
+  {
+    title: "Academics",
+    links: [
+      { label: "Curriculum", href: "/academy/curriculum" },
+      { label: "Toppers", href: "/toppers" },
+      { label: "AICU", href: "/aicu" },
+      { label: "Alumni", href: "/alumni" },
+      { label: "Careers", href: "/careers" },
+      { label: "Calendar", href: "/structure/calendar" },
+    ],
+  },
 ];
 
 export function Footer() {
   const { school } = useSchool();
   const year = new Date().getFullYear();
   const [contactInfo, setContactInfo] = useState({ phone: "", email: "", address: "" });
-  const [socialLinks, setSocialLinks] = useState({ facebook: "", instagram: "", youtube: "", twitter: "" });
+  const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
   const [description, setDescription] = useState("");
+  const [footerLinkGroups, setFooterLinkGroups] = useState(defaultFooterLinks);
 
   useEffect(() => {
     fetch("/api/schools")
@@ -46,8 +53,9 @@ export function Footer() {
           const slug = document.cookie.match(/school-slug=([^;]+)/)?.[1] || "apsfatehpur";
           const s = arr.find((sc: { slug: string }) => sc.slug === slug) || arr[0];
           if (s?.contactInfo) setContactInfo({ phone: s.contactInfo.phone || "", email: s.contactInfo.email || "", address: s.contactInfo.address || "" });
-          if (s?.socialLinks) setSocialLinks({ facebook: s.socialLinks.facebook || "", instagram: s.socialLinks.instagram || "", youtube: s.socialLinks.youtube || "", twitter: s.socialLinks.twitter || "" });
+          if (s?.socialLinks) setSocialLinks(s.socialLinks);
           if (s?.description) setDescription(s.description);
+          if (s?.footerLinks?.length) setFooterLinkGroups(s.footerLinks);
         }
       })
       .catch(() => {});
@@ -71,69 +79,31 @@ export function Footer() {
                 {description}
               </p>
             )}
-            <div className="flex gap-3">
-              {socialLinks.facebook && (
-                <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-                  <Globe className="h-4 w-4" />
-                </a>
-              )}
-              {socialLinks.instagram && (
-                <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-                  <Globe className="h-4 w-4" />
-                </a>
-              )}
-              {socialLinks.youtube && (
-                <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              )}
-              {socialLinks.twitter && (
-                <a href={socialLinks.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              )}
+            <SocialLinksBar links={socialLinks} variant="dark" />
+          </div>
+
+          {/* Dynamic footer link columns */}
+          {footerLinkGroups.map((group) => (
+            <div key={group.title}>
+              <h4 className="text-white font-semibold text-base mb-4">
+                {group.title}
+              </h4>
+              <ul className="space-y-2">
+                {group.links.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="text-sm hover:text-white transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
+          ))}
 
-          {/* Col 2: Quick Links */}
-          <div>
-            <h4 className="text-white font-semibold text-base mb-4">
-              Quick Links
-            </h4>
-            <ul className="space-y-2">
-              {quickLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm hover:text-white transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Col 3: Academics */}
-          <div>
-            <h4 className="text-white font-semibold text-base mb-4">
-              Academics
-            </h4>
-            <ul className="space-y-2">
-              {academicLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm hover:text-white transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Col 4: Contact */}
+          {/* Col: Contact */}
           <div>
             <h4 className="text-white font-semibold text-base mb-4">
               Contact Us

@@ -5,6 +5,9 @@ import { requireAuth, unauthorizedResponse } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/lib/api-helpers";
 import { schoolUpdateSchema } from "@/lib/validations";
 
+// Force dynamic — route has both GET and PUT
+export const dynamic = "force-dynamic";
+
 // GET /api/schools — list active schools (public)
 export async function GET() {
   try {
