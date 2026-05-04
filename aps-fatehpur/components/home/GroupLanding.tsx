@@ -32,13 +32,24 @@ const fallbackToppers = [
   "/images/toppers/topper-7.jpg", "/images/toppers/topper-8.jpg", "/images/toppers/topper-9.jpg",
 ];
 
-const navLinks = [
+const defaultNavLinks = [
   { label: "Home", href: "#home" },
   { label: "About", href: "#about" },
   { label: "Branches", href: "#branches" },
   { label: "Toppers", href: "#toppers" },
   { label: "Gallery", href: "#gallery" },
   { label: "Contact", href: "#contact" },
+];
+
+const defaultGroupFooterLinks = [
+  { title: "Quick Links", links: [
+    { label: "Home", href: "#home" },
+    { label: "About", href: "#about" },
+    { label: "Branches", href: "#branches" },
+    { label: "Toppers", href: "#toppers" },
+    { label: "Gallery", href: "#gallery" },
+    { label: "Contact", href: "#contact" },
+  ]},
 ];
 
 /* ───────────────────── GROUP LANDING ───────────────────── */
@@ -53,6 +64,8 @@ export function GroupLanding() {
   const [gallery, setGallery] = useState<GalleryData[]>([]);
   const [groupName, setGroupName] = useState("APS Group");
   const [contactInfo, setContactInfo] = useState({ phone: "+91-XXXX-XXXXXX", email: "info@apsfatehpur.com", address: "Fatehpur Shekhawati, Rajasthan, India" });
+  const [groupHeaderNav, setGroupHeaderNav] = useState(defaultNavLinks);
+  const [groupFooterLinks, setGroupFooterLinks] = useState(defaultGroupFooterLinks);
 
   useEffect(() => {
     // Fetch sliders
@@ -75,6 +88,12 @@ export function GroupLanding() {
               email: group.contactInfo.email || "info@apsfatehpur.com",
               address: group.contactInfo.address || "Fatehpur Shekhawati, Rajasthan, India",
             });
+          }
+          if (group?.headerNav?.length) {
+            setGroupHeaderNav(group.headerNav.map((n: { label: string; href: string }) => ({ label: n.label, href: n.href })));
+          }
+          if (group?.footerLinks?.length) {
+            setGroupFooterLinks(group.footerLinks);
           }
         }
       }).catch(() => {});
@@ -110,19 +129,19 @@ export function GroupLanding() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <GroupNav groupName={groupName} />
+      <GroupNav groupName={groupName} navLinks={groupHeaderNav} />
       <HeroSlider slides={slides} />
       <AboutSection />
       <BranchesSection branches={branchCards} />
       <ToppersSection toppers={toppers} />
       <GallerySection items={gallery} />
-      <GroupFooter branches={branchCards} contactInfo={contactInfo} groupName={groupName} />
+      <GroupFooter branches={branchCards} contactInfo={contactInfo} groupName={groupName} footerLinks={groupFooterLinks} />
     </div>
   );
 }
 
 /* ───────────────────── NAV ───────────────────── */
-function GroupNav({ groupName }: { groupName: string }) {
+function GroupNav({ groupName, navLinks }: { groupName: string; navLinks: { label: string; href: string }[] }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -724,11 +743,11 @@ function GallerySection({ items }: { items: GalleryData[] }) {
 }
 
 /* ───────────────────── FOOTER ───────────────────── */
-function GroupFooter({ branches, contactInfo, groupName }: { branches: BranchCard[]; contactInfo: { phone: string; email: string; address: string }; groupName: string }) {
+function GroupFooter({ branches, contactInfo, groupName, footerLinks }: { branches: BranchCard[]; contactInfo: { phone: string; email: string; address: string }; groupName: string; footerLinks: { title: string; links: { label: string; href: string }[] }[] }) {
   return (
     <footer id="contact" className="bg-[#0f172a] text-white">
       <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* About */}
           <div>
             <div className="flex items-center gap-3 mb-4">
@@ -746,7 +765,26 @@ function GroupFooter({ branches, contactInfo, groupName }: { branches: BranchCar
             </p>
           </div>
 
-          {/* Quick Links */}
+          {/* Dynamic footer link groups */}
+          {footerLinks.map((group) => (
+            <div key={group.title}>
+              <h4 className="font-bold mb-4">{group.title}</h4>
+              <ul className="space-y-2">
+                {group.links.map((link) => (
+                  <li key={link.href}>
+                    <a
+                      href={link.href}
+                      className="text-sm text-gray-400 hover:text-white transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+
+          {/* Our Branches */}
           <div>
             <h4 className="font-bold mb-4">Our Branches</h4>
             <ul className="space-y-2">
