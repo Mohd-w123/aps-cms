@@ -213,5 +213,20 @@ export const schoolUpdateSchema = z.object({
     years: z.number().optional(),
     awards: z.number().optional(),
   }).optional(),
+  headerNav: z.array(z.object({
+    label: z.string().min(1),
+    href: z.string().min(1),
+    children: z.array(z.object({
+      label: z.string().min(1),
+      href: z.string().min(1),
+    })).optional().default([]),
+  })).optional(),
+  footerLinks: z.array(z.object({
+    title: z.string().min(1),
+    links: z.array(z.object({
+      label: z.string().min(1),
+      href: z.string().min(1),
+    })).optional().default([]),
+  })).optional(),
   isActive: z.boolean().optional(),
 });

@@ -1,5 +1,16 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+export interface INavItem {
+  label: string;
+  href: string;
+  children?: { label: string; href: string }[];
+}
+
+export interface IFooterLinkGroup {
+  title: string;
+  links: { label: string; href: string }[];
+}
+
 export interface ISchool extends Document {
   name: string;
   slug: string;
@@ -29,6 +40,10 @@ export interface ISchool extends Document {
     instagram?: string;
     youtube?: string;
     twitter?: string;
+    whatsapp?: string;
+    linkedin?: string;
+    telegram?: string;
+    website?: string;
   };
   stats: {
     students: number;
@@ -36,6 +51,8 @@ export interface ISchool extends Document {
     years: number;
     awards: number;
   };
+  headerNav: INavItem[];
+  footerLinks: IFooterLinkGroup[];
   isActive: boolean;
 }
 
@@ -69,12 +86,45 @@ const SchoolSchema = new Schema<ISchool>(
       instagram: { type: String },
       youtube: { type: String },
       twitter: { type: String },
+      whatsapp: { type: String },
+      linkedin: { type: String },
+      telegram: { type: String },
+      website: { type: String },
     },
     stats: {
       students: { type: Number, default: 0 },
       teachers: { type: Number, default: 0 },
       years: { type: Number, default: 0 },
       awards: { type: Number, default: 0 },
+    },
+    headerNav: {
+      type: [
+        {
+          label: { type: String, required: true },
+          href: { type: String, required: true },
+          children: [
+            {
+              label: { type: String, required: true },
+              href: { type: String, required: true },
+            },
+          ],
+        },
+      ],
+      default: [],
+    },
+    footerLinks: {
+      type: [
+        {
+          title: { type: String, required: true },
+          links: [
+            {
+              label: { type: String, required: true },
+              href: { type: String, required: true },
+            },
+          ],
+        },
+      ],
+      default: [],
     },
     isActive: { type: Boolean, default: true },
   },

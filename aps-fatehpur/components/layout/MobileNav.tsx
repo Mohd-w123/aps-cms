@@ -6,14 +6,16 @@ import { usePathname } from "next/navigation";
 import { X, ChevronDown, GraduationCap } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useSchool } from "@/hooks/useSchool";
-import { navigation } from "@/config/navigation";
+import { navigation as defaultNavigation, NavItem } from "@/config/navigation";
 
 interface MobileNavProps {
   open: boolean;
   onClose: () => void;
+  navItems?: NavItem[];
 }
 
-export function MobileNav({ open, onClose }: MobileNavProps) {
+export function MobileNav({ open, onClose, navItems }: MobileNavProps) {
+  const navigation = navItems?.length ? navItems : defaultNavigation;
   const { school } = useSchool();
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -53,7 +55,7 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
 
         {/* Nav Links */}
         <nav className="overflow-y-auto h-[calc(100vh-80px)] py-2">
-          {navigation.map((item) => {
+          {navigation.map((item: NavItem) => {
             const hasChildren = item.children && item.children.length > 0;
             const expanded = expandedItems.includes(item.label);
             const active = isActive(item.href);

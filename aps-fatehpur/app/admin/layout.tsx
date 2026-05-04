@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Loader2,
   School,
+  Navigation2,
 } from "lucide-react";
 
 interface NavItem {
@@ -110,6 +111,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     {
       title: "SYSTEM",
       items: [
+        { label: "Navigation", href: "/admin/navigation", icon: Navigation2 },
         { label: "Users", href: "/admin/users", icon: Users, roles: ["superadmin", "school_admin"] },
         { label: "Settings", href: "/admin/settings", icon: Settings },
       ],

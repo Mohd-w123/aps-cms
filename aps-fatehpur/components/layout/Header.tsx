@@ -13,8 +13,9 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { useSchool } from "@/hooks/useSchool";
-import { navigation, NavItem } from "@/config/navigation";
+import { navigation as defaultNavigation, NavItem } from "@/config/navigation";
 import { MobileNav } from "./MobileNav";
+import { SocialIcon, socialPlatforms } from "@/components/shared/SocialIcons";
 
 export function Header() {
   const { school } = useSchool();
@@ -23,6 +24,8 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [contactInfo, setContactInfo] = useState({ phone: "", email: "", address: "" });
   const [tagline, setTagline] = useState("");
+  const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
+  const [navItems, setNavItems] = useState<NavItem[]>(defaultNavigation);
 
   useEffect(() => {
     fetch("/api/schools")
@@ -41,6 +44,8 @@ export function Header() {
             });
           }
           if (s?.tagline) setTagline(s.tagline);
+          if (s?.socialLinks) setSocialLinks(s.socialLinks);
+          if (s?.headerNav?.length) setNavItems(s.headerNav);
         }
       })
       .catch(() => {});
@@ -73,12 +78,30 @@ export function Header() {
               </span>
             )}
           </div>
-          {contactInfo.address && (
-            <div className="flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5" />
-              {contactInfo.address}
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            {contactInfo.address && (
+              <span className="flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5" />
+                {contactInfo.address}
+              </span>
+            )}
+            {socialPlatforms.filter(p => socialLinks[p.key]).length > 0 && (
+              <span className="flex items-center gap-2 ml-2">
+                {socialPlatforms.filter(p => socialLinks[p.key]).map(p => (
+                  <a
+                    key={p.key}
+                    href={socialLinks[p.key]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={p.label}
+                    className="hover:opacity-80 transition-opacity"
+                  >
+                    <SocialIcon platform={p.key} />
+                  </a>
+                ))}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -111,7 +134,7 @@ export function Header() {
 
           {/* Desktop Nav */}
           <ul className="hidden lg:flex items-center gap-1">
-            {navigation.map((item) => (
+            {navItems.map((item) => (
               <NavDesktopItem
                 key={item.label}
                 item={item}
@@ -146,7 +169,7 @@ export function Header() {
       </nav>
 
       {/* Mobile Nav Sheet */}
-      <MobileNav open={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <MobileNav open={mobileOpen} onClose={() => setMobileOpen(false)} navItems={navItems} />
     </header>
   );
 }
