@@ -8,7 +8,12 @@ import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface TopperItem {
   _id: string;
-  image: string;
+  name: string;
+  photo: string;
+  percentage: number;
+  year: string;
+  exam: string;
+  rank: number;
   order: number;
 }
 
@@ -99,8 +104,8 @@ export default function ToppersPage() {
                     onClick={() => setLightboxIndex(i)}
                   >
                     <Image
-                      src={topper.image}
-                      alt={`Topper ${i + 1}`}
+                      src={topper.photo}
+                      alt={topper.name || `Topper ${i + 1}`}
                       width={224}
                       height={300}
                       className="w-full h-auto object-contain"
@@ -122,8 +127,8 @@ export default function ToppersPage() {
                       onClick={() => setLightboxIndex(i)}
                     >
                       <Image
-                        src={topper.image}
-                        alt={`Topper ${i + 1}`}
+                        src={topper.photo}
+                        alt={topper.name || `Topper ${i + 1}`}
                         width={224}
                         height={300}
                         className="w-full h-auto object-contain"
@@ -173,8 +178,8 @@ export default function ToppersPage() {
           </button>
           <div className="relative max-w-[90vw] max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
             <Image
-              src={toppers[lightboxIndex].image}
-              alt={`Topper ${lightboxIndex + 1}`}
+              src={toppers[lightboxIndex].photo}
+              alt={toppers[lightboxIndex].name || `Topper ${lightboxIndex + 1}`}
               width={800}
               height={1000}
               className="max-h-[85vh] w-auto object-contain rounded-lg"
