@@ -101,6 +101,47 @@ function FloatingDecorations() {
   );
 }
 
+/* ───────────────────── CURSOR TRAIL ───────────────────── */
+function CursorTrail() {
+  const trailRef = useRef<HTMLDivElement>(null);
+  const pos = useRef({ x: 0, y: 0 });
+  const target = useRef({ x: 0, y: 0 });
+  const animRef = useRef<number>(0);
+
+  useEffect(() => {
+    // Hide on touch devices
+    if ("ontouchstart" in window) return;
+
+    const onMove = (e: MouseEvent) => {
+      target.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener("mousemove", onMove);
+
+    const animate = () => {
+      pos.current.x += (target.current.x - pos.current.x) * 0.15;
+      pos.current.y += (target.current.y - pos.current.y) * 0.15;
+      if (trailRef.current) {
+        trailRef.current.style.transform = `translate(${pos.current.x - 16}px, ${pos.current.y - 16}px)`;
+      }
+      animRef.current = requestAnimationFrame(animate);
+    };
+    animRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      cancelAnimationFrame(animRef.current);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={trailRef}
+      className="pointer-events-none fixed top-0 left-0 z-[9999] h-6 w-6 rounded-full bg-gradient-to-br from-purple-500/50 to-pink-500/50 blur-[2px] hidden md:block ring-1 ring-purple-400/30"
+      style={{ willChange: "transform" }}
+    />
+  );
+}
+
 /* ───────────────────── GROUP LANDING ───────────────────── */
 interface SlideData { _id: string; image: string; title: string; subtitle: string; ctaLabel?: string; ctaLink?: string; }
 interface BranchData { slug: string; name: string; domain?: string; logo?: string; cardImage?: string; cardBgColor?: string; websiteUrl?: string; theme: { primaryColor?: string }; contactInfo?: { phone?: string; email?: string; address?: string }; isActive: boolean; }
@@ -172,6 +213,7 @@ export function GroupLanding() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fef9f4] font-sans">
+      <CursorTrail />
       <GroupNav groupName={groupName} navLinks={groupHeaderNav} />
       <HeroSlider slides={slides} />
       <AboutSection />
@@ -322,24 +364,24 @@ function HeroSlider({ slides }: { slides: SlideData[] }) {
 
       <button
         onClick={prev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm hover:bg-white/30 transition-all hover:scale-110"
+        className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all hover:scale-110"
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
       <button
         onClick={next}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm hover:bg-white/30 transition-all hover:scale-110"
+        className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all hover:scale-110"
       >
         <ChevronRight className="h-5 w-5" />
       </button>
 
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2.5">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2.5 bg-purple-900/40 backdrop-blur-sm rounded-full px-3 py-2">
         {slides.map((_, i) => (
           <button
             key={i}
             onClick={() => setCurrent(i)}
             className={`h-3 rounded-full transition-all ${
-              i === current ? "w-10 bg-white shadow-md" : "w-3 bg-white/40 hover:bg-white/60"
+              i === current ? "w-10 bg-gradient-to-r from-purple-400 to-pink-400 shadow-md" : "w-3 bg-white/60 hover:bg-white/80"
             }`}
           />
         ))}
