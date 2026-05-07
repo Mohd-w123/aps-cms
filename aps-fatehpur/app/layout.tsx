@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Baloo_2, Nunito } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,18 @@ import { LayoutShell } from "@/components/layout/LayoutShell";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+});
+
+const baloo2 = Baloo_2({
+  subsets: ["latin"],
+  variable: "--font-heading",
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const nunito = Nunito({
+  subsets: ["latin"],
+  variable: "--font-nunito",
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -34,7 +46,7 @@ export default function RootLayout({
   const theme = school?.theme;
 
   return (
-    <html lang="en" className={cn("font-sans", inter.variable)}>
+    <html lang="en" className={cn("font-sans", inter.variable, baloo2.variable, nunito.variable)}>
       <body
         className="antialiased"
         style={
