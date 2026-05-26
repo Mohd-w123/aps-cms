@@ -16,6 +16,7 @@ import {
   TestimonialsSlider,
   CTABanner,
 } from "@/components/home";
+import { CursorTrail } from "@/components/shared/PlayfulUI";
 
 export default function HomePage() {
   const { slug, isLoading } = useSchool();
@@ -36,6 +37,7 @@ export default function HomePage() {
   // Individual school home page
   return (
     <>
+      <CursorTrail />
       <HeroCarousel />
       <RunningNotice />
       <QuickStats />

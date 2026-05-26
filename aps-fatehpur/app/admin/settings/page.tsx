@@ -1,15 +1,20 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useAdminApi } from "@/hooks/useAdminApi";
 import { useAuth } from "@/hooks/useAuth";
 import { FileUploader } from "@/components/admin/FileUploader";
 import { Loader2, Save } from "lucide-react";
+import { getSchoolBySlug } from "@/config/schools";
 
 interface SchoolSettings {
   _id: string; name: string; slug: string; logo?: string; favicon?: string;
   tagline?: string; description?: string;
-  theme: { primaryColor: string; secondaryColor: string; accentColor: string };
+  theme: {
+    primaryColor: string; primaryDarkColor: string; secondaryColor: string;
+    accentColor: string; accentBlueColor: string; accentLimeColor: string;
+    bgLightColor: string; textDarkColor: string; textMutedColor: string;
+  };
   contactInfo: { phone: string; email: string; address: string; mapEmbed?: string; officeHours?: string };
   socialLinks: { facebook?: string; instagram?: string; youtube?: string; twitter?: string };
   stats: { students: number; teachers: number; years: number; awards: number };
@@ -28,9 +33,10 @@ export default function AdminSettingsPage() {
     if (!api.token) return;
     api.get("/api/schools").then(r => {
       if (r.success) {
+        const emptyTheme = { primaryColor: "", primaryDarkColor: "", secondaryColor: "", accentColor: "", accentBlueColor: "", accentLimeColor: "", bgLightColor: "", textDarkColor: "", textMutedColor: "" };
         const arr: SchoolSettings[] = (Array.isArray(r.data) ? r.data : [r.data]).map((s: SchoolSettings) => ({
           ...s,
-          theme: s.theme || { primaryColor: "", secondaryColor: "", accentColor: "" },
+          theme: { ...emptyTheme, ...(s.theme || {}) },
           contactInfo: s.contactInfo || { phone: "", email: "", address: "", mapEmbed: "", officeHours: "" },
           socialLinks: s.socialLinks || { facebook: "", instagram: "", youtube: "", twitter: "" },
           stats: s.stats || { students: 0, teachers: 0, years: 0, awards: 0 },
@@ -64,6 +70,20 @@ export default function AdminSettingsPage() {
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>;
   if (!data) return <div className="text-center py-12 text-gray-400">No school data found</div>;
 
+  // Get static config fallback colors for the current school
+  const staticConfig = getSchoolBySlug(data.slug);
+  const themeFallbacks: Record<string, string> = {
+    primaryColor: staticConfig?.theme.primary || "#499f42",
+    primaryDarkColor: staticConfig?.theme.primaryDark || "#3d8a37",
+    secondaryColor: staticConfig?.theme.textDark || "#22235b",
+    accentColor: staticConfig?.theme.accentYellow || "#d4e96e",
+    accentBlueColor: staticConfig?.theme.accentBlue || "#9ab5db",
+    accentLimeColor: staticConfig?.theme.accentYellow || "#d4e96e",
+    bgLightColor: staticConfig?.theme.bgLight || "#f6faf5",
+    textDarkColor: staticConfig?.theme.textDark || "#22235b",
+    textMutedColor: staticConfig?.theme.textMuted || "#6B7280",
+  };
+
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center justify-between">
@@ -96,6 +116,57 @@ export default function AdminSettingsPage() {
           <div><label className="block text-sm font-medium text-gray-700 mb-1">Favicon</label>
             <FileUploader value={data.favicon || ""} onChange={url => setData(p => p ? { ...p, favicon: url } : p)} /></div>
         </div>
+
+        <fieldset className="border border-gray-200 rounded-lg p-4">
+          <legend className="text-sm font-medium text-gray-700 px-2">🎨 Theme Colors</legend>
+          <p className="text-xs text-gray-400 mb-4">Customize website colors. Leave empty to use default theme. Changes apply site-wide after save.</p>
+          <div className="grid grid-cols-3 gap-4">
+            {([
+              { key: "primaryColor", label: "Primary", desc: "Main brand color (buttons, nav)" },
+              { key: "primaryDarkColor", label: "Primary Dark", desc: "Top bar, hover states" },
+              { key: "secondaryColor", label: "Secondary (Navy)", desc: "Headings, footer bg" },
+              { key: "accentColor", label: "Accent (Lime)", desc: "Highlights, badges" },
+              { key: "accentBlueColor", label: "Accent Blue", desc: "Soft accents, blobs" },
+              { key: "accentLimeColor", label: "Accent Lime", desc: "CTA gradients" },
+              { key: "bgLightColor", label: "Background Light", desc: "Section backgrounds" },
+              { key: "textDarkColor", label: "Text Dark", desc: "Main heading color" },
+              { key: "textMutedColor", label: "Text Muted", desc: "Body text, subtitles" },
+            ] as const).map(({ key, label, desc }) => (
+              <div key={key}>
+                <label className="block text-xs text-gray-500 mb-1">{label}</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={data.theme[key] || themeFallbacks[key] || "#000000"}
+                    onChange={e => setData(p => p ? { ...p, theme: { ...p.theme, [key]: e.target.value } } : p)}
+                    className="h-9 w-9 rounded-lg border border-gray-200 cursor-pointer p-0.5"
+                  />
+                  <input
+                    type="text"
+                    value={data.theme[key] || ""}
+                    onChange={e => setData(p => p ? { ...p, theme: { ...p.theme, [key]: e.target.value } } : p)}
+                    placeholder={themeFallbacks[key] || "#000000"}
+                    className="flex-1 px-2 py-1.5 rounded-lg border border-gray-200 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <p className="text-[10px] text-gray-400 mt-0.5">{desc}</p>
+              </div>
+            ))}
+          </div>
+          {/* Live Preview */}
+          <div className="mt-4 p-4 rounded-xl border border-gray-100" style={{ backgroundColor: data.theme.bgLightColor || "#f6faf5" }}>
+            <p className="text-xs text-gray-400 mb-2">Preview</p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: data.theme.primaryColor }}>Primary</span>
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: data.theme.primaryDarkColor }}>Primary Dark</span>
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: data.theme.secondaryColor }}>Secondary</span>
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold" style={{ backgroundColor: data.theme.accentColor, color: data.theme.textDarkColor }}>Accent</span>
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: data.theme.accentBlueColor }}>Blue</span>
+            </div>
+            <p className="mt-2 text-sm font-semibold" style={{ color: data.theme.textDarkColor }}>Sample Heading</p>
+            <p className="text-xs" style={{ color: data.theme.textMutedColor }}>Sample body text with muted color</p>
+          </div>
+        </fieldset>
 
         <fieldset className="border border-gray-200 rounded-lg p-4">
           <legend className="text-sm font-medium text-gray-700 px-2">Contact Info</legend>

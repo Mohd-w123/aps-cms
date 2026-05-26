@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { PlayfulSection, SectionHeader } from "@/components/shared/PlayfulUI";
 
 interface TopperData {
   _id: string;
@@ -60,23 +61,9 @@ export function ToppersCarousel() {
     setLightboxIndex((c) => (c !== null ? (c + 1) % toppers.length : null));
 
   return (
-    <section className="py-16" style={{ backgroundColor: "var(--bg-light)" }}>
+    <PlayfulSection className="py-20" style={{ backgroundColor: "var(--bg-light, #f6faf5)" }} blobs floatingIcons>
       <div className="container mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <p
-            className="text-sm font-semibold uppercase tracking-wider mb-2"
-            style={{ color: "var(--school-primary)" }}
-          >
-            Achievements
-          </p>
-          <h2
-            className="text-3xl md:text-4xl font-bold"
-            style={{ color: "var(--text-dark)" }}
-          >
-            Our Toppers
-          </h2>
-        </div>
+        <SectionHeader label="Achievements" title="Our Toppers" emoji="🏆" />
 
         {/* Auto-scrolling Carousel */}
         <div
@@ -87,7 +74,7 @@ export function ToppersCarousel() {
           {toppers.map((t, i) => (
             <div
               key={t._id}
-              className="flex-shrink-0 w-56 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer"
+              className="flex-shrink-0 w-56 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all hover:-translate-y-2 cursor-pointer border border-gray-100"
               onClick={() => openLightbox(i)}
             >
               {t.photo ? (
@@ -99,13 +86,13 @@ export function ToppersCarousel() {
                   className="w-full h-auto object-contain"
                 />
               ) : (
-                <div className="w-full h-[300px] bg-gray-100 flex items-center justify-center">
-                  <span className="text-4xl font-bold text-gray-300">{t.name?.charAt(0)}</span>
+                <div className="w-full h-[300px] bg-gradient-to-br from-[var(--accent-blue,#9ab5db)]/20 to-[var(--school-primary,#499f42)]/10 flex items-center justify-center">
+                  <span className="text-4xl font-heading font-bold opacity-30" style={{ color: "var(--text-dark, #22235b)" }}>{t.name?.charAt(0)}</span>
                 </div>
               )}
-              <div className="p-2 text-center bg-white">
-                <p className="text-sm font-semibold text-gray-900 truncate">{t.name}</p>
-                {t.percentage && <p className="text-xs text-gray-500">{t.percentage}%{t.year ? ` • ${t.year}` : ""}</p>}
+              <div className="p-3 text-center bg-white">
+                <p className="text-sm font-heading font-semibold truncate" style={{ color: "var(--text-dark, #22235b)" }}>{t.name}</p>
+                {t.percentage && <p className="text-xs" style={{ color: "var(--school-primary, #499f42)" }}>{t.percentage}%{t.year ? ` • ${t.year}` : ""}</p>}
               </div>
             </div>
           ))}
@@ -114,8 +101,8 @@ export function ToppersCarousel() {
         <div className="mt-8 text-center">
           <Link
             href="/toppers"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold hover:opacity-80 transition-colors"
-            style={{ color: "var(--school-primary)" }}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors"
+            style={{ color: "var(--school-primary, #499f42)" }}
           >
             View All Toppers <ArrowRight className="h-4 w-4" />
           </Link>
@@ -167,6 +154,6 @@ export function ToppersCarousel() {
           </div>
         </div>
       )}
-    </section>
+    </PlayfulSection>
   );
 }

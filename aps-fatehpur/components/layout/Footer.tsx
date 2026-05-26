@@ -62,15 +62,21 @@ export function Footer() {
   }, []);
 
   return (
-    <footer className="bg-gray-900 text-gray-300">
+    <footer className="text-gray-300" style={{ backgroundColor: "var(--text-dark, #22235b)" }}>
+      {/* Wave Top Divider */}
+      <div className="w-full overflow-hidden leading-none bg-[var(--bg-light,#f6faf5)]">
+        <svg className="relative block w-full h-12 md:h-20" viewBox="0 0 1200 120" preserveAspectRatio="none">
+          <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V92.65A600.21,600.21,0,0,0,321.39,56.44Z" fill="var(--text-dark, #22235b)" />
+        </svg>
+      </div>
       {/* Main Grid */}
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Col 1: About */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <GraduationCap className="h-8 w-8 text-white" />
-              <h3 className="text-white font-bold text-lg">
+              <GraduationCap className="h-8 w-8" style={{ color: "var(--accent-yellow, #d4e96e)" }} />
+              <h3 className="text-white font-heading font-bold text-lg">
                 {school?.name || "APS Fatehpur"}
               </h3>
             </div>
@@ -85,7 +91,7 @@ export function Footer() {
           {/* Dynamic footer link columns */}
           {footerLinkGroups.map((group) => (
             <div key={group.title}>
-              <h4 className="text-white font-semibold text-base mb-4">
+              <h4 className="text-white font-heading font-semibold text-base mb-4">
                 {group.title}
               </h4>
               <ul className="space-y-2">
@@ -93,7 +99,7 @@ export function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm hover:text-white transition-colors"
+                      className="text-sm hover:text-[var(--accent-yellow,#d4e96e)] transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -105,7 +111,7 @@ export function Footer() {
 
           {/* Col: Contact */}
           <div>
-            <h4 className="text-white font-semibold text-base mb-4">
+            <h4 className="text-white font-heading font-semibold text-base mb-4">
               Contact Us
             </h4>
             <ul className="space-y-3 text-sm">
@@ -139,10 +145,10 @@ export function Footer() {
             © {year} {school?.name || "APS Fatehpur"}. All rights reserved.
           </span>
           <div className="flex gap-4">
-            <Link href="/privacy" className="hover:text-white transition-colors">
+            <Link href="/privacy" className="hover:text-[var(--accent-yellow,#d4e96e)] transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="hover:text-white transition-colors">
+            <Link href="/terms" className="hover:text-[var(--accent-yellow,#d4e96e)] transition-colors">
               Terms of Use
             </Link>
           </div>

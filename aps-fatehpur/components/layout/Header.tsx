@@ -61,7 +61,7 @@ export function Header() {
       {/* ── Top Info Bar ── */}
       <div
         className="hidden md:block text-white text-sm"
-        style={{ backgroundColor: "var(--school-primary-dark)" }}
+        style={{ backgroundColor: "var(--text-dark, #22235b)" }}
       >
         <div className="container mx-auto flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-6">
@@ -108,7 +108,7 @@ export function Header() {
       {/* ── Main Navbar ── */}
       <nav
         className="text-white"
-        style={{ backgroundColor: "var(--school-primary)" }}
+        style={{ backgroundColor: "var(--school-primary, #499f42)" }}
       >
         <div className="container mx-auto flex items-center justify-between px-4 py-3">
           {/* Logo + School Name */}
@@ -146,10 +146,10 @@ export function Header() {
             <li>
               <Link
                 href="/academy/admissions"
-                className="ml-2 inline-block rounded-full px-4 py-2 text-sm font-semibold transition-colors"
+                className="ml-2 inline-block rounded-full px-4 py-2 text-sm font-semibold transition-all hover:scale-105"
                 style={{
-                  backgroundColor: "var(--accent-yellow)",
-                  color: "var(--text-dark)",
+                  backgroundColor: "var(--accent-yellow, #d4e96e)",
+                  color: "var(--text-dark, #22235b)",
                 }}
               >
                 Apply Now

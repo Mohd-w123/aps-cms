@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSchool } from "@/hooks/useSchool";
+import { PlayfulSection, SectionHeader, BlobDecoration } from "@/components/shared/PlayfulUI";
 
 const defaultContent = `<p>Founded in 1940 in Fatehpur Shekhawati, Ashraful Uloom Educational and Welfare Society emerged as a beacon of hope, dedicated to fostering education within an Islamic atmosphere and ideology.</p><p>The journey began with the establishment of Madarsa Islamiya Ashraful Uloom, an Islamic education center. Recognizing the need for modern education alongside religious teachings, the society founded Maulana Azad Middle School in 1962.</p><p>In 2006, the society established Ashraful Uloom Public School. Today, it proudly nurtures over 1,500 young minds, achieving a remarkable legacy of 100% results year after year.</p>`;
 
@@ -32,55 +33,47 @@ export function AboutSnippet() {
   }, []);
 
   return (
-    <section className="py-16" style={{ backgroundColor: "var(--bg-light)" }}>
+    <PlayfulSection className="py-20" style={{ backgroundColor: "var(--bg-light, #f6faf5)" }} blobs floatingIcons>
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           {/* Left: Campus Image */}
-          <div className="aspect-[4/3] rounded-2xl overflow-hidden">
-            <Image
-              src={image}
-              alt={`${school?.name || "APS Fatehpur"} Campus`}
-              width={800}
-              height={600}
-              className="w-full h-full object-cover"
-              priority
-            />
+          <div className="relative">
+            <BlobDecoration className="absolute -top-8 -left-8 w-40 h-40 opacity-20 animate-float-slow" style={{ color: "var(--accent-blue, #9ab5db)" }} />
+            <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-xl">
+              <Image
+                src={image}
+                alt={`${school?.name || "APS Fatehpur"} Campus`}
+                width={800}
+                height={600}
+                className="w-full h-full object-cover"
+                priority
+              />
+            </div>
           </div>
 
           {/* Right: Content */}
           <div>
-            <p
-              className="text-sm font-semibold uppercase tracking-wider mb-2"
-              style={{ color: "var(--school-primary)" }}
-            >
-              About Us
-            </p>
-            <h2
-              className="text-3xl md:text-4xl font-bold mb-6"
-              style={{ color: "var(--text-dark)" }}
-            >
-              {title}
-            </h2>
+            <SectionHeader label="About Us" title={title} emoji="🏫" align="left" />
             <div
               className="text-base leading-relaxed mb-8 prose prose-gray max-w-none"
-              style={{ color: "var(--text-muted)" }}
+              style={{ color: "var(--text-muted-color)" }}
               dangerouslySetInnerHTML={{ __html: content }}
             />
             {signoff && (
-              <p className="text-sm italic mb-6" style={{ color: "var(--text-muted)" }}>
+              <p className="text-sm italic mb-6 text-gray-500">
                 {signoff}
               </p>
             )}
             <Link
               href="/about"
-              className="inline-block rounded-full px-6 py-3 text-sm font-semibold text-white transition-transform hover:scale-105"
-              style={{ backgroundColor: "var(--school-primary)" }}
+              className="inline-block rounded-full px-6 py-3 text-sm font-semibold text-white transition-all hover:scale-105 shadow-lg"
+              style={{ backgroundColor: "var(--school-primary, #499f42)" }}
             >
               Read More About Us →
             </Link>
           </div>
         </div>
       </div>
-    </section>
+    </PlayfulSection>
   );
 }

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { BlobDecoration, WaveTop, FloatingDecorations } from "@/components/shared/PlayfulUI";
 
 interface CtaData {
   heading: string; body: string;
@@ -35,41 +36,37 @@ export function CTABanner() {
 
   return (
     <section
-      className="relative py-20 overflow-hidden"
-      style={{ backgroundColor: "var(--accent-yellow)" }}
+      className="relative py-24 overflow-hidden"
+      style={{ background: "linear-gradient(135deg, var(--accent-yellow, #d4e96e) 0%, var(--school-primary, #499f42) 100%)" }}
     >
-      {/* Decorative circles */}
-      <div className="absolute -top-20 -right-20 h-60 w-60 rounded-full bg-white/5" />
-      <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-white/5" />
+      {/* Wave top */}
+      <WaveTop className="text-white" />
 
-      <div className="container relative mx-auto px-4 text-center">
-        <h2
-          className="text-3xl md:text-4xl font-bold mb-4"
-          style={{ color: "var(--school-primary)" }}
-        >
+      {/* Decorative blobs */}
+      <BlobDecoration className="absolute -top-16 -right-16 w-64 h-64 text-white/15 animate-float-slow" />
+      <BlobDecoration className="absolute -bottom-12 -left-12 w-48 h-48 opacity-10 animate-float" style={{ color: "var(--text-dark, #22235b)" }} />
+
+      <FloatingDecorations />
+
+      <div className="container relative mx-auto px-4 text-center z-10">
+        <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold mb-4" style={{ color: "var(--text-dark, #22235b)" }}>
           {cta.heading}
         </h2>
-        <p
-          className="text-lg mb-8 max-w-2xl mx-auto"
-          style={{ color: "var(--school-primary)", opacity: 0.85 }}
-        >
+        <p className="text-lg mb-8 max-w-2xl mx-auto opacity-80" style={{ color: "var(--text-dark, #22235b)" }}>
           {cta.body}
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href={cta.btn1Link}
-            className="inline-block rounded-full px-8 py-3 font-semibold text-base text-white transition-transform hover:scale-105"
-            style={{ backgroundColor: "var(--accent-red)" }}
+            className="inline-block rounded-full px-8 py-3 font-semibold text-base text-white transition-all hover:scale-105 shadow-lg hover:opacity-90"
+            style={{ backgroundColor: "var(--text-dark, #22235b)" }}
           >
             {cta.btn1Label}
           </Link>
           <Link
             href={cta.btn2Link}
-            className="inline-block rounded-full px-8 py-3 font-semibold text-base border-2 transition-colors hover:opacity-80"
-            style={{
-              borderColor: "var(--school-primary)",
-              color: "var(--school-primary)",
-            }}
+            className="inline-block rounded-full px-8 py-3 font-semibold text-base border-2 transition-all hover:text-white"
+            style={{ borderColor: "var(--text-dark, #22235b)", color: "var(--text-dark, #22235b)" }}
           >
             {cta.btn2Label}
           </Link>

@@ -191,8 +191,14 @@ export const schoolUpdateSchema = z.object({
   tagline: z.string().optional(),
   theme: z.object({
     primaryColor: z.string().optional(),
+    primaryDarkColor: z.string().optional(),
     secondaryColor: z.string().optional(),
     accentColor: z.string().optional(),
+    accentBlueColor: z.string().optional(),
+    accentLimeColor: z.string().optional(),
+    bgLightColor: z.string().optional(),
+    textDarkColor: z.string().optional(),
+    textMutedColor: z.string().optional(),
   }).optional(),
   contactInfo: z.object({
     phone: z.string().optional(),
