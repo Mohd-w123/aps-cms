@@ -11,7 +11,7 @@ import { schools } from "@/config/schools";
 import { Plus, Pencil, Trash2, X, Loader2, ShieldAlert } from "lucide-react";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
-type Tab = "homepage" | "sliders" | "pages" | "news" | "gallery" | "toppers" | "persons" | "aicu" | "social";
+type Tab = "homepage" | "sliders" | "pages" | "news" | "gallery" | "toppers" | "persons" | "aicu" | "alumni" | "social";
 
 export default function SchoolSiteManagement() {
   const params = useParams();
@@ -29,6 +29,7 @@ export default function SchoolSiteManagement() {
     { key: "toppers", label: "Toppers" },
     { key: "persons", label: "People" },
     { key: "aicu", label: "AICU" },
+    { key: "alumni", label: "Alumni" },
     { key: "social", label: "Social Links" },
   ];
 
@@ -75,6 +76,7 @@ export default function SchoolSiteManagement() {
       {activeTab === "toppers" && <SchoolToppers schoolSlug={slug} />}
       {activeTab === "persons" && <SchoolPersons schoolSlug={slug} />}
       {activeTab === "aicu" && <SchoolAICU schoolSlug={slug} />}
+      {activeTab === "alumni" && <SchoolAlumni schoolSlug={slug} />}
       {activeTab === "social" && <SchoolSocialLinks schoolSlug={slug} />}
     </div>
   );
@@ -1054,6 +1056,160 @@ function SchoolSocialLinks({ schoolSlug }: { schoolSlug: string }) {
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}Save Social Links
         </button>
       </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ALUMNI
+// ═══════════════════════════════════════════════════════════════
+function SchoolAlumni({ schoolSlug }: { schoolSlug: string }) {
+  const api = useAdminApi();
+  interface AlumniItem {
+    _id: string; name: string; batch: string; course: string; currentRole: string;
+    company?: string; photo?: string; testimonial?: string; isApproved: boolean;
+  }
+  const [items, setItems] = useState<AlumniItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"pending" | "approved">("pending");
+  const [detail, setDetail] = useState<AlumniItem | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const r = await api.get(`/api/alumni?limit=200&school=${schoolSlug}`);
+    if (r.success) setItems(r.data);
+    setLoading(false);
+  }, [api, schoolSlug]);
+  useEffect(() => { if (api.token) load(); }, [api.token]); // eslint-disable-line
+
+  const toggle = async (id: string, val: boolean) => {
+    await api.put(`/api/alumni?school=${schoolSlug}`, { id, isApproved: val });
+    load();
+    if (detail?._id === id) setDetail(prev => prev ? { ...prev, isApproved: val } : null);
+  };
+
+  const remove = async (id: string) => {
+    await api.del(`/api/alumni?id=${id}&school=${schoolSlug}`);
+    load();
+    if (detail?._id === id) setDetail(null);
+  };
+
+  const pending = items.filter(i => !i.isApproved);
+  const approved = items.filter(i => i.isApproved);
+  const list = tab === "pending" ? pending : approved;
+
+  if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>;
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-gray-600">Manage alumni registrations and testimonials for this school.</p>
+
+      <div className="flex gap-2">
+        <button onClick={() => setTab("pending")} className={`px-4 py-1.5 rounded-full text-sm font-medium ${tab === "pending" ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+          Pending ({pending.length})
+        </button>
+        <button onClick={() => setTab("approved")} className={`px-4 py-1.5 rounded-full text-sm font-medium ${tab === "approved" ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+          Approved ({approved.length})
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Batch</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Role / Company</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Testimonial</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {list.map(a => (
+              <tr key={a._id} className="hover:bg-gray-50">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    {a.photo ? (
+                      <Image src={a.photo} alt={a.name} width={32} height={32} className="w-8 h-8 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">{a.name.charAt(0)}</div>
+                    )}
+                    <span className="font-medium text-gray-900">{a.name}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-gray-500">{a.batch}</td>
+                <td className="px-4 py-3 text-gray-500">{a.currentRole}{a.company ? `, ${a.company}` : ""}</td>
+                <td className="px-4 py-3 text-gray-500 max-w-[200px] truncate">{a.testimonial || "—"}</td>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <button onClick={() => setDetail(a)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500" title="View details"><Pencil className="h-4 w-4" /></button>
+                    {!a.isApproved ? (
+                      <button onClick={() => toggle(a._id, true)} className="p-1.5 rounded hover:bg-gray-100 text-emerald-600" title="Approve">✓</button>
+                    ) : (
+                      <button onClick={() => toggle(a._id, false)} className="p-1.5 rounded hover:bg-gray-100 text-amber-600" title="Revoke">✗</button>
+                    )}
+                    <button onClick={() => remove(a._id)} className="p-1.5 rounded hover:bg-gray-100 text-red-500" title="Delete"><Trash2 className="h-4 w-4" /></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {list.length === 0 && (
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">No {tab} alumni</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Detail Modal */}
+      {detail && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-5 border-b">
+              <h3 className="text-lg font-bold text-gray-900">Alumni Details</h3>
+              <button onClick={() => setDetail(null)} className="p-1 rounded hover:bg-gray-100"><X className="h-5 w-5 text-gray-500" /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="flex items-center gap-4">
+                {detail.photo ? (
+                  <Image src={detail.photo} alt={detail.name} width={64} height={64} className="w-16 h-16 rounded-full object-cover" />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-400">{detail.name.charAt(0)}</div>
+                )}
+                <div>
+                  <p className="font-semibold text-gray-900">{detail.name}</p>
+                  <p className="text-sm text-gray-500">Batch {detail.batch} • {detail.course}</p>
+                  <p className="text-sm text-gray-500">{detail.currentRole}{detail.company ? ` at ${detail.company}` : ""}</p>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Photo</label>
+                <FileUploader
+                  value={detail.photo || ""}
+                  onChange={async (url) => {
+                    setDetail(prev => prev ? { ...prev, photo: url } : null);
+                    await api.put(`/api/alumni?school=${schoolSlug}`, { id: detail._id, photo: url });
+                    load();
+                  }}
+                />
+              </div>
+              {detail.testimonial && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-xs text-gray-400 mb-1">Testimonial</p>
+                  <p className="text-sm text-gray-700 italic">&ldquo;{detail.testimonial}&rdquo;</p>
+                </div>
+              )}
+              <div className="flex gap-2">
+                {!detail.isApproved ? (
+                  <button onClick={() => toggle(detail._id, true)} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700">Approve</button>
+                ) : (
+                  <button onClick={() => toggle(detail._id, false)} className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-medium hover:bg-amber-600">Revoke Approval</button>
+                )}
+                <button onClick={() => { remove(detail._id); }} className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

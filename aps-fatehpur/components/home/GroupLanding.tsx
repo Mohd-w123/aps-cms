@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { SocialLinksBar, SocialIcon, socialPlatforms } from "@/components/shared/SocialIcons";
+import { TestimonialsSlider } from "@/components/home/TestimonialsSlider";
 
 /* ── Fallbacks (used until API data loads) ── */
 const fallbackBranches = configSchools.filter((s) => s.slug !== "apsfatehpur");
@@ -223,6 +224,7 @@ export function GroupLanding() {
       <BranchesSection branches={branchCards} />
       <ToppersSection toppers={toppers} />
       <GallerySection items={gallery} />
+      <TestimonialsSlider />
       <GroupFooter branches={branchCards} contactInfo={contactInfo} groupName={groupName} footerLinks={groupFooterLinks} socialLinks={socialLinks} />
     </div>
   );
