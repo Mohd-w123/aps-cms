@@ -23,6 +23,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { SocialLinksBar, SocialIcon, socialPlatforms } from "@/components/shared/SocialIcons";
 
 /* ── Fallbacks (used until API data loads) ── */
 const fallbackBranches = configSchools.filter((s) => s.slug !== "apsfatehpur");
@@ -156,6 +157,7 @@ export function GroupLanding() {
   const [contactInfo, setContactInfo] = useState({ phone: "+91-XXXX-XXXXXX", email: "info@apsfatehpur.com", address: "Fatehpur Shekhawati, Rajasthan, India" });
   const [groupHeaderNav, setGroupHeaderNav] = useState(defaultNavLinks);
   const [groupFooterLinks, setGroupFooterLinks] = useState(defaultGroupFooterLinks);
+  const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetch("/api/sliders?scope=group&limit=10").then(r => r.json())
@@ -182,6 +184,7 @@ export function GroupLanding() {
           if (group?.footerLinks?.length) {
             setGroupFooterLinks(group.footerLinks);
           }
+          if (group?.socialLinks) setSocialLinks(group.socialLinks);
         }
       }).catch(() => {});
 
@@ -214,19 +217,19 @@ export function GroupLanding() {
   return (
     <div className="min-h-screen flex flex-col bg-[#f6faf5] font-sans">
       <CursorTrail />
-      <GroupNav groupName={groupName} navLinks={groupHeaderNav} />
+      <GroupNav groupName={groupName} navLinks={groupHeaderNav} socialLinks={socialLinks} contactInfo={contactInfo} />
       <HeroSlider slides={slides} />
       <AboutSection />
       <BranchesSection branches={branchCards} />
       <ToppersSection toppers={toppers} />
       <GallerySection items={gallery} />
-      <GroupFooter branches={branchCards} contactInfo={contactInfo} groupName={groupName} footerLinks={groupFooterLinks} />
+      <GroupFooter branches={branchCards} contactInfo={contactInfo} groupName={groupName} footerLinks={groupFooterLinks} socialLinks={socialLinks} />
     </div>
   );
 }
 
 /* ───────────────────── NAV ───────────────────── */
-function GroupNav({ groupName, navLinks }: { groupName: string; navLinks: { label: string; href: string }[] }) {
+function GroupNav({ groupName, navLinks, socialLinks, contactInfo }: { groupName: string; navLinks: { label: string; href: string }[]; socialLinks: Record<string, string>; contactInfo: { phone: string; email: string; address: string } }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -236,70 +239,124 @@ function GroupNav({ groupName, navLinks }: { groupName: string; navLinks: { labe
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const hasSocial = socialPlatforms.some(p => socialLinks[p.key]);
+
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled || mobileOpen
-          ? "bg-white/90 backdrop-blur-md shadow-sm border-b border-[#9ab5db]/30"
-          : "bg-transparent"
-      }`}
-    >
-      <div className="w-full mx-auto px-4 md:px-8 flex items-center justify-between h-16 md:h-18">
-        <Link href="#home" className="flex items-center gap-3">
-          <Image
-            src="/logos/apsfatehpur.png"
-            alt="APS Fatehpur"
-            width={44}
-            height={44}
-            className="rounded-full ring-2 ring-[#499f42]/30"
-          />
-          <span
-            className={`font-heading font-bold text-sm md:text-base transition-colors ${
-              scrolled || mobileOpen ? "text-[#22235b]" : "text-white"
-            }`}
-          >
-            {groupName}
-          </span>
-        </Link>
-
-        <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all hover:bg-[#499f42]/10 ${
-                scrolled ? "text-[#22235b] hover:text-[#499f42]" : "text-white/90 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              {link.label}
-            </a>
-          ))}
-        </nav>
-
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className={`md:hidden p-2 rounded-full transition-colors ${
-            scrolled || mobileOpen ? "text-[#22235b] hover:bg-[#499f42]/10" : "text-white hover:bg-white/10"
-          }`}
-        >
-          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+    <header className="fixed top-0 left-0 right-0 z-50">
+      {/* ── Top Info Bar (visible on desktop, hidden when scrolled) ── */}
+      <div
+        className={`hidden md:block text-white text-sm transition-all duration-300 overflow-hidden ${
+          scrolled ? "max-h-0 opacity-0" : "max-h-12 opacity-100"
+        }`}
+        style={{ backgroundColor: "var(--school-primary-dark, #22235b)" }}
+      >
+        <div className="w-full mx-auto px-4 md:px-8 flex items-center justify-between py-2">
+          <div className="flex items-center gap-6">
+            {contactInfo.phone && (
+              <span className="flex items-center gap-1.5">
+                <Phone className="h-3.5 w-3.5" />
+                {contactInfo.phone}
+              </span>
+            )}
+            {contactInfo.email && (
+              <span className="flex items-center gap-1.5">
+                <Mail className="h-3.5 w-3.5" />
+                {contactInfo.email}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-4">
+            {contactInfo.address && (
+              <span className="flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5" />
+                {contactInfo.address}
+              </span>
+            )}
+            {hasSocial && (
+              <span className="flex items-center gap-2 ml-2">
+                {socialPlatforms.filter(p => socialLinks[p.key]).map(p => (
+                  <a
+                    key={p.key}
+                    href={socialLinks[p.key]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={p.label}
+                    className="hover:opacity-80 transition-opacity"
+                  >
+                    <SocialIcon platform={p.key} />
+                  </a>
+                ))}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
-      {mobileOpen && (
-        <div className="md:hidden bg-white/95 backdrop-blur-md border-t border-[#9ab5db]/30 shadow-lg rounded-b-3xl mx-2">
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={() => setMobileOpen(false)}
-              className="block px-6 py-3.5 text-sm font-medium text-[#22235b] hover:bg-[#499f42]/5 transition-colors"
+      {/* ── Main Navbar ── */}
+      <div
+        className={`transition-all duration-300 ${
+          scrolled || mobileOpen
+            ? "bg-white/90 backdrop-blur-md shadow-sm border-b border-[#9ab5db]/30"
+            : "bg-transparent"
+        }`}
+      >
+        <div className="w-full mx-auto px-4 md:px-8 flex items-center justify-between h-16 md:h-18">
+          <Link href="#home" className="flex items-center gap-3">
+            <Image
+              src="/logos/apsfatehpur.png"
+              alt="APS Fatehpur"
+              width={44}
+              height={44}
+              className="rounded-full ring-2 ring-[#499f42]/30"
+            />
+            <span
+              className={`font-heading font-bold text-sm md:text-base transition-colors ${
+                scrolled || mobileOpen ? "text-[#22235b]" : "text-white"
+              }`}
             >
-              {link.label}
-            </a>
-          ))}
+              {groupName}
+            </span>
+          </Link>
+
+          <nav className="hidden md:flex items-center gap-1">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all hover:bg-[#499f42]/10 ${
+                  scrolled ? "text-[#22235b] hover:text-[#499f42]" : "text-white/90 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className={`md:hidden p-2 rounded-full transition-colors ${
+              scrolled || mobileOpen ? "text-[#22235b] hover:bg-[#499f42]/10" : "text-white hover:bg-white/10"
+            }`}
+          >
+            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
-      )}
+
+        {mobileOpen && (
+          <div className="md:hidden bg-white/95 backdrop-blur-md border-t border-[#9ab5db]/30 shadow-lg rounded-b-3xl mx-2">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className="block px-6 py-3.5 text-sm font-medium text-[#22235b] hover:bg-[#499f42]/5 transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
     </header>
   );
 }
@@ -860,7 +917,7 @@ function GallerySection({ items }: { items: GalleryData[] }) {
 }
 
 /* ───────────────────── FOOTER ───────────────────── */
-function GroupFooter({ branches, contactInfo, groupName, footerLinks }: { branches: BranchCard[]; contactInfo: { phone: string; email: string; address: string }; groupName: string; footerLinks: { title: string; links: { label: string; href: string }[] }[] }) {
+function GroupFooter({ branches, contactInfo, groupName, footerLinks, socialLinks }: { branches: BranchCard[]; contactInfo: { phone: string; email: string; address: string }; groupName: string; footerLinks: { title: string; links: { label: string; href: string }[] }[]; socialLinks: Record<string, string> }) {
   return (
     <footer id="contact" className="relative bg-[#22235b] text-white overflow-hidden">
       {/* Background decorative elements */}
@@ -884,6 +941,9 @@ function GroupFooter({ branches, contactInfo, groupName, footerLinks }: { branch
             <p className="text-sm text-[#9ab5db]/80 leading-relaxed">
               {groupName} — Nurturing minds, building futures since 1940.
             </p>
+            <div className="mt-4">
+              <SocialLinksBar links={socialLinks} variant="dark" size="sm" />
+            </div>
           </div>
 
           {/* Dynamic footer link groups */}

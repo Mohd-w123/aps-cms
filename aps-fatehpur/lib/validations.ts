@@ -212,6 +212,10 @@ export const schoolUpdateSchema = z.object({
     instagram: z.string().optional(),
     youtube: z.string().optional(),
     twitter: z.string().optional(),
+    whatsapp: z.string().optional(),
+    linkedin: z.string().optional(),
+    telegram: z.string().optional(),
+    website: z.string().optional(),
   }).optional(),
   stats: z.object({
     students: z.number().optional(),

@@ -11,7 +11,7 @@ import { schools } from "@/config/schools";
 import { Plus, Pencil, Trash2, X, Loader2, ShieldAlert } from "lucide-react";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
-type Tab = "homepage" | "sliders" | "pages" | "news" | "gallery" | "toppers" | "persons" | "aicu";
+type Tab = "homepage" | "sliders" | "pages" | "news" | "gallery" | "toppers" | "persons" | "aicu" | "social";
 
 export default function SchoolSiteManagement() {
   const params = useParams();
@@ -29,6 +29,7 @@ export default function SchoolSiteManagement() {
     { key: "toppers", label: "Toppers" },
     { key: "persons", label: "People" },
     { key: "aicu", label: "AICU" },
+    { key: "social", label: "Social Links" },
   ];
 
   if (!school) {
@@ -74,6 +75,7 @@ export default function SchoolSiteManagement() {
       {activeTab === "toppers" && <SchoolToppers schoolSlug={slug} />}
       {activeTab === "persons" && <SchoolPersons schoolSlug={slug} />}
       {activeTab === "aicu" && <SchoolAICU schoolSlug={slug} />}
+      {activeTab === "social" && <SchoolSocialLinks schoolSlug={slug} />}
     </div>
   );
 }
@@ -987,6 +989,71 @@ function SchoolHomepage({ schoolSlug }: { schoolSlug: string }) {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SOCIAL LINKS
+// ═══════════════════════════════════════════════════════════════
+function SchoolSocialLinks({ schoolSlug }: { schoolSlug: string }) {
+  const api = useAdminApi();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [schoolId, setSchoolId] = useState<string>("");
+  const [links, setLinks] = useState<Record<string, string>>({
+    facebook: "", instagram: "", youtube: "", twitter: "",
+    whatsapp: "", linkedin: "", telegram: "", website: "",
+  });
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const r = await api.get("/api/schools");
+      if (r.success) {
+        const arr = Array.isArray(r.data) ? r.data : [r.data];
+        const school = arr.find((s: { slug: string }) => s.slug === schoolSlug);
+        if (school) {
+          setSchoolId(school._id);
+          setLinks(prev => ({ ...prev, ...(school.socialLinks || {}) }));
+        }
+      }
+      setLoading(false);
+    };
+    if (api.token) load();
+  }, [api.token]); // eslint-disable-line
+
+  const save = async () => {
+    if (!schoolId) return;
+    setSaving(true);
+    await api.put("/api/schools", { id: schoolId, socialLinks: links });
+    setSaving(false);
+  };
+
+  if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>;
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-gray-600">Manage social media links for this school. These appear in the header and footer.</p>
+      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <h3 className="text-lg font-bold text-gray-900">Social Links</h3>
+        <div className="grid grid-cols-2 gap-4">
+          {(["facebook", "instagram", "youtube", "twitter", "whatsapp", "linkedin", "telegram", "website"] as const).map(k => (
+            <div key={k}>
+              <label className="block text-xs text-gray-500 mb-1 capitalize">{k}</label>
+              <input
+                value={links[k] || ""}
+                onChange={e => setLinks(prev => ({ ...prev, [k]: e.target.value }))}
+                placeholder={k === "website" ? "https://yoursite.com" : `https://${k}.com/...`}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          ))}
+        </div>
+        <button onClick={save} disabled={saving} className="px-6 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2">
+          {saving && <Loader2 className="h-4 w-4 animate-spin" />}Save Social Links
+        </button>
+      </div>
     </div>
   );
 }

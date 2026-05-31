@@ -16,7 +16,6 @@ interface SchoolSettings {
     bgLightColor: string; textDarkColor: string; textMutedColor: string;
   };
   contactInfo: { phone: string; email: string; address: string; mapEmbed?: string; officeHours?: string };
-  socialLinks: { facebook?: string; instagram?: string; youtube?: string; twitter?: string };
   stats: { students: number; teachers: number; years: number; awards: number };
 }
 
@@ -38,7 +37,6 @@ export default function AdminSettingsPage() {
           ...s,
           theme: { ...emptyTheme, ...(s.theme || {}) },
           contactInfo: s.contactInfo || { phone: "", email: "", address: "", mapEmbed: "", officeHours: "" },
-          socialLinks: s.socialLinks || { facebook: "", instagram: "", youtube: "", twitter: "" },
           stats: s.stats || { students: 0, teachers: 0, years: 0, awards: 0 },
         }));
         setAllSchools(arr);
@@ -62,7 +60,7 @@ export default function AdminSettingsPage() {
     await api.put("/api/schools", {
       id: data._id, name: data.name, logo: data.logo, favicon: data.favicon,
       tagline: data.tagline, description: data.description,
-      theme: data.theme, contactInfo: data.contactInfo, socialLinks: data.socialLinks, stats: data.stats,
+      theme: data.theme, contactInfo: data.contactInfo, stats: data.stats,
     });
     setSaving(false);
   };
@@ -181,16 +179,6 @@ export default function AdminSettingsPage() {
               <input value={data.contactInfo.officeHours || ""} onChange={e => setData(p => p ? { ...p, contactInfo: { ...p.contactInfo, officeHours: e.target.value } } : p)} placeholder="e.g. Mon - Sat: 8:00 AM - 3:00 PM" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
             <div><label className="block text-xs text-gray-500 mb-1">Map Embed URL</label>
               <input value={data.contactInfo.mapEmbed || ""} onChange={e => setData(p => p ? { ...p, contactInfo: { ...p.contactInfo, mapEmbed: e.target.value } } : p)} placeholder="Google Maps embed URL" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
-          </div>
-        </fieldset>
-
-        <fieldset className="border border-gray-200 rounded-lg p-4">
-          <legend className="text-sm font-medium text-gray-700 px-2">Social Links</legend>
-          <div className="grid grid-cols-2 gap-4">
-            {(["facebook", "instagram", "youtube", "twitter"] as const).map(k => (
-              <div key={k}><label className="block text-xs text-gray-500 mb-1 capitalize">{k}</label>
-                <input value={data.socialLinks[k] || ""} onChange={e => setData(p => p ? { ...p, socialLinks: { ...p.socialLinks, [k]: e.target.value } } : p)} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
-            ))}
           </div>
         </fieldset>
 
