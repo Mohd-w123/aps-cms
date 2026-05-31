@@ -9,9 +9,7 @@ import { FileUploader } from "@/components/admin/FileUploader";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { schools } from "@/config/schools";
 import { Plus, Pencil, Trash2, X, Loader2, ShieldAlert } from "lucide-react";
-import dynamic from "next/dynamic";
-
-const RichTextEditor = dynamic(() => import("@/components/admin/RichTextEditor").then(m => m.RichTextEditor), { ssr: false });
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
 type Tab = "homepage" | "sliders" | "pages" | "news" | "gallery" | "toppers" | "persons" | "aicu";
 
@@ -383,8 +381,10 @@ function SchoolNews({ schoolSlug }: { schoolSlug: string }) {
               </div>
               <div><label className="block text-sm font-medium text-gray-700 mb-1">Excerpt</label>
                 <textarea value={form.excerpt} onChange={e => setForm(f => ({ ...f, excerpt: e.target.value }))} rows={2} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
-              <div><label className="block text-sm font-medium text-gray-700 mb-1">Featured Image</label>
-                <FileUploader value={form.featuredImage} onChange={url => setForm(f => ({ ...f, featuredImage: url }))} /></div>
+              {form.category !== "notice" && (
+                <div><label className="block text-sm font-medium text-gray-700 mb-1">Featured Image</label>
+                  <FileUploader value={form.featuredImage} onChange={url => setForm(f => ({ ...f, featuredImage: url }))} /></div>
+              )}
               <div><label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
                 <RichTextEditor value={form.content} onChange={val => setForm(f => ({ ...f, content: val }))} /></div>
               <label className="flex items-center gap-2">

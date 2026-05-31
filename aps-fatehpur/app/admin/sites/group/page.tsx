@@ -7,9 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { FileUploader } from "@/components/admin/FileUploader";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { Plus, Pencil, Trash2, X, Loader2, GripVertical, ShieldAlert } from "lucide-react";
-import dynamic from "next/dynamic";
-
-const RichTextEditor = dynamic(() => import("@/components/admin/RichTextEditor").then(m => m.RichTextEditor), { ssr: false });
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
 // ─── Types ───
 interface SliderItem {
