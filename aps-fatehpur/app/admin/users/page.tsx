@@ -93,7 +93,7 @@ export default function AdminUsersPage() {
                 <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
               <div><label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                 <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                  <option value="editor">Editor</option><option value="school_admin">School Admin</option><option value="superadmin">Super Admin</option>
+                  <option value="editor">Editor</option><option value="school_admin">School Admin</option><option value="superadmin">Super Admin</option><option value="sales">Sales</option>
                 </select></div>
               <div><label className="block text-sm font-medium text-gray-700 mb-1">School ID</label>
                 <input value={form.schoolId} onChange={e => setForm(f => ({ ...f, schoolId: e.target.value }))} placeholder="Leave blank for superadmin" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>

@@ -43,7 +43,12 @@ export async function GET(request: NextRequest) {
 
     await connectDB();
 
-    const filter: Record<string, unknown> = { schoolId: payload.schoolId };
+    // Use ?school= param if provided (for superadmin viewing other schools)
+    const explicitSchoolId = await getSchoolId(request);
+    const targetSchoolId = explicitSchoolId || payload.schoolId;
+    if (!canAccessSchool(payload, targetSchoolId)) return forbiddenResponse();
+
+    const filter: Record<string, unknown> = { schoolId: targetSchoolId };
     if (status) filter.status = status;
 
     const [items, total] = await Promise.all([

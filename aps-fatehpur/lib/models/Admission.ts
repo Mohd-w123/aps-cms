@@ -16,6 +16,10 @@ export interface IAdmission extends Document {
   appliedAt: Date;
   reviewedBy?: Types.ObjectId;
   reviewedAt?: Date;
+  sentToSales?: boolean;
+  sentToSalesAt?: Date;
+  sentToSalesBy?: Types.ObjectId;
+  salesPersonId?: Types.ObjectId;
 }
 
 const AdmissionSchema = new Schema<IAdmission>(
@@ -44,6 +48,10 @@ const AdmissionSchema = new Schema<IAdmission>(
     appliedAt: { type: Date, default: Date.now },
     reviewedBy: { type: Schema.Types.ObjectId, ref: "User" },
     reviewedAt: { type: Date },
+    sentToSales: { type: Boolean, default: false },
+    sentToSalesAt: { type: Date },
+    sentToSalesBy: { type: Schema.Types.ObjectId, ref: "User" },
+    salesPersonId: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );

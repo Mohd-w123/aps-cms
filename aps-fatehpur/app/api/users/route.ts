@@ -21,6 +21,9 @@ export async function GET(request: NextRequest) {
     } else if (searchParams.get("schoolId")) {
       filter.schoolId = searchParams.get("schoolId");
     }
+    if (searchParams.get("role")) {
+      filter.role = searchParams.get("role");
+    }
 
     const [data, total] = await Promise.all([
       User.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
@@ -46,10 +49,10 @@ export async function POST(request: NextRequest) {
       return errorResponse(parsed.error.issues.map((e) => e.message).join(", "));
     }
 
-    // school_admin can only create editors for their school
+    // school_admin can only create editors/sales for their school
     if (payload.role === "school_admin") {
       if (parsed.data.schoolId !== payload.schoolId) return forbiddenResponse();
-      if (parsed.data.role !== "editor") return forbiddenResponse("School admins can only create editors");
+      if (parsed.data.role !== "editor" && parsed.data.role !== "sales") return forbiddenResponse("School admins can only create editors and sales users");
     }
 
     await connectDB();
