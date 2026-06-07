@@ -8,6 +8,10 @@ export interface IEnquiry extends Document {
   subject: string;
   message: string;
   status: "new" | "read" | "replied";
+  sentToSales?: boolean;
+  sentToSalesAt?: Date;
+  sentToSalesBy?: Types.ObjectId;
+  salesPersonId?: Types.ObjectId;
 }
 
 const EnquirySchema = new Schema<IEnquiry>(
@@ -23,6 +27,10 @@ const EnquirySchema = new Schema<IEnquiry>(
       enum: ["new", "read", "replied"],
       default: "new",
     },
+    sentToSales: { type: Boolean, default: false },
+    sentToSalesAt: { type: Date },
+    sentToSalesBy: { type: Schema.Types.ObjectId, ref: "User" },
+    salesPersonId: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );

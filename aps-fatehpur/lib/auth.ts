@@ -11,7 +11,7 @@ const SALT_ROUNDS = 12;
 export interface JWTPayload {
   userId: string;
   schoolId: string;
-  role: "superadmin" | "school_admin" | "editor";
+  role: "superadmin" | "school_admin" | "editor" | "sales";
 }
 
 export function signToken(payload: JWTPayload): string {
@@ -63,7 +63,7 @@ export async function comparePassword(
   return bcrypt.compare(password, hash);
 }
 
-type AllowedRoles = ("superadmin" | "school_admin" | "editor")[];
+type AllowedRoles = ("superadmin" | "school_admin" | "editor" | "sales")[];
 
 /**
  * Validate auth and optionally check roles.

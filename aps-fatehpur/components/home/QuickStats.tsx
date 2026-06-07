@@ -49,8 +49,8 @@ function StatCard({
 
   return (
     <div className="flex flex-col items-center gap-2 py-6 px-4">
-      <Icon className="h-8 w-8 text-white/80" />
-      <span className="text-3xl md:text-4xl font-bold text-white">
+      <Icon className="h-8 w-8" style={{ color: "var(--accent-yellow, #d4e96e)" }} />
+      <span className="text-3xl md:text-4xl font-heading font-bold text-white">
         {count.toLocaleString()}
         {suffix}
       </span>
@@ -69,7 +69,9 @@ export function QuickStats() {
       .then(r => r.json())
       .then(r => {
         if (r.success) {
-          const school = Array.isArray(r.data) ? r.data[0] : r.data;
+          const arr = Array.isArray(r.data) ? r.data : [r.data];
+          const slug = document.cookie.match(/school-slug=([^;]+)/)?.[1] || "apsfatehpur";
+          const school = arr.find((s: { slug: string }) => s.slug === slug) || arr[0];
           if (school?.stats) {
             setStats([
               { icon: Users, label: "Students", target: school.stats.students || 3500, suffix: "+" },
@@ -103,7 +105,7 @@ export function QuickStats() {
     <section
       ref={ref}
       className="py-2"
-      style={{ backgroundColor: "var(--school-primary)" }}
+      style={{ background: "linear-gradient(135deg, var(--school-primary, #499f42) 0%, var(--school-primary-dark, #3d8a37) 100%)" }}
     >
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/20">

@@ -50,20 +50,14 @@ export function GalleryPreview() {
     setLightboxIndex((c) => (c !== null ? (c + 1) % images.length : null));
 
   return (
-    <section className="py-16 bg-white">
+    <section className="py-20 bg-white">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-10">
-          <p
-            className="text-sm font-semibold uppercase tracking-wider mb-2"
-            style={{ color: "var(--school-primary)" }}
-          >
-            Moments
+          <p className="text-sm font-bold uppercase tracking-widest mb-2 font-heading" style={{ color: "var(--school-primary, #499f42)" }}>
+            📸 Moments
           </p>
-          <h2
-            className="text-3xl md:text-4xl font-bold"
-            style={{ color: "var(--text-dark)" }}
-          >
+          <h2 className="font-heading text-3xl md:text-4xl font-bold" style={{ color: "var(--text-dark, #22235b)" }}>
             Photo Gallery
           </h2>
         </div>
@@ -77,9 +71,9 @@ export function GalleryPreview() {
               className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
                 catFilter === c
                   ? "text-white shadow-md"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  : "bg-gray-100 text-gray-600"
               }`}
-              style={catFilter === c ? { backgroundColor: "var(--school-primary)" } : undefined}
+              style={catFilter === c ? { backgroundColor: "var(--school-primary, #499f42)" } : undefined}
             >
               {c === "all" ? "All" : c.charAt(0).toUpperCase() + c.slice(1)}
             </button>
@@ -91,7 +85,7 @@ export function GalleryPreview() {
           {images.map((img, i) => (
             <div
               key={img._id}
-              className={`group relative overflow-hidden rounded-xl cursor-pointer ${
+              className={`group relative overflow-hidden rounded-2xl cursor-pointer ${
                 i === 0 ? "md:row-span-2" : ""
               }`}
               onClick={() => openLightbox(i)}
@@ -118,8 +112,8 @@ export function GalleryPreview() {
         <div className="mt-8 text-center">
           <Link
             href="/gallery"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold hover:opacity-80 transition-colors"
-            style={{ color: "var(--school-primary)" }}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors"
+            style={{ color: "var(--school-primary, #499f42)" }}
           >
             View Full Gallery <ArrowRight className="h-4 w-4" />
           </Link>

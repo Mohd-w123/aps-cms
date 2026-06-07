@@ -44,7 +44,17 @@ export async function GET(request: NextRequest) {
 
     await connectDB();
 
-    const filter: Record<string, unknown> = { schoolId: payload.schoolId };
+    let filter: Record<string, unknown>;
+
+    if (payload.role === "sales") {
+      filter = { salesPersonId: payload.userId, sentToSales: true };
+    } else {
+      const explicitSchoolId = await getSchoolId(request);
+      const targetSchoolId = explicitSchoolId || payload.schoolId;
+      if (!targetSchoolId || !canAccessSchool(payload, targetSchoolId)) return forbiddenResponse();
+      filter = { schoolId: targetSchoolId };
+    }
+
     if (status) filter.status = status;
 
     const [items, total] = await Promise.all([
@@ -62,7 +72,7 @@ export async function GET(request: NextRequest) {
 // PUT /api/admissions — admin protected, update status
 export async function PUT(request: NextRequest) {
   try {
-    const payload = requireAuth(request);
+    const payload = requireAuth(request, ["superadmin", "school_admin"]);
     if (!payload) return unauthorizedResponse();
 
     const body = await request.json();

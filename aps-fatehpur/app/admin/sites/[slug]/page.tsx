@@ -8,12 +8,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { FileUploader } from "@/components/admin/FileUploader";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { schools } from "@/config/schools";
-import { Plus, Pencil, Trash2, X, Loader2, ShieldAlert } from "lucide-react";
-import dynamic from "next/dynamic";
+import { Plus, Pencil, Trash2, X, Loader2, ShieldAlert, Eye, CheckCircle2, XCircle, MessageSquare, Send } from "lucide-react";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
-const RichTextEditor = dynamic(() => import("@/components/admin/RichTextEditor").then(m => m.RichTextEditor), { ssr: false });
-
-type Tab = "homepage" | "sliders" | "pages" | "news" | "gallery" | "toppers" | "persons" | "aicu";
+type Tab = "homepage" | "sliders" | "pages" | "news" | "gallery" | "toppers" | "persons" | "aicu" | "alumni" | "admissions" | "enquiries" | "social";
 
 export default function SchoolSiteManagement() {
   const params = useParams();
@@ -31,6 +29,10 @@ export default function SchoolSiteManagement() {
     { key: "toppers", label: "Toppers" },
     { key: "persons", label: "People" },
     { key: "aicu", label: "AICU" },
+    { key: "alumni", label: "Alumni" },
+    { key: "admissions", label: "Admissions" },
+    { key: "enquiries", label: "Enquiries" },
+    { key: "social", label: "Social Links" },
   ];
 
   if (!school) {
@@ -76,6 +78,10 @@ export default function SchoolSiteManagement() {
       {activeTab === "toppers" && <SchoolToppers schoolSlug={slug} />}
       {activeTab === "persons" && <SchoolPersons schoolSlug={slug} />}
       {activeTab === "aicu" && <SchoolAICU schoolSlug={slug} />}
+      {activeTab === "alumni" && <SchoolAlumni schoolSlug={slug} />}
+      {activeTab === "admissions" && <SchoolAdmissions schoolSlug={slug} />}
+      {activeTab === "enquiries" && <SchoolEnquiries schoolSlug={slug} />}
+      {activeTab === "social" && <SchoolSocialLinks schoolSlug={slug} />}
     </div>
   );
 }
@@ -383,8 +389,10 @@ function SchoolNews({ schoolSlug }: { schoolSlug: string }) {
               </div>
               <div><label className="block text-sm font-medium text-gray-700 mb-1">Excerpt</label>
                 <textarea value={form.excerpt} onChange={e => setForm(f => ({ ...f, excerpt: e.target.value }))} rows={2} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
-              <div><label className="block text-sm font-medium text-gray-700 mb-1">Featured Image</label>
-                <FileUploader value={form.featuredImage} onChange={url => setForm(f => ({ ...f, featuredImage: url }))} /></div>
+              {form.category !== "notice" && (
+                <div><label className="block text-sm font-medium text-gray-700 mb-1">Featured Image</label>
+                  <FileUploader value={form.featuredImage} onChange={url => setForm(f => ({ ...f, featuredImage: url }))} /></div>
+              )}
               <div><label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
                 <RichTextEditor value={form.content} onChange={val => setForm(f => ({ ...f, content: val }))} /></div>
               <label className="flex items-center gap-2">
@@ -985,6 +993,595 @@ function SchoolHomepage({ schoolSlug }: { schoolSlug: string }) {
           <button onClick={saveCta} disabled={saving} className="px-6 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2">
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}Save CTA Banner
           </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SOCIAL LINKS
+// ═══════════════════════════════════════════════════════════════
+function SchoolSocialLinks({ schoolSlug }: { schoolSlug: string }) {
+  const api = useAdminApi();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [schoolId, setSchoolId] = useState<string>("");
+  const [links, setLinks] = useState<Record<string, string>>({
+    facebook: "", instagram: "", youtube: "", twitter: "",
+    whatsapp: "", linkedin: "", telegram: "", website: "",
+  });
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const r = await api.get("/api/schools");
+      if (r.success) {
+        const arr = Array.isArray(r.data) ? r.data : [r.data];
+        const school = arr.find((s: { slug: string }) => s.slug === schoolSlug);
+        if (school) {
+          setSchoolId(school._id);
+          setLinks(prev => ({ ...prev, ...(school.socialLinks || {}) }));
+        }
+      }
+      setLoading(false);
+    };
+    if (api.token) load();
+  }, [api.token]); // eslint-disable-line
+
+  const save = async () => {
+    if (!schoolId) return;
+    setSaving(true);
+    await api.put("/api/schools", { id: schoolId, socialLinks: links });
+    setSaving(false);
+  };
+
+  if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>;
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-gray-600">Manage social media links for this school. These appear in the header and footer.</p>
+      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <h3 className="text-lg font-bold text-gray-900">Social Links</h3>
+        <div className="grid grid-cols-2 gap-4">
+          {(["facebook", "instagram", "youtube", "twitter", "whatsapp", "linkedin", "telegram", "website"] as const).map(k => (
+            <div key={k}>
+              <label className="block text-xs text-gray-500 mb-1 capitalize">{k}</label>
+              <input
+                value={links[k] || ""}
+                onChange={e => setLinks(prev => ({ ...prev, [k]: e.target.value }))}
+                placeholder={k === "website" ? "https://yoursite.com" : `https://${k}.com/...`}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          ))}
+        </div>
+        <button onClick={save} disabled={saving} className="px-6 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2">
+          {saving && <Loader2 className="h-4 w-4 animate-spin" />}Save Social Links
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ALUMNI
+// ═══════════════════════════════════════════════════════════════
+function SchoolAlumni({ schoolSlug }: { schoolSlug: string }) {
+  const api = useAdminApi();
+  interface AlumniItem {
+    _id: string; name: string; batch: string; course: string; currentRole: string;
+    company?: string; photo?: string; testimonial?: string; isApproved: boolean;
+  }
+  const [items, setItems] = useState<AlumniItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"pending" | "approved">("pending");
+  const [detail, setDetail] = useState<AlumniItem | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const r = await api.get(`/api/alumni?limit=200&school=${schoolSlug}`);
+    if (r.success) setItems(r.data);
+    setLoading(false);
+  }, [api, schoolSlug]);
+  useEffect(() => { if (api.token) load(); }, [api.token]); // eslint-disable-line
+
+  const toggle = async (id: string, val: boolean) => {
+    await api.put(`/api/alumni?school=${schoolSlug}`, { id, isApproved: val });
+    load();
+    if (detail?._id === id) setDetail(prev => prev ? { ...prev, isApproved: val } : null);
+  };
+
+  const remove = async (id: string) => {
+    await api.del(`/api/alumni?id=${id}&school=${schoolSlug}`);
+    load();
+    if (detail?._id === id) setDetail(null);
+  };
+
+  const pending = items.filter(i => !i.isApproved);
+  const approved = items.filter(i => i.isApproved);
+  const list = tab === "pending" ? pending : approved;
+
+  if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>;
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-gray-600">Manage alumni registrations and testimonials for this school.</p>
+
+      <div className="flex gap-2">
+        <button onClick={() => setTab("pending")} className={`px-4 py-1.5 rounded-full text-sm font-medium ${tab === "pending" ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+          Pending ({pending.length})
+        </button>
+        <button onClick={() => setTab("approved")} className={`px-4 py-1.5 rounded-full text-sm font-medium ${tab === "approved" ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+          Approved ({approved.length})
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Batch</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Role / Company</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Testimonial</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {list.map(a => (
+              <tr key={a._id} className="hover:bg-gray-50">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    {a.photo ? (
+                      <Image src={a.photo} alt={a.name} width={32} height={32} className="w-8 h-8 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">{a.name.charAt(0)}</div>
+                    )}
+                    <span className="font-medium text-gray-900">{a.name}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-gray-500">{a.batch}</td>
+                <td className="px-4 py-3 text-gray-500">{a.currentRole}{a.company ? `, ${a.company}` : ""}</td>
+                <td className="px-4 py-3 text-gray-500 max-w-[200px] truncate">{a.testimonial || "—"}</td>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <button onClick={() => setDetail(a)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500" title="View details"><Pencil className="h-4 w-4" /></button>
+                    {!a.isApproved ? (
+                      <button onClick={() => toggle(a._id, true)} className="p-1.5 rounded hover:bg-gray-100 text-emerald-600" title="Approve">✓</button>
+                    ) : (
+                      <button onClick={() => toggle(a._id, false)} className="p-1.5 rounded hover:bg-gray-100 text-amber-600" title="Revoke">✗</button>
+                    )}
+                    <button onClick={() => remove(a._id)} className="p-1.5 rounded hover:bg-gray-100 text-red-500" title="Delete"><Trash2 className="h-4 w-4" /></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {list.length === 0 && (
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">No {tab} alumni</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Detail Modal */}
+      {detail && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-5 border-b">
+              <h3 className="text-lg font-bold text-gray-900">Alumni Details</h3>
+              <button onClick={() => setDetail(null)} className="p-1 rounded hover:bg-gray-100"><X className="h-5 w-5 text-gray-500" /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="flex items-center gap-4">
+                {detail.photo ? (
+                  <Image src={detail.photo} alt={detail.name} width={64} height={64} className="w-16 h-16 rounded-full object-cover" />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-400">{detail.name.charAt(0)}</div>
+                )}
+                <div>
+                  <p className="font-semibold text-gray-900">{detail.name}</p>
+                  <p className="text-sm text-gray-500">Batch {detail.batch} • {detail.course}</p>
+                  <p className="text-sm text-gray-500">{detail.currentRole}{detail.company ? ` at ${detail.company}` : ""}</p>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Photo</label>
+                <FileUploader
+                  value={detail.photo || ""}
+                  onChange={async (url) => {
+                    setDetail(prev => prev ? { ...prev, photo: url } : null);
+                    await api.put(`/api/alumni?school=${schoolSlug}`, { id: detail._id, photo: url });
+                    load();
+                  }}
+                />
+              </div>
+              {detail.testimonial && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-xs text-gray-400 mb-1">Testimonial</p>
+                  <p className="text-sm text-gray-700 italic">&ldquo;{detail.testimonial}&rdquo;</p>
+                </div>
+              )}
+              <div className="flex gap-2">
+                {!detail.isApproved ? (
+                  <button onClick={() => toggle(detail._id, true)} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700">Approve</button>
+                ) : (
+                  <button onClick={() => toggle(detail._id, false)} className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-medium hover:bg-amber-600">Revoke Approval</button>
+                )}
+                <button onClick={() => { remove(detail._id); }} className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADMISSIONS
+// ═══════════════════════════════════════════════════════════════
+
+function SchoolAdmissions({ schoolSlug }: { schoolSlug: string }) {
+  const api = useAdminApi();
+  interface AdmissionItem {
+    _id: string; studentName: string; parentName: string; phone: string; email: string;
+    class: string; dob: string; gender: string; address: string; previousSchool?: string;
+    documents: { name: string; url: string }[]; status: string; createdAt: string;
+    sentToSales?: boolean; sentToSalesAt?: string;
+  }
+  interface SalesPerson { _id: string; name: string; email: string; }
+  const [items, setItems] = useState<AdmissionItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("");
+  const [detail, setDetail] = useState<AdmissionItem | null>(null);
+  const [salesPersons, setSalesPersons] = useState<SalesPerson[]>([]);
+  const [showSalesConfirm, setShowSalesConfirm] = useState(false);
+  const [selectedSales, setSelectedSales] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const r = await api.get(`/api/admissions?limit=200&school=${schoolSlug}`);
+    if (r.success) setItems(r.data);
+    setLoading(false);
+  }, [api, schoolSlug]);
+
+  // Load sales persons
+  const loadSalesPersons = useCallback(async () => {
+    const r = await api.get("/api/users?role=sales");
+    if (r.success) setSalesPersons(r.data || []);
+  }, [api]);
+
+  useEffect(() => { if (api.token) { load(); loadSalesPersons(); } }, [api.token]); // eslint-disable-line
+
+  const updateStatus = async (id: string, status: string) => {
+    await api.put(`/api/admissions?school=${schoolSlug}`, { id, status });
+    load();
+    if (detail?._id === id) setDetail(prev => prev ? { ...prev, status } : null);
+  };
+
+  const handleSendToSales = async () => {
+    if (!detail || !selectedSales) return;
+    setSending(true);
+    const r = await api.post("/api/admissions/send-to-sales", {
+      admissionId: detail._id,
+      salesUserId: selectedSales,
+    });
+    setSending(false);
+    setShowSalesConfirm(false);
+    if (r.success) {
+      setDetail(prev => prev ? { ...prev, sentToSales: true, sentToSalesAt: new Date().toISOString() } : null);
+      load();
+    }
+  };
+
+  const statuses = ["", "pending", "reviewed", "accepted", "rejected"];
+
+  if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>;
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-gray-600">Review and manage admission applications for this school.</p>
+
+      <div className="flex gap-2 flex-wrap">
+        {statuses.map(s => (
+          <button key={s} onClick={() => setFilter(s)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium capitalize ${filter === s ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+            {s || "All"} ({s ? items.filter(i => i.status === s).length : items.length})
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Student</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Class</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Parent</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Sales</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Date</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {(filter ? items.filter(i => i.status === filter) : items).map(a => (
+              <tr key={a._id} className="hover:bg-gray-50">
+                <td className="px-4 py-3 font-medium text-gray-900">{a.studentName}</td>
+                <td className="px-4 py-3 text-gray-600">{a.class}</td>
+                <td className="px-4 py-3 text-gray-600">{a.parentName}</td>
+                <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${a.status === "accepted" ? "bg-green-100 text-green-700" : a.status === "rejected" ? "bg-red-100 text-red-700" : a.status === "reviewed" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"}`}>{a.status}</span></td>
+                <td className="px-4 py-3">{a.sentToSales ? <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Sent</span> : <span className="text-xs text-gray-400">—</span>}</td>
+                <td className="px-4 py-3 text-gray-500">{new Date(a.createdAt).toLocaleDateString()}</td>
+                <td className="px-4 py-3 text-right">
+                  <button onClick={() => setDetail(a)} className="text-gray-400 hover:text-emerald-600"><Eye className="h-4 w-4" /></button>
+                </td>
+              </tr>
+            ))}
+            {(filter ? items.filter(i => i.status === filter) : items).length === 0 && (
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No admissions found.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Detail Modal */}
+      {detail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setDetail(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 relative" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setDetail(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700"><X className="h-5 w-5" /></button>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">{detail.studentName}</h3>
+            <p className="text-xs text-gray-500 mb-4">Lead from: <span className="font-medium text-gray-700">{schoolSlug}</span></p>
+            <div className="space-y-2 text-sm">
+              <Row label="Parent" value={detail.parentName} />
+              <Row label="Phone" value={detail.phone} />
+              <Row label="Email" value={detail.email} />
+              <Row label="Class" value={detail.class} />
+              <Row label="DOB" value={new Date(detail.dob).toLocaleDateString()} />
+              <Row label="Gender" value={detail.gender} />
+              <Row label="Address" value={detail.address} />
+              {detail.previousSchool && <Row label="Prev School" value={detail.previousSchool} />}
+              {detail.documents?.length > 0 && (
+                <div className="pt-2">
+                  <span className="text-gray-500 font-medium">Documents:</span>
+                  <ul className="mt-1 space-y-1">
+                    {detail.documents.map((d, i) => (
+                      <li key={i}><a href={d.url} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">{d.name}</a></li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <Row label="Status" value={detail.status} />
+              <Row label="Applied" value={new Date(detail.createdAt).toLocaleString()} />
+              {detail.sentToSales && <Row label="Sent to Sales" value={detail.sentToSalesAt ? new Date(detail.sentToSalesAt).toLocaleString() : "Yes"} />}
+            </div>
+            <div className="flex flex-wrap gap-2 mt-6">
+              {detail.status !== "accepted" && (
+                <button onClick={() => updateStatus(detail._id, "accepted")} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 flex items-center gap-1"><CheckCircle2 className="h-4 w-4" /> Accept</button>
+              )}
+              {detail.status !== "rejected" && (
+                <button onClick={() => updateStatus(detail._id, "rejected")} className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 flex items-center gap-1"><XCircle className="h-4 w-4" /> Reject</button>
+              )}
+              {detail.status === "pending" && (
+                <button onClick={() => updateStatus(detail._id, "reviewed")} className="px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 flex items-center gap-1"><Eye className="h-4 w-4" /> Mark Reviewed</button>
+              )}
+              <button onClick={() => { setSelectedSales(salesPersons[0]?._id || ""); setShowSalesConfirm(true); }}
+                className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 flex items-center gap-1">
+                <Send className="h-4 w-4" /> Send to Sales
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Send to Sales Confirmation Dialog */}
+      {showSalesConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" onClick={() => setShowSalesConfirm(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Send to Sales Person</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Send admission data for <span className="font-medium">{detail?.studentName}</span> to a sales person via email.
+            </p>
+            {salesPersons.length === 0 ? (
+              <p className="text-sm text-red-500 mb-4">No sales persons found. Please create a user with the &quot;sales&quot; role first.</p>
+            ) : (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Sales Person</label>
+                <select value={selectedSales} onChange={e => setSelectedSales(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                  {salesPersons.map(sp => (
+                    <option key={sp._id} value={sp._id}>{sp.name} ({sp.email})</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setShowSalesConfirm(false)} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200">Cancel</button>
+              <button onClick={handleSendToSales} disabled={!selectedSales || sending || salesPersons.length === 0}
+                className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {sending ? "Sending..." : "Confirm & Send"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return <div className="flex gap-4 py-1"><span className="w-24 text-gray-500 flex-shrink-0 font-medium">{label}</span><span className="text-gray-900">{value}</span></div>;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ENQUIRIES
+// ═══════════════════════════════════════════════════════════════
+
+function SchoolEnquiries({ schoolSlug }: { schoolSlug: string }) {
+  const api = useAdminApi();
+  interface EnquiryItem {
+    _id: string; name: string; email: string; phone: string; subject: string; message: string; status: string; createdAt: string;
+    sentToSales?: boolean; sentToSalesAt?: string;
+  }
+  interface SalesPerson { _id: string; name: string; email: string; }
+  const [items, setItems] = useState<EnquiryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("");
+  const [detail, setDetail] = useState<EnquiryItem | null>(null);
+  const [salesPersons, setSalesPersons] = useState<SalesPerson[]>([]);
+  const [showSalesConfirm, setShowSalesConfirm] = useState(false);
+  const [selectedSales, setSelectedSales] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const r = await api.get(`/api/enquiries?limit=200&school=${schoolSlug}`);
+    if (r.success) setItems(r.data);
+    setLoading(false);
+  }, [api, schoolSlug]);
+
+  const loadSalesPersons = useCallback(async () => {
+    const r = await api.get("/api/users?role=sales");
+    if (r.success) setSalesPersons(r.data || []);
+  }, [api]);
+
+  useEffect(() => { if (api.token) { load(); loadSalesPersons(); } }, [api.token]); // eslint-disable-line
+
+  const updateStatus = async (id: string, status: string) => {
+    await api.put(`/api/enquiries?school=${schoolSlug}`, { id, status });
+    load();
+    if (detail?._id === id) setDetail(prev => prev ? { ...prev, status } : null);
+  };
+
+  const handleSendToSales = async () => {
+    if (!detail || !selectedSales) return;
+    setSending(true);
+    const r = await api.post("/api/enquiries/send-to-sales", {
+      enquiryId: detail._id,
+      salesUserId: selectedSales,
+    });
+    setSending(false);
+    setShowSalesConfirm(false);
+    if (r.success) {
+      setDetail(prev => prev ? { ...prev, sentToSales: true, sentToSalesAt: new Date().toISOString() } : null);
+      load();
+    }
+  };
+
+  const statuses = ["", "new", "read", "replied"];
+
+  if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>;
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-gray-600">Manage contact enquiries submitted to this school.</p>
+
+      <div className="flex gap-2 flex-wrap">
+        {statuses.map(s => (
+          <button key={s} onClick={() => setFilter(s)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium capitalize ${filter === s ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+            {s || "All"} ({s ? items.filter(i => i.status === s).length : items.length})
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Subject</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Sales</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Date</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {(filter ? items.filter(i => i.status === filter) : items).map(e => (
+              <tr key={e._id} className="hover:bg-gray-50">
+                <td className="px-4 py-3 font-medium text-gray-900">{e.name}</td>
+                <td className="px-4 py-3 text-gray-600 truncate max-w-[200px]">{e.subject}</td>
+                <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${e.status === "replied" ? "bg-green-100 text-green-700" : e.status === "read" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"}`}>{e.status}</span></td>
+                <td className="px-4 py-3">{e.sentToSales ? <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Sent</span> : <span className="text-xs text-gray-400">—</span>}</td>
+                <td className="px-4 py-3 text-gray-500">{new Date(e.createdAt).toLocaleDateString()}</td>
+                <td className="px-4 py-3 text-right">
+                  <button onClick={() => { setDetail(e); if (e.status === "new") updateStatus(e._id, "read"); }} className="text-gray-400 hover:text-emerald-600"><Eye className="h-4 w-4" /></button>
+                </td>
+              </tr>
+            ))}
+            {(filter ? items.filter(i => i.status === filter) : items).length === 0 && (
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">No enquiries found.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Detail Modal */}
+      {detail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setDetail(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 relative" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setDetail(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700"><X className="h-5 w-5" /></button>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">{detail.name}</h3>
+            <p className="text-xs text-gray-500 mb-1">{detail.subject}</p>
+            <p className="text-xs text-gray-500 mb-4">Lead from: <span className="font-medium text-gray-700">{schoolSlug}</span></p>
+            <div className="space-y-2 text-sm mb-4">
+              <Row label="Email" value={detail.email} />
+              <Row label="Phone" value={detail.phone} />
+              <Row label="Status" value={detail.status} />
+              <Row label="Date" value={new Date(detail.createdAt).toLocaleString()} />
+              {detail.sentToSales && <Row label="Sent to Sales" value={detail.sentToSalesAt ? new Date(detail.sentToSalesAt).toLocaleString() : "Yes"} />}
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-800 whitespace-pre-wrap">{detail.message}</div>
+            <div className="flex flex-wrap gap-2 mt-6">
+              {detail.status !== "replied" && (
+                <button onClick={() => updateStatus(detail._id, "replied")} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 flex items-center gap-1"><MessageSquare className="h-4 w-4" /> Mark Replied</button>
+              )}
+              {detail.status === "new" && (
+                <button onClick={() => updateStatus(detail._id, "read")} className="px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 flex items-center gap-1"><Eye className="h-4 w-4" /> Mark Read</button>
+              )}
+              <button onClick={() => { setSelectedSales(salesPersons[0]?._id || ""); setShowSalesConfirm(true); }}
+                className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 flex items-center gap-1">
+                <Send className="h-4 w-4" /> Send to Sales
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Send to Sales Confirmation Dialog */}
+      {showSalesConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" onClick={() => setShowSalesConfirm(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Send to Sales Person</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Send enquiry from <span className="font-medium">{detail?.name}</span> to a sales person via email.
+            </p>
+            {salesPersons.length === 0 ? (
+              <p className="text-sm text-red-500 mb-4">No sales persons found. Please create a user with the &quot;sales&quot; role first.</p>
+            ) : (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Sales Person</label>
+                <select value={selectedSales} onChange={e => setSelectedSales(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                  {salesPersons.map(sp => (
+                    <option key={sp._id} value={sp._id}>{sp.name} ({sp.email})</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setShowSalesConfirm(false)} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200">Cancel</button>
+              <button onClick={handleSendToSales} disabled={!selectedSales || sending || salesPersons.length === 0}
+                className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {sending ? "Sending..." : "Confirm & Send"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

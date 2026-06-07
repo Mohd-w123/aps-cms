@@ -23,6 +23,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { SocialLinksBar, SocialIcon, socialPlatforms } from "@/components/shared/SocialIcons";
+import { TestimonialsSlider } from "@/components/home/TestimonialsSlider";
 
 /* ── Fallbacks (used until API data loads) ── */
 const fallbackBranches = configSchools.filter((s) => s.slug !== "apsfatehpur");
@@ -91,12 +93,12 @@ function BlobDecoration({ className }: { className?: string }) {
 function FloatingDecorations() {
   return (
     <>
-      <Star className="absolute top-20 left-[10%] h-6 w-6 text-yellow-400/80 animate-float" />
-      <Pencil className="absolute top-40 right-[15%] h-5 w-5 text-purple-400/70 animate-float-slow" />
-      <Sparkles className="absolute bottom-32 left-[20%] h-7 w-7 text-pink-400/70 animate-bounce-gentle" />
-      <Heart className="absolute top-1/3 right-[8%] h-5 w-5 text-rose-400/65 animate-float" />
-      <BookOpen className="absolute bottom-20 right-[25%] h-6 w-6 text-blue-400/70 animate-float-slow" />
-      <Star className="absolute top-1/2 left-[5%] h-4 w-4 text-amber-400/75 animate-bounce-gentle" />
+      <Star className="absolute top-20 left-[10%] h-6 w-6 text-[#d4e96e]/80 animate-float" />
+      <Pencil className="absolute top-40 right-[15%] h-5 w-5 text-[#499f42]/70 animate-float-slow" />
+      <Sparkles className="absolute bottom-32 left-[20%] h-7 w-7 text-[#9ab5db]/70 animate-bounce-gentle" />
+      <Heart className="absolute top-1/3 right-[8%] h-5 w-5 text-[#499f42]/50 animate-float" />
+      <BookOpen className="absolute bottom-20 right-[25%] h-6 w-6 text-[#9ab5db]/70 animate-float-slow" />
+      <Star className="absolute top-1/2 left-[5%] h-4 w-4 text-[#d4e96e]/75 animate-bounce-gentle" />
     </>
   );
 }
@@ -136,7 +138,7 @@ function CursorTrail() {
   return (
     <div
       ref={trailRef}
-      className="pointer-events-none fixed top-0 left-0 z-[9999] h-6 w-6 rounded-full bg-gradient-to-br from-purple-500/50 to-pink-500/50 blur-[2px] hidden md:block ring-1 ring-purple-400/30"
+      className="pointer-events-none fixed top-0 left-0 z-[9999] h-6 w-6 rounded-full bg-gradient-to-br from-[#499f42]/50 to-[#9ab5db]/50 blur-[2px] hidden md:block ring-1 ring-[#499f42]/30"
       style={{ willChange: "transform" }}
     />
   );
@@ -156,6 +158,7 @@ export function GroupLanding() {
   const [contactInfo, setContactInfo] = useState({ phone: "+91-XXXX-XXXXXX", email: "info@apsfatehpur.com", address: "Fatehpur Shekhawati, Rajasthan, India" });
   const [groupHeaderNav, setGroupHeaderNav] = useState(defaultNavLinks);
   const [groupFooterLinks, setGroupFooterLinks] = useState(defaultGroupFooterLinks);
+  const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetch("/api/sliders?scope=group&limit=10").then(r => r.json())
@@ -182,6 +185,7 @@ export function GroupLanding() {
           if (group?.footerLinks?.length) {
             setGroupFooterLinks(group.footerLinks);
           }
+          if (group?.socialLinks) setSocialLinks(group.socialLinks);
         }
       }).catch(() => {});
 
@@ -212,21 +216,22 @@ export function GroupLanding() {
       }));
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fef9f4] font-sans">
+    <div className="min-h-screen flex flex-col bg-[#f6faf5] font-sans">
       <CursorTrail />
-      <GroupNav groupName={groupName} navLinks={groupHeaderNav} />
+      <GroupNav groupName={groupName} navLinks={groupHeaderNav} socialLinks={socialLinks} contactInfo={contactInfo} />
       <HeroSlider slides={slides} />
       <AboutSection />
       <BranchesSection branches={branchCards} />
       <ToppersSection toppers={toppers} />
       <GallerySection items={gallery} />
-      <GroupFooter branches={branchCards} contactInfo={contactInfo} groupName={groupName} footerLinks={groupFooterLinks} />
+      <TestimonialsSlider />
+      <GroupFooter branches={branchCards} contactInfo={contactInfo} groupName={groupName} footerLinks={groupFooterLinks} socialLinks={socialLinks} />
     </div>
   );
 }
 
 /* ───────────────────── NAV ───────────────────── */
-function GroupNav({ groupName, navLinks }: { groupName: string; navLinks: { label: string; href: string }[] }) {
+function GroupNav({ groupName, navLinks, socialLinks, contactInfo }: { groupName: string; navLinks: { label: string; href: string }[]; socialLinks: Record<string, string>; contactInfo: { phone: string; email: string; address: string } }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -236,70 +241,124 @@ function GroupNav({ groupName, navLinks }: { groupName: string; navLinks: { labe
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const hasSocial = socialPlatforms.some(p => socialLinks[p.key]);
+
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled || mobileOpen
-          ? "bg-white/90 backdrop-blur-md shadow-sm border-b border-purple-100/50"
-          : "bg-transparent"
-      }`}
-    >
-      <div className="w-full mx-auto px-4 md:px-8 flex items-center justify-between h-16 md:h-18">
-        <Link href="#home" className="flex items-center gap-3">
-          <Image
-            src="/logos/apsfatehpur.png"
-            alt="APS Fatehpur"
-            width={44}
-            height={44}
-            className="rounded-full ring-2 ring-purple-200/50"
-          />
-          <span
-            className={`font-heading font-bold text-sm md:text-base transition-colors ${
-              scrolled || mobileOpen ? "text-purple-900" : "text-white"
-            }`}
-          >
-            {groupName}
-          </span>
-        </Link>
-
-        <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all hover:bg-purple-100/50 ${
-                scrolled ? "text-purple-800 hover:text-purple-900" : "text-white/90 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              {link.label}
-            </a>
-          ))}
-        </nav>
-
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className={`md:hidden p-2 rounded-full transition-colors ${
-            scrolled || mobileOpen ? "text-purple-900 hover:bg-purple-50" : "text-white hover:bg-white/10"
-          }`}
-        >
-          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+    <header className="fixed top-0 left-0 right-0 z-50">
+      {/* ── Top Info Bar (visible on desktop, hidden when scrolled) ── */}
+      <div
+        className={`hidden md:block text-white text-sm transition-all duration-300 overflow-hidden ${
+          scrolled ? "max-h-0 opacity-0" : "max-h-12 opacity-100"
+        }`}
+        style={{ backgroundColor: "var(--school-primary-dark, #22235b)" }}
+      >
+        <div className="w-full mx-auto px-4 md:px-8 flex items-center justify-between py-2">
+          <div className="flex items-center gap-6">
+            {contactInfo.phone && (
+              <span className="flex items-center gap-1.5">
+                <Phone className="h-3.5 w-3.5" />
+                {contactInfo.phone}
+              </span>
+            )}
+            {contactInfo.email && (
+              <span className="flex items-center gap-1.5">
+                <Mail className="h-3.5 w-3.5" />
+                {contactInfo.email}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-4">
+            {contactInfo.address && (
+              <span className="flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5" />
+                {contactInfo.address}
+              </span>
+            )}
+            {hasSocial && (
+              <span className="flex items-center gap-2 ml-2">
+                {socialPlatforms.filter(p => socialLinks[p.key]).map(p => (
+                  <a
+                    key={p.key}
+                    href={socialLinks[p.key]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={p.label}
+                    className="hover:opacity-80 transition-opacity"
+                  >
+                    <SocialIcon platform={p.key} />
+                  </a>
+                ))}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
-      {mobileOpen && (
-        <div className="md:hidden bg-white/95 backdrop-blur-md border-t border-purple-100/50 shadow-lg rounded-b-3xl mx-2">
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={() => setMobileOpen(false)}
-              className="block px-6 py-3.5 text-sm font-medium text-purple-800 hover:bg-purple-50/50 transition-colors"
+      {/* ── Main Navbar ── */}
+      <div
+        className={`transition-all duration-300 ${
+          scrolled || mobileOpen
+            ? "bg-white/90 backdrop-blur-md shadow-sm border-b border-[#9ab5db]/30"
+            : "bg-transparent"
+        }`}
+      >
+        <div className="w-full mx-auto px-4 md:px-8 flex items-center justify-between h-16 md:h-18">
+          <Link href="#home" className="flex items-center gap-3">
+            <Image
+              src="/logos/apsfatehpur.png"
+              alt="APS Fatehpur"
+              width={44}
+              height={44}
+              className="rounded-full ring-2 ring-[#499f42]/30"
+            />
+            <span
+              className={`font-heading font-bold text-sm md:text-base transition-colors ${
+                scrolled || mobileOpen ? "text-[#22235b]" : "text-white"
+              }`}
             >
-              {link.label}
-            </a>
-          ))}
+              {groupName}
+            </span>
+          </Link>
+
+          <nav className="hidden md:flex items-center gap-1">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all hover:bg-[#499f42]/10 ${
+                  scrolled ? "text-[#22235b] hover:text-[#499f42]" : "text-white/90 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className={`md:hidden p-2 rounded-full transition-colors ${
+              scrolled || mobileOpen ? "text-[#22235b] hover:bg-[#499f42]/10" : "text-white hover:bg-white/10"
+            }`}
+          >
+            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
-      )}
+
+        {mobileOpen && (
+          <div className="md:hidden bg-white/95 backdrop-blur-md border-t border-[#9ab5db]/30 shadow-lg rounded-b-3xl mx-2">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className="block px-6 py-3.5 text-sm font-medium text-[#22235b] hover:bg-[#499f42]/5 transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
     </header>
   );
 }
@@ -327,13 +386,13 @@ function HeroSlider({ slides }: { slides: SlideData[] }) {
           backgroundPosition: "center",
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/60 via-indigo-900/40 to-pink-900/30" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#22235b]/60 via-[#22235b]/40 to-[#499f42]/20" />
       </div>
 
       {/* Floating decorations on hero */}
       <div className="absolute inset-0 pointer-events-none">
-        <Star className="absolute top-24 left-[15%] h-5 w-5 text-yellow-300/70 animate-float" />
-        <Sparkles className="absolute top-32 right-[20%] h-6 w-6 text-pink-300/60 animate-float-slow" />
+        <Star className="absolute top-24 left-[15%] h-5 w-5 text-[#d4e96e]/70 animate-float" />
+        <Sparkles className="absolute top-32 right-[20%] h-6 w-6 text-[#9ab5db]/60 animate-float-slow" />
         <Star className="absolute bottom-40 left-[10%] h-4 w-4 text-white/50 animate-bounce-gentle" />
       </div>
 
@@ -347,7 +406,7 @@ function HeroSlider({ slides }: { slides: SlideData[] }) {
             <div className="flex gap-4 flex-wrap">
               <a
                 href="#branches"
-                className="inline-block rounded-full px-8 py-3.5 font-semibold text-base bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25 transition-all hover:scale-105 hover:shadow-xl hover:shadow-purple-500/30"
+                className="inline-block rounded-full px-8 py-3.5 font-semibold text-base bg-gradient-to-r from-[#499f42] to-[#3d8a37] text-white shadow-lg shadow-[#499f42]/25 transition-all hover:scale-105 hover:shadow-xl hover:shadow-[#499f42]/30"
               >
                 Our Branches
               </a>
@@ -364,31 +423,31 @@ function HeroSlider({ slides }: { slides: SlideData[] }) {
 
       <button
         onClick={prev}
-        className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all hover:scale-110"
+        className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#499f42] to-[#3d8a37] text-white shadow-lg shadow-[#499f42]/30 hover:shadow-xl hover:shadow-[#499f42]/40 transition-all hover:scale-110"
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
       <button
         onClick={next}
-        className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all hover:scale-110"
+        className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#499f42] to-[#3d8a37] text-white shadow-lg shadow-[#499f42]/30 hover:shadow-xl hover:shadow-[#499f42]/40 transition-all hover:scale-110"
       >
         <ChevronRight className="h-5 w-5" />
       </button>
 
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2.5 bg-purple-900/40 backdrop-blur-sm rounded-full px-3 py-2">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2.5 bg-[#22235b]/40 backdrop-blur-sm rounded-full px-3 py-2">
         {slides.map((_, i) => (
           <button
             key={i}
             onClick={() => setCurrent(i)}
             className={`h-3 rounded-full transition-all ${
-              i === current ? "w-10 bg-gradient-to-r from-purple-400 to-pink-400 shadow-md" : "w-3 bg-white/60 hover:bg-white/80"
+              i === current ? "w-10 bg-gradient-to-r from-[#499f42] to-[#d4e96e] shadow-md" : "w-3 bg-white/60 hover:bg-white/80"
             }`}
           />
         ))}
       </div>
 
       {/* Bottom wave */}
-      <div className="absolute bottom-0 left-0 w-full text-[#fef9f4]">
+      <div className="absolute bottom-0 left-0 w-full text-[#f6faf5]">
         <WaveBottom />
       </div>
     </section>
@@ -422,10 +481,10 @@ function AboutSection() {
   const displayContent = content || defaultContent;
 
   return (
-    <section id="about" className="relative py-24 bg-gradient-to-br from-[#fef9f4] via-[#f5f0ff] to-[#eef6ff] overflow-hidden">
+    <section id="about" className="relative py-24 bg-gradient-to-br from-[#f6faf5] via-[#f0f5fa] to-[#f5faf0] overflow-hidden">
       {/* Background blobs */}
-      <BlobDecoration className="absolute -top-20 -right-20 w-72 h-72 text-purple-200/50 animate-float-slow" />
-      <BlobDecoration className="absolute -bottom-16 -left-16 w-56 h-56 text-blue-200/40 animate-float" />
+      <BlobDecoration className="absolute -top-20 -right-20 w-72 h-72 text-[#9ab5db]/30 animate-float-slow" />
+      <BlobDecoration className="absolute -bottom-16 -left-16 w-56 h-56 text-[#499f42]/20 animate-float" />
 
       <FloatingDecorations />
 
@@ -442,21 +501,21 @@ function AboutSection() {
               />
             </div>
             {/* Decorative accent */}
-            <div className="absolute -bottom-4 -right-4 w-24 h-24 rounded-2xl -z-10 opacity-60" style={{ background: "linear-gradient(135deg, #fde2c8, #f9c4d2)" }} />
-            <div className="absolute -top-4 -left-4 w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full -z-10 opacity-50" />
+            <div className="absolute -bottom-4 -right-4 w-24 h-24 rounded-2xl -z-10 opacity-60" style={{ background: "linear-gradient(135deg, #d4e96e, #9ab5db)" }} />
+            <div className="absolute -top-4 -left-4 w-20 h-20 bg-gradient-to-br from-[#9ab5db]/30 to-[#499f42]/20 rounded-full -z-10 opacity-50" />
           </div>
           <div>
-            <p className="text-sm font-bold uppercase tracking-widest mb-3 text-purple-500 font-heading">
+            <p className="text-sm font-bold uppercase tracking-widest mb-3 text-[#499f42] font-heading">
               ✨ About Us
             </p>
-            <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-purple-900 leading-tight">
+            <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-[#22235b] leading-tight">
               {title}
             </h2>
             <div
               className="text-base leading-relaxed text-gray-600 space-y-4 [&>p]:mb-4"
               dangerouslySetInnerHTML={{ __html: displayContent }}
             />
-            <p className="text-sm italic text-purple-400 mt-6 font-medium">
+            <p className="text-sm italic text-[#499f42]/70 mt-6 font-medium">
               {signoff}
             </p>
           </div>
@@ -470,32 +529,32 @@ function AboutSection() {
 interface BranchCard { slug: string; name: string; domain: string; logo: string; theme: { primary: string }; image: string; cardBgColor?: string; websiteUrl?: string; }
 
 const pastelColors = [
-  { bg: "from-blue-50 to-indigo-50", border: "border-blue-200/50", hover: "hover:shadow-blue-200/40" },
-  { bg: "from-purple-50 to-pink-50", border: "border-purple-200/50", hover: "hover:shadow-purple-200/40" },
-  { bg: "from-amber-50 to-orange-50", border: "border-amber-200/50", hover: "hover:shadow-amber-200/40" },
-  { bg: "from-emerald-50 to-teal-50", border: "border-emerald-200/50", hover: "hover:shadow-emerald-200/40" },
+  { bg: "from-[#f0f7ef] to-[#e8f5e6]", border: "border-[#499f42]/20", hover: "hover:shadow-[#499f42]/20" },
+  { bg: "from-[#eef2f8] to-[#e4ecf5]", border: "border-[#9ab5db]/30", hover: "hover:shadow-[#9ab5db]/20" },
+  { bg: "from-[#f8fae8] to-[#f2f7d8]", border: "border-[#d4e96e]/30", hover: "hover:shadow-[#d4e96e]/20" },
+  { bg: "from-[#ecedf5] to-[#e2e3f0]", border: "border-[#22235b]/15", hover: "hover:shadow-[#22235b]/15" },
 ];
 
 function BranchesSection({ branches }: { branches: BranchCard[] }) {
   return (
-    <section id="branches" className="relative py-24 overflow-hidden bg-gradient-to-b from-[#ede9fe]/60 via-[#fce7f3]/40 to-[#dbeafe]/50">
+    <section id="branches" className="relative py-24 overflow-hidden bg-gradient-to-b from-[#e8f5e6]/40 via-[#eef2f8]/30 to-[#f8fae8]/40">
       {/* Top wave */}
-      <div className="absolute top-0 left-0 w-full text-[#fef9f4]">
+      <div className="absolute top-0 left-0 w-full text-[#f6faf5]">
         <WaveTop />
       </div>
 
       {/* Background blobs */}
-      <BlobDecoration className="absolute top-10 -left-20 w-64 h-64 text-purple-200/50 animate-float-slow" />
-      <BlobDecoration className="absolute bottom-10 -right-16 w-48 h-48 text-blue-200/45 animate-float" />
+      <BlobDecoration className="absolute top-10 -left-20 w-64 h-64 text-[#499f42]/15 animate-float-slow" />
+      <BlobDecoration className="absolute bottom-10 -right-16 w-48 h-48 text-[#9ab5db]/20 animate-float" />
 
       <FloatingDecorations />
 
       <div className="w-full mx-auto px-6 md:px-12 lg:px-16 relative z-10">
         <div className="text-center mb-14">
-          <p className="text-sm font-bold uppercase tracking-widest mb-3 text-purple-500 font-heading">
+          <p className="text-sm font-bold uppercase tracking-widest mb-3 text-[#499f42] font-heading">
             🏫 Our Network
           </p>
-          <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-purple-900">
+          <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[#22235b]">
             Our Branches
           </h2>
           <p className="mt-4 text-gray-500 max-w-md mx-auto">
@@ -511,7 +570,7 @@ function BranchesSection({ branches }: { branches: BranchCard[] }) {
       </div>
 
       {/* Bottom wave */}
-      <div className="absolute bottom-0 left-0 w-full text-[#fff7ed]">
+      <div className="absolute bottom-0 left-0 w-full text-[#f6faf5]">
         <WaveBottom />
       </div>
     </section>
@@ -553,10 +612,10 @@ function PlayfulBranchCard({ school, colorSet }: { school: BranchCard; colorSet:
             className="w-full h-full object-cover"
           />
         </div>
-        <h3 className="font-heading font-bold text-base text-purple-900 mb-2 leading-snug">
+        <h3 className="font-heading font-bold text-base text-[#22235b] mb-2 leading-snug">
           {school.name}
         </h3>
-        <span className="inline-flex items-center gap-1 text-xs font-medium text-purple-500 group-hover:text-purple-700 transition-colors">
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-[#499f42] group-hover:text-[#3d8a37] transition-colors">
           Visit Website <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
         </span>
       </CardContent>
@@ -583,23 +642,23 @@ function ToppersSection({ toppers }: { toppers: string[] }) {
   }, []);
 
   return (
-    <section id="toppers" className="relative py-24 bg-gradient-to-br from-[#fefce8]/50 via-[#fff7ed] to-[#fef2f2]/60 overflow-hidden">
+    <section id="toppers" className="relative py-24 bg-gradient-to-br from-[#f8fae8]/40 via-[#f6faf5] to-[#eef2f8]/40 overflow-hidden">
       {/* Background blobs */}
-      <BlobDecoration className="absolute top-20 right-0 w-60 h-60 text-amber-200/50 animate-float" />
-      <BlobDecoration className="absolute bottom-10 left-10 w-44 h-44 text-pink-200/45 animate-float-slow" />
+      <BlobDecoration className="absolute top-20 right-0 w-60 h-60 text-[#d4e96e]/30 animate-float" />
+      <BlobDecoration className="absolute bottom-10 left-10 w-44 h-44 text-[#9ab5db]/25 animate-float-slow" />
 
       <div className="absolute inset-0 pointer-events-none">
-        <GraduationCap className="absolute top-16 left-[12%] h-7 w-7 text-purple-400/65 animate-float" />
-        <Star className="absolute top-24 right-[18%] h-5 w-5 text-yellow-400/70 animate-bounce-gentle" />
-        <Sparkles className="absolute bottom-20 left-[30%] h-6 w-6 text-pink-400/60 animate-float-slow" />
+        <GraduationCap className="absolute top-16 left-[12%] h-7 w-7 text-[#22235b]/40 animate-float" />
+        <Star className="absolute top-24 right-[18%] h-5 w-5 text-[#d4e96e]/70 animate-bounce-gentle" />
+        <Sparkles className="absolute bottom-20 left-[30%] h-6 w-6 text-[#9ab5db]/50 animate-float-slow" />
       </div>
 
       <div className="w-full mx-auto px-6 md:px-12 lg:px-16 relative z-10">
         <div className="text-center mb-12">
-          <p className="text-sm font-bold uppercase tracking-widest mb-3 text-purple-500 font-heading">
+          <p className="text-sm font-bold uppercase tracking-widest mb-3 text-[#499f42] font-heading">
             🏆 Achievements
           </p>
-          <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-purple-900">
+          <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[#22235b]">
             Our Toppers
           </h2>
           <p className="mt-4 text-gray-500 max-w-md mx-auto">
@@ -720,24 +779,24 @@ function GallerySection({ items }: { items: GalleryData[] }) {
   const current = lightboxIndex !== null ? filtered[lightboxIndex] : null;
 
   return (
-    <section id="gallery" className="relative py-24 overflow-hidden bg-gradient-to-b from-[#fce7f3]/50 via-[#ede9fe]/40 to-[#dbeafe]/50">
+    <section id="gallery" className="relative py-24 overflow-hidden bg-gradient-to-b from-[#eef2f8]/40 via-[#f0f7ef]/30 to-[#f8fae8]/40">
       {/* Top wave */}
-      <div className="absolute top-0 left-0 w-full text-[#fff7ed]">
+      <div className="absolute top-0 left-0 w-full text-[#f6faf5]">
         <WaveTop />
       </div>
 
       {/* Background blobs */}
-      <BlobDecoration className="absolute -top-10 right-10 w-52 h-52 text-pink-200/45 animate-float" />
-      <BlobDecoration className="absolute bottom-20 -left-10 w-40 h-40 text-purple-200/40 animate-float-slow" />
+      <BlobDecoration className="absolute -top-10 right-10 w-52 h-52 text-[#9ab5db]/25 animate-float" />
+      <BlobDecoration className="absolute bottom-20 -left-10 w-40 h-40 text-[#499f42]/15 animate-float-slow" />
 
       <FloatingDecorations />
 
       <div className="w-full mx-auto px-6 md:px-12 lg:px-16 relative z-10">
         <div className="text-center mb-10">
-          <p className="text-sm font-bold uppercase tracking-widest mb-3 text-purple-500 font-heading">
+          <p className="text-sm font-bold uppercase tracking-widest mb-3 text-[#499f42] font-heading">
             📸 Memories
           </p>
-          <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-purple-900">
+          <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[#22235b]">
             Our Gallery
           </h2>
         </div>
@@ -750,8 +809,8 @@ function GallerySection({ items }: { items: GalleryData[] }) {
               onClick={() => { setCatFilter(cat); setLightboxIndex(null); }}
               className={`px-5 py-2 rounded-full text-xs font-semibold transition-all ${
                 catFilter === cat
-                  ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-300/30"
-                  : "bg-white text-purple-700 hover:bg-purple-50 border border-purple-100 shadow-sm"
+                  ? "bg-gradient-to-r from-[#499f42] to-[#3d8a37] text-white shadow-lg shadow-[#499f42]/20"
+                  : "bg-white text-[#22235b] hover:bg-[#499f42]/5 border border-[#9ab5db]/30 shadow-sm"
               }`}
             >
               {cat === "all" ? "All" : cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -773,7 +832,7 @@ function GallerySection({ items }: { items: GalleryData[] }) {
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-110"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#22235b]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 {item.type === "video" ? (
                   <Play className="h-10 w-10 text-white drop-shadow-lg" />
                 ) : (
@@ -791,7 +850,7 @@ function GallerySection({ items }: { items: GalleryData[] }) {
       </div>
 
       {/* Bottom wave */}
-      <div className="absolute bottom-0 left-0 w-full text-[#1e1b4b]">
+      <div className="absolute bottom-0 left-0 w-full text-[#22235b]">
         <WaveBottom />
       </div>
 
@@ -860,12 +919,12 @@ function GallerySection({ items }: { items: GalleryData[] }) {
 }
 
 /* ───────────────────── FOOTER ───────────────────── */
-function GroupFooter({ branches, contactInfo, groupName, footerLinks }: { branches: BranchCard[]; contactInfo: { phone: string; email: string; address: string }; groupName: string; footerLinks: { title: string; links: { label: string; href: string }[] }[] }) {
+function GroupFooter({ branches, contactInfo, groupName, footerLinks, socialLinks }: { branches: BranchCard[]; contactInfo: { phone: string; email: string; address: string }; groupName: string; footerLinks: { title: string; links: { label: string; href: string }[] }[]; socialLinks: Record<string, string> }) {
   return (
-    <footer id="contact" className="relative bg-[#1e1b4b] text-white overflow-hidden">
+    <footer id="contact" className="relative bg-[#22235b] text-white overflow-hidden">
       {/* Background decorative elements */}
-      <BlobDecoration className="absolute top-10 right-10 w-60 h-60 text-purple-800/20 animate-float-slow" />
-      <BlobDecoration className="absolute bottom-20 left-10 w-40 h-40 text-indigo-800/20 animate-float" />
+      <BlobDecoration className="absolute top-10 right-10 w-60 h-60 text-[#499f42]/10 animate-float-slow" />
+      <BlobDecoration className="absolute bottom-20 left-10 w-40 h-40 text-[#9ab5db]/10 animate-float" />
 
       <div className="w-full mx-auto px-6 md:px-12 lg:px-16 py-16 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
@@ -877,25 +936,28 @@ function GroupFooter({ branches, contactInfo, groupName, footerLinks }: { branch
                 alt="APS"
                 width={44}
                 height={44}
-                className="rounded-full ring-2 ring-purple-300/30"
+                className="rounded-full ring-2 ring-[#499f42]/20"
               />
               <span className="font-heading font-bold text-lg">{groupName}</span>
             </div>
-            <p className="text-sm text-purple-200/70 leading-relaxed">
+            <p className="text-sm text-[#9ab5db]/80 leading-relaxed">
               {groupName} — Nurturing minds, building futures since 1940.
             </p>
+            <div className="mt-4">
+              <SocialLinksBar links={socialLinks} variant="dark" size="sm" />
+            </div>
           </div>
 
           {/* Dynamic footer link groups */}
           {footerLinks.map((group) => (
             <div key={group.title}>
-              <h4 className="font-heading font-bold mb-4 text-purple-100">{group.title}</h4>
+              <h4 className="font-heading font-bold mb-4 text-[#d4e96e]">{group.title}</h4>
               <ul className="space-y-2.5">
                 {group.links.map((link) => (
                   <li key={link.href}>
                     <a
                       href={link.href}
-                      className="text-sm text-purple-200/60 hover:text-white transition-colors hover:pl-1 inline-block"
+                      className="text-sm text-[#9ab5db]/70 hover:text-white transition-colors hover:pl-1 inline-block"
                     >
                       {link.label}
                     </a>
@@ -907,7 +969,7 @@ function GroupFooter({ branches, contactInfo, groupName, footerLinks }: { branch
 
           {/* Our Branches */}
           <div>
-            <h4 className="font-heading font-bold mb-4 text-purple-100">Our Branches</h4>
+            <h4 className="font-heading font-bold mb-4 text-[#d4e96e]">Our Branches</h4>
             <ul className="space-y-2.5">
               {branches.map((school) => (
                 <li key={school.slug}>
@@ -919,7 +981,7 @@ function GroupFooter({ branches, contactInfo, groupName, footerLinks }: { branch
                         window.location.href = `/?school=${school.slug}`;
                       }
                     }}
-                    className="text-sm text-purple-200/60 hover:text-white transition-colors hover:pl-1 inline-block"
+                    className="text-sm text-[#9ab5db]/70 hover:text-white transition-colors hover:pl-1 inline-block"
                   >
                     {school.name}
                   </a>
@@ -930,25 +992,25 @@ function GroupFooter({ branches, contactInfo, groupName, footerLinks }: { branch
 
           {/* Contact */}
           <div>
-            <h4 className="font-heading font-bold mb-4 text-purple-100">Contact</h4>
+            <h4 className="font-heading font-bold mb-4 text-[#d4e96e]">Contact</h4>
             <div className="space-y-3.5">
-              <div className="flex items-start gap-3 text-sm text-purple-200/60">
-                <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-purple-300" />
+              <div className="flex items-start gap-3 text-sm text-[#9ab5db]/70">
+                <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-[#499f42]" />
                 <span>{contactInfo.address}</span>
               </div>
-              <div className="flex items-center gap-3 text-sm text-purple-200/60">
-                <Phone className="h-4 w-4 flex-shrink-0 text-purple-300" />
+              <div className="flex items-center gap-3 text-sm text-[#9ab5db]/70">
+                <Phone className="h-4 w-4 flex-shrink-0 text-[#499f42]" />
                 <span>{contactInfo.phone}</span>
               </div>
-              <div className="flex items-center gap-3 text-sm text-purple-200/60">
-                <Mail className="h-4 w-4 flex-shrink-0 text-purple-300" />
+              <div className="flex items-center gap-3 text-sm text-[#9ab5db]/70">
+                <Mail className="h-4 w-4 flex-shrink-0 text-[#499f42]" />
                 <span>{contactInfo.email}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div className="border-t border-purple-800/50 text-center py-5 text-sm text-purple-300/50">
+      <div className="border-t border-[#9ab5db]/20 text-center py-5 text-sm text-[#9ab5db]/50">
         © {new Date().getFullYear()} {groupName}. All rights reserved.
       </div>
     </footer>

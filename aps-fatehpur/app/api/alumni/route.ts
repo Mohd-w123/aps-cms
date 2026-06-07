@@ -44,8 +44,14 @@ export async function GET(request: NextRequest) {
     let filter: Record<string, unknown>;
 
     if (payload) {
-      // Admin mode: all alumni for their school
-      filter = { schoolId: payload.schoolId };
+      // Admin mode: use ?school= param if provided (for superadmin viewing other schools)
+      const explicitSchoolId = await getSchoolId(request);
+      const targetSchoolId = explicitSchoolId || payload.schoolId;
+
+      // Permission check: non-superadmin can only view their own school
+      if (!canAccessSchool(payload, targetSchoolId)) return forbiddenResponse();
+
+      filter = { schoolId: targetSchoolId };
     } else {
       // Public mode: approved alumni only
       const schoolId = await getSchoolId(request);
@@ -92,6 +98,32 @@ export async function PUT(request: NextRequest) {
     return successResponse(updated);
   } catch (error) {
     console.error("Alumni PUT error:", error);
+    return errorResponse("Internal server error", 500);
+  }
+}
+
+// DELETE /api/alumni?id=xxx — admin protected
+export async function DELETE(request: NextRequest) {
+  try {
+    const payload = requireAuth(request);
+    if (!payload) return unauthorizedResponse();
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) return errorResponse("Alumni id is required");
+
+    await connectDB();
+    const alumni = await Alumni.findById(id);
+    if (!alumni) return errorResponse("Alumni not found", 404);
+
+    if (!canAccessSchool(payload, alumni.schoolId.toString())) {
+      return forbiddenResponse();
+    }
+
+    await Alumni.findByIdAndDelete(id);
+    return successResponse({ deleted: true });
+  } catch (error) {
+    console.error("Alumni DELETE error:", error);
     return errorResponse("Internal server error", 500);
   }
 }

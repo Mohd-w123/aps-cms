@@ -7,9 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { FileUploader } from "@/components/admin/FileUploader";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { Plus, Pencil, Trash2, X, Loader2, GripVertical, ShieldAlert } from "lucide-react";
-import dynamic from "next/dynamic";
-
-const RichTextEditor = dynamic(() => import("@/components/admin/RichTextEditor").then(m => m.RichTextEditor), { ssr: false });
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
 // ─── Types ───
 interface SliderItem {
@@ -26,7 +24,7 @@ interface BranchItem {
 interface GalleryItem { _id: string; image: string; title?: string; type: string; category?: string; }
 interface TopperItem { _id: string; name: string; photo?: string; percentage?: number; year?: string; exam?: string; rank?: number; }
 
-type Tab = "homepage" | "sliders" | "branches" | "gallery" | "toppers";
+type Tab = "homepage" | "sliders" | "branches" | "gallery" | "toppers" | "social";
 
 export default function GroupSiteManagement() {
   const { user } = useAuth();
@@ -49,6 +47,7 @@ export default function GroupSiteManagement() {
     { key: "branches", label: "Branches" },
     { key: "gallery", label: "Gallery" },
     { key: "toppers", label: "Toppers" },
+    { key: "social", label: "Social Links" },
   ];
 
   return (
@@ -76,6 +75,7 @@ export default function GroupSiteManagement() {
       {activeTab === "branches" && <BranchesTab />}
       {activeTab === "gallery" && <GalleryTab />}
       {activeTab === "toppers" && <ToppersTab />}
+      {activeTab === "social" && <GroupSocialLinksTab />}
     </div>
   );
 }
@@ -573,6 +573,72 @@ function GroupHomepageTab() {
         </div>
         <button onClick={saveAbout} disabled={saving} className="px-6 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2">
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}Save About Section
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SOCIAL LINKS (Group)
+// ═══════════════════════════════════════════════════════════════
+function GroupSocialLinksTab() {
+  const api = useAdminApi();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [schoolId, setSchoolId] = useState<string>("");
+  const [links, setLinks] = useState<Record<string, string>>({
+    facebook: "", instagram: "", youtube: "", twitter: "",
+    whatsapp: "", linkedin: "", telegram: "", website: "",
+  });
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const r = await api.get("/api/schools");
+      if (r.success) {
+        const arr = Array.isArray(r.data) ? r.data : [r.data];
+        // Group page uses the "apsfatehpur" school as the main/group entity
+        const school = arr.find((s: { slug: string }) => s.slug === "apsfatehpur");
+        if (school) {
+          setSchoolId(school._id);
+          setLinks(prev => ({ ...prev, ...(school.socialLinks || {}) }));
+        }
+      }
+      setLoading(false);
+    };
+    if (api.token) load();
+  }, [api.token]); // eslint-disable-line
+
+  const save = async () => {
+    if (!schoolId) return;
+    setSaving(true);
+    await api.put("/api/schools", { id: schoolId, socialLinks: links });
+    setSaving(false);
+  };
+
+  if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>;
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-gray-600">Manage social media links for the group. These appear in the header and footer of the group landing page.</p>
+      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <h3 className="text-lg font-bold text-gray-900">Social Links</h3>
+        <div className="grid grid-cols-2 gap-4">
+          {(["facebook", "instagram", "youtube", "twitter", "whatsapp", "linkedin", "telegram", "website"] as const).map(k => (
+            <div key={k}>
+              <label className="block text-xs text-gray-500 mb-1 capitalize">{k}</label>
+              <input
+                value={links[k] || ""}
+                onChange={e => setLinks(prev => ({ ...prev, [k]: e.target.value }))}
+                placeholder={k === "website" ? "https://yoursite.com" : `https://${k}.com/...`}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          ))}
+        </div>
+        <button onClick={save} disabled={saving} className="px-6 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2">
+          {saving && <Loader2 className="h-4 w-4 animate-spin" />}Save Social Links
         </button>
       </div>
     </div>

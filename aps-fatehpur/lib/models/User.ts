@@ -1,11 +1,11 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface IUser extends Document {
-  schoolId: Types.ObjectId;
+  schoolId?: Types.ObjectId;
   name: string;
   email: string;
   passwordHash: string;
-  role: "superadmin" | "school_admin" | "editor";
+  role: "superadmin" | "school_admin" | "editor" | "sales";
   lastLogin?: Date;
   isActive: boolean;
 }
@@ -18,7 +18,7 @@ const UserSchema = new Schema<IUser>(
     passwordHash: { type: String, required: true, select: false },
     role: {
       type: String,
-      enum: ["superadmin", "school_admin", "editor"],
+      enum: ["superadmin", "school_admin", "editor", "sales"],
       default: "editor",
     },
     lastLogin: { type: Date },

@@ -45,7 +45,7 @@ const initialForm: FormData = {
 };
 
 export default function AlumniPage() {
-  const { slug: schoolSlug } = useSchool();
+  const { slug: schoolSlug, isLoading: schoolLoading } = useSchool();
   const [alumni, setAlumni] = useState<AlumniMember[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,13 +55,13 @@ export default function AlumniPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [photoUploading, setPhotoUploading] = useState(false);
 
   useEffect(() => {
+    if (schoolLoading) return;
     const fetchAlumni = async () => {
       try {
-        const res = await fetch(`/api/alumni?limit=50`, {
-          headers: { "x-school-slug": schoolSlug },
-        });
+        const res = await fetch(`/api/alumni?limit=50&school=${schoolSlug}`);
         const json = await res.json();
         if (json.success) setAlumni(json.data);
       } catch {
@@ -71,10 +71,33 @@ export default function AlumniPage() {
       }
     };
     if (schoolSlug) fetchAlumni();
-  }, [schoolSlug]);
+  }, [schoolSlug, schoolLoading]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { setError("Photo must be under 2MB"); return; }
+    setPhotoUploading(true);
+    setError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/alumni/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (json.success && json.data?.url) {
+        setForm(prev => ({ ...prev, photo: json.data.url }));
+      } else {
+        setError(json.error || "Upload failed");
+      }
+    } catch {
+      setError("Upload failed");
+    } finally {
+      setPhotoUploading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,11 +116,10 @@ export default function AlumniPage() {
       if (form.photo) payload.photo = form.photo;
       if (form.testimonial) payload.testimonial = form.testimonial;
 
-      const res = await fetch("/api/alumni", {
+      const res = await fetch(`/api/alumni?school=${schoolSlug}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-school-slug": schoolSlug,
         },
         body: JSON.stringify(payload),
       });
@@ -328,16 +350,24 @@ export default function AlumniPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-dark)" }}>
-                      Photo URL
+                      Photo
                     </label>
-                    <input
-                      type="url"
-                      name="photo"
-                      value={form.photo}
-                      onChange={handleChange}
-                      placeholder="https://..."
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--school-primary)]"
-                    />
+                    <div className="flex items-center gap-3">
+                      {form.photo && (
+                        <Image src={form.photo} alt="Preview" width={48} height={48} className="w-12 h-12 rounded-full object-cover border" />
+                      )}
+                      <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                        {photoUploading ? "Uploading..." : form.photo ? "Change Photo" : "Upload Photo"}
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={handlePhotoUpload}
+                          disabled={photoUploading}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">Max 2MB. JPEG, PNG, or WebP.</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-dark)" }}>

@@ -26,14 +26,14 @@
     --radius: 0.625rem;
 
     /* School theme defaults (overridden per school via JS) */
-    --school-primary: #3FA34D;
-    --school-primary-dark: #2d7a38;
-    --accent-yellow: #F4D03F;
+    --school-primary: #499f42;
+    --school-primary-dark: #3d8a37;
+    --accent-yellow: #d4e96e;
     --accent-red: #C0392B;
-    --accent-blue: #2F3C8F;
-    --bg-light: #F8F9FA;
+    --accent-blue: #9ab5db;
+    --bg-light: #f6faf5;
     --border-gray: #E5E7EB;
-    --text-dark: #1F2937;
+    --text-dark: #22235b;
     --text-muted-color: #6B7280;
   }
 

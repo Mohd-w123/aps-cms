@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { WaveBottom, FloatingDecorations } from "@/components/shared/PlayfulUI";
 
 interface Slide {
   _id: string; image: string; title: string; subtitle: string; ctaLabel?: string; ctaLink?: string;
@@ -52,14 +53,17 @@ export function HeroCarousel() {
           backgroundPosition: "center",
         }}
       >
-        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to right, var(--text-dark, #22235b)CC, var(--text-dark, #22235b)80, var(--school-primary, #499f42)4D)" }} />
       </div>
+
+      {/* Floating decorations */}
+      <FloatingDecorations />
 
       {/* Content */}
       <div className="relative z-10 flex h-full items-center">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl text-white">
-            <h1 className="text-3xl md:text-5xl font-bold leading-tight mb-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h1 className="font-heading text-3xl md:text-5xl font-bold leading-tight mb-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
               {slide.title}
             </h1>
             <p className="text-lg md:text-xl opacity-90 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
@@ -68,10 +72,10 @@ export function HeroCarousel() {
             {slide.ctaLabel && slide.ctaLink && (
               <Link
                 href={slide.ctaLink}
-                className="inline-block rounded-full px-8 py-3 font-semibold text-base transition-transform hover:scale-105"
+                className="inline-block rounded-full px-8 py-3 font-semibold text-base transition-all hover:scale-105 shadow-lg"
                 style={{
-                  backgroundColor: "var(--accent-yellow)",
-                  color: "var(--school-primary)",
+                  backgroundColor: "var(--accent-yellow, #d4e96e)",
+                  color: "var(--text-dark, #22235b)",
                 }}
               >
                 {slide.ctaLabel}
@@ -84,34 +88,40 @@ export function HeroCarousel() {
       {/* Navigation arrows */}
       <button
         onClick={prev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm hover:bg-white/30 transition-colors"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex h-12 w-12 items-center justify-center rounded-full text-white backdrop-blur-sm transition-all hover:scale-110"
+        style={{ backgroundColor: "color-mix(in srgb, var(--school-primary, #499f42) 70%, transparent)" }}
         aria-label="Previous slide"
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
       <button
         onClick={next}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm hover:bg-white/30 transition-colors"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex h-12 w-12 items-center justify-center rounded-full text-white backdrop-blur-sm transition-all hover:scale-110"
+        style={{ backgroundColor: "color-mix(in srgb, var(--school-primary, #499f42) 70%, transparent)" }}
         aria-label="Next slide"
       >
         <ChevronRight className="h-5 w-5" />
       </button>
 
       {/* Dots */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+      <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex gap-2">
         {slides.map((_, i) => (
           <button
             key={i}
             onClick={() => setCurrent(i)}
             className={`h-2.5 rounded-full transition-all ${
               i === current
-                ? "w-8 bg-white"
+                ? "w-8"
                 : "w-2.5 bg-white/50 hover:bg-white/70"
             }`}
+            style={i === current ? { backgroundColor: "var(--accent-yellow, #d4e96e)" } : undefined}
             aria-label={`Go to slide ${i + 1}`}
           />
         ))}
       </div>
+
+      {/* Wave bottom divider */}
+      <WaveBottom className="text-white" />
     </section>
   );
 }

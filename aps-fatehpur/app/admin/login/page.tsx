@@ -1,18 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { GraduationCap, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, authReady, isAuthenticated, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (authReady && isAuthenticated) {
+      router.replace(user?.role === "sales" ? "/admin/sales" : "/admin/dashboard");
+    }
+  }, [authReady, isAuthenticated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,14 +26,22 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      await login(email, password);
-      router.push("/admin/dashboard");
+      const result = await login(email, password);
+      router.replace(result.user.role === "sales" ? "/admin/sales" : "/admin/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setLoading(false);
     }
   };
+
+  if (authReady && isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">

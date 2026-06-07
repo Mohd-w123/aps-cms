@@ -12,7 +12,9 @@ export function useAdminApi() {
       if (res.status === 401) {
         logout();
         toast.error("Session expired. Please login again.");
-        window.location.href = "/admin/login";
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/admin/login")) {
+          window.location.href = "/admin/login";
+        }
         return { success: false, error: "Unauthorized" };
       }
       const text = await res.text();
