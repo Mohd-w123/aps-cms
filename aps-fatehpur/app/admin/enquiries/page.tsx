@@ -3,7 +3,9 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useAdminApi } from "@/hooks/useAdminApi";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { Loader2, Eye, X, Send, MessageSquare } from "lucide-react";
+import { exportToExcel } from "@/lib/export-excel";
+import { toast } from "sonner";
+import { Loader2, Eye, X, Send, MessageSquare, Download } from "lucide-react";
 
 interface Enquiry {
   _id: string; name: string; email: string; phone: string; subject: string; message: string; status: string; createdAt: string;
@@ -16,11 +18,13 @@ export default function AdminEnquiriesPage() {
   const [items, setItems] = useState<Enquiry[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [detail, setDetail] = useState<Enquiry | null>(null);
   const [salesPersons, setSalesPersons] = useState<SalesPerson[]>([]);
   const [showSalesConfirm, setShowSalesConfirm] = useState(false);
   const [selectedSales, setSelectedSales] = useState("");
   const [sending, setSending] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -41,31 +45,94 @@ export default function AdminEnquiriesPage() {
     load(); if (detail?._id === id) setDetail(prev => prev ? { ...prev, status } : null);
   };
 
-  const handleSendToSales = async () => {
-    if (!detail || !selectedSales) return;
-    setSending(true);
-    const r = await api.post("/api/enquiries/send-to-sales", {
-      enquiryId: detail._id,
-      salesUserId: selectedSales,
+  const statuses = ["", "new", "read", "replied"];
+  const filtered = filter ? items.filter(i => i.status === filter) : items;
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
     });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map(e => e._id)));
+    }
+  };
+
+  const openBulkSend = () => {
+    setBulkMode(true);
+    setSelectedSales(salesPersons[0]?._id || "");
+    setShowSalesConfirm(true);
+  };
+
+  const openSingleSend = () => {
+    setBulkMode(false);
+    setSelectedSales(salesPersons[0]?._id || "");
+    setShowSalesConfirm(true);
+  };
+
+  const handleSendToSales = async () => {
+    if (!selectedSales) return;
+    const idsToSend = bulkMode ? Array.from(selectedIds) : detail ? [detail._id] : [];
+    if (idsToSend.length === 0) return;
+
+    setSending(true);
+    const body = idsToSend.length === 1
+      ? { id: idsToSend[0], salesUserId: selectedSales }
+      : { ids: idsToSend, salesUserId: selectedSales };
+    const r = await api.post("/api/enquiries/send-to-sales", body);
     setSending(false);
     setShowSalesConfirm(false);
     if (r.success) {
-      setDetail(prev => prev ? { ...prev, sentToSales: true, sentToSalesAt: new Date().toISOString() } : null);
+      if (r.data?.emailWarning) toast.warning(r.data.emailWarning);
+      if (bulkMode) {
+        setSelectedIds(new Set());
+      } else if (detail) {
+        setDetail(prev => prev ? { ...prev, sentToSales: true, sentToSalesAt: new Date().toISOString() } : null);
+      }
       load();
     }
   };
 
-  const statuses = ["", "new", "read", "replied"];
-  const filtered = filter ? items.filter(i => i.status === filter) : items;
+  const handleExport = () => {
+    const headers = ["Name", "Subject", "Status", "Sales", "Date"];
+    const rows = filtered.map(e => [
+      e.name,
+      e.subject,
+      e.status,
+      e.sentToSales ? "Sent" : "—",
+      new Date(e.createdAt).toLocaleDateString("en-IN"),
+    ]);
+    exportToExcel(`enquiries_${new Date().toISOString().slice(0, 10)}`, headers, rows);
+    toast.success("Export downloaded");
+  };
 
   return (
     <div className="space-y-6">
-      <div><h2 className="text-2xl font-bold text-gray-900">Enquiries</h2><p className="text-sm text-gray-500 mt-1">Manage contact enquiries</p></div>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div><h2 className="text-2xl font-bold text-gray-900">Enquiries</h2><p className="text-sm text-gray-500 mt-1">Manage contact enquiries</p></div>
+        <div className="flex gap-2">
+          <button
+            onClick={openBulkSend}
+            disabled={selectedIds.size === 0}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed">
+            <Send className="h-4 w-4" /> Send Selected to Sales ({selectedIds.size})
+          </button>
+          <button onClick={handleExport}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
+            <Download className="h-4 w-4" /> Export Excel
+          </button>
+        </div>
+      </div>
 
       <div className="flex gap-2 flex-wrap">
         {statuses.map(s => (
-          <button key={s} onClick={() => setFilter(s)} className={`px-4 py-1.5 rounded-full text-sm font-medium capitalize ${filter === s ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+          <button key={s} onClick={() => { setFilter(s); setSelectedIds(new Set()); }} className={`px-4 py-1.5 rounded-full text-sm font-medium capitalize ${filter === s ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
             {s || "All"} ({s ? items.filter(i => i.status === s).length : items.length})
           </button>
         ))}
@@ -75,6 +142,10 @@ export default function AdminEnquiriesPage() {
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200"><tr>
+              <th className="px-4 py-3 w-10">
+                <input type="checkbox" checked={filtered.length > 0 && selectedIds.size === filtered.length}
+                  onChange={toggleSelectAll} className="rounded border-gray-300" aria-label="Select all" />
+              </th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Subject</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
@@ -84,7 +155,11 @@ export default function AdminEnquiriesPage() {
             </tr></thead>
             <tbody className="divide-y divide-gray-100">
               {filtered.map(e => (
-                <tr key={e._id} className="hover:bg-gray-50">
+                <tr key={e._id} className={`hover:bg-gray-50 ${selectedIds.has(e._id) ? "bg-purple-50/50" : ""}`}>
+                  <td className="px-4 py-3">
+                    <input type="checkbox" checked={selectedIds.has(e._id)} onChange={() => toggleSelect(e._id)}
+                      className="rounded border-gray-300" aria-label={`Select ${e.name}`} />
+                  </td>
                   <td className="px-4 py-3 font-medium text-gray-900">{e.name}</td>
                   <td className="px-4 py-3 text-gray-500 max-w-[200px] truncate">{e.subject}</td>
                   <td className="px-4 py-3"><StatusBadge status={e.status} /></td>
@@ -95,7 +170,7 @@ export default function AdminEnquiriesPage() {
                       className="p-1.5 rounded hover:bg-gray-100 text-gray-500"><Eye className="h-4 w-4" /></button>
                   </td>
                 </tr>))}
-              {filtered.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">No enquiries found</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No enquiries found</td></tr>}
             </tbody>
           </table>
         </div>
@@ -122,7 +197,7 @@ export default function AdminEnquiriesPage() {
                 {detail.status !== "replied" && (
                   <button onClick={() => updateStatus(detail._id, "replied")} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 flex items-center gap-1"><MessageSquare className="h-4 w-4" /> Mark Replied</button>
                 )}
-                <button onClick={() => { setSelectedSales(salesPersons[0]?._id || ""); setShowSalesConfirm(true); }}
+                <button onClick={openSingleSend}
                   className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 flex items-center gap-1">
                   <Send className="h-4 w-4" /> Send to Sales
                 </button>
@@ -132,13 +207,16 @@ export default function AdminEnquiriesPage() {
         </div>
       )}
 
-      {/* Send to Sales Confirmation Dialog */}
       {showSalesConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" onClick={() => setShowSalesConfirm(false)}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-gray-900 mb-2">Send to Sales Person</h3>
             <p className="text-sm text-gray-600 mb-4">
-              Send enquiry from <span className="font-medium">{detail?.name}</span> to a sales person via email.
+              {bulkMode ? (
+                <>Send <span className="font-medium">{selectedIds.size} selected enquiry(ies)</span> to a sales person via email.</>
+              ) : (
+                <>Send enquiry from <span className="font-medium">{detail?.name}</span> to a sales person via email.</>
+              )}
             </p>
             {salesPersons.length === 0 ? (
               <p className="text-sm text-red-500 mb-4">No sales persons found. Please create a user with the &quot;sales&quot; role first.</p>
@@ -158,7 +236,7 @@ export default function AdminEnquiriesPage() {
               <button onClick={handleSendToSales} disabled={!selectedSales || sending || salesPersons.length === 0}
                 className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                {sending ? "Sending..." : "Confirm & Send"}
+                {sending ? "Sending..." : bulkMode ? `Confirm & Send (${selectedIds.size})` : "Confirm & Send"}
               </button>
             </div>
           </div>

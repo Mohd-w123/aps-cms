@@ -50,18 +50,22 @@ export async function POST(request: NextRequest) {
     }
 
     // school_admin can only create editors/sales for their school
+    const { password, schoolId: parsedSchoolId, ...rest } = parsed.data;
+    let schoolId = parsedSchoolId;
     if (payload.role === "school_admin") {
-      if (parsed.data.schoolId !== payload.schoolId) return forbiddenResponse();
-      if (parsed.data.role !== "editor" && parsed.data.role !== "sales") return forbiddenResponse("School admins can only create editors and sales users");
+      if (!schoolId) schoolId = payload.schoolId;
+      if (schoolId !== payload.schoolId) return forbiddenResponse();
+      if (rest.role !== "editor" && rest.role !== "sales") return forbiddenResponse("School admins can only create editors and sales users");
     }
 
     await connectDB();
     const existing = await User.findOne({ email: parsed.data.email });
     if (existing) return errorResponse("Email already in use");
 
-    const { password, ...rest } = parsed.data;
     const passwordHash = await hashPassword(password);
-    const user = await User.create({ ...rest, passwordHash });
+    const userData: Record<string, unknown> = { ...rest, passwordHash };
+    if (schoolId) userData.schoolId = schoolId;
+    const user = await User.create(userData);
 
     return successResponse(user, 201);
   } catch (error) {
@@ -121,7 +125,7 @@ export async function DELETE(request: NextRequest) {
     const user = await User.findById(id);
     if (!user) return errorResponse("User not found", 404);
 
-    if (payload.role !== "superadmin" && !canAccessSchool(payload, user.schoolId.toString())) {
+    if (payload.role !== "superadmin" && user.schoolId && !canAccessSchool(payload, user.schoolId.toString())) {
       return forbiddenResponse();
     }
 

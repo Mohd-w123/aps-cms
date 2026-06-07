@@ -150,14 +150,29 @@ export const alumniUpdateSchema = alumniCreateSchema.partial().extend({
 });
 
 // ── Users ──
-export const userCreateSchema = z.object({
-  name: z.string().min(1).max(200),
-  email: z.string().email(),
-  password: z.string().min(8).max(100),
-  role: z.enum(["superadmin", "school_admin", "editor", "sales"]),
-  schoolId: z.string().min(1).optional(),
-  isActive: z.boolean().optional().default(true),
-});
+const ROLES_WITHOUT_SCHOOL = ["superadmin", "sales"] as const;
+
+export const userCreateSchema = z
+  .object({
+    name: z.string().min(1).max(200),
+    email: z.string().email(),
+    password: z.string().min(8).max(100),
+    role: z.enum(["superadmin", "school_admin", "editor", "sales"]),
+    schoolId: z.preprocess(
+      (val) => (val === "" || val === null ? undefined : val),
+      z.string().min(1).optional()
+    ),
+    isActive: z.boolean().optional().default(true),
+  })
+  .superRefine((data, ctx) => {
+    if (!ROLES_WITHOUT_SCHOOL.includes(data.role as (typeof ROLES_WITHOUT_SCHOOL)[number]) && !data.schoolId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "School is required for this role",
+        path: ["schoolId"],
+      });
+    }
+  });
 export const userUpdateSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   email: z.string().email().optional(),

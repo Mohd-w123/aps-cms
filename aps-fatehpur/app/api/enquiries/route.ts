@@ -43,12 +43,17 @@ export async function GET(request: NextRequest) {
 
     await connectDB();
 
-    // Use ?school= param if provided (for superadmin viewing other schools)
-    const explicitSchoolId = await getSchoolId(request);
-    const targetSchoolId = explicitSchoolId || payload.schoolId;
-    if (!canAccessSchool(payload, targetSchoolId)) return forbiddenResponse();
+    let filter: Record<string, unknown>;
 
-    const filter: Record<string, unknown> = { schoolId: targetSchoolId };
+    if (payload.role === "sales") {
+      filter = { salesPersonId: payload.userId, sentToSales: true };
+    } else {
+      const explicitSchoolId = await getSchoolId(request);
+      const targetSchoolId = explicitSchoolId || payload.schoolId;
+      if (!targetSchoolId || !canAccessSchool(payload, targetSchoolId)) return forbiddenResponse();
+      filter = { schoolId: targetSchoolId };
+    }
+
     if (status) filter.status = status;
 
     const [items, total] = await Promise.all([
@@ -66,7 +71,7 @@ export async function GET(request: NextRequest) {
 // PUT /api/enquiries — admin protected, update status
 export async function PUT(request: NextRequest) {
   try {
-    const payload = requireAuth(request);
+    const payload = requireAuth(request, ["superadmin", "school_admin"]);
     if (!payload) return unauthorizedResponse();
 
     const body = await request.json();

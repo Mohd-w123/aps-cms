@@ -5,7 +5,7 @@ import { successResponse, errorResponse } from "@/lib/api-helpers";
 import Admission from "@/lib/models/Admission";
 import User from "@/lib/models/User";
 import School from "@/lib/models/School";
-import { sendMail } from "@/lib/email";
+import { sendMail, isEmailConfigured } from "@/lib/email";
 
 // POST /api/admissions/send-to-sales — send admission data to sales person via email (single or bulk)
 export async function POST(request: NextRequest) {
@@ -14,11 +14,11 @@ export async function POST(request: NextRequest) {
     if (!payload) return unauthorizedResponse();
 
     const body = await request.json();
-    const { admissionId, admissionIds, salesUserId } = body;
+    const { admissionId, admissionIds, id, ids, salesUserId } = body;
 
-    // Support both single and bulk
-    const ids: string[] = admissionIds || (admissionId ? [admissionId] : []);
-    if (ids.length === 0) return errorResponse("Admission ID(s) required");
+    // Support single/bulk: id/ids (new), admissionId/admissionIds (legacy)
+    const resolvedIds: string[] = ids || admissionIds || (id ? [id] : admissionId ? [admissionId] : []);
+    if (resolvedIds.length === 0) return errorResponse("Admission ID(s) required");
     if (!salesUserId) return errorResponse("Sales person ID is required");
 
     await connectDB();
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get all admissions
-    const admissions = await Admission.find({ _id: { $in: ids } });
+    const admissions = await Admission.find({ _id: { $in: resolvedIds } });
     if (admissions.length === 0) return errorResponse("No admissions found", 404);
 
     // Permission check
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get school names for all unique school IDs
-    const schoolIds = [...new Set(admissions.map(a => a.schoolId.toString()))];
+    const schoolIds = Array.from(new Set(admissions.map(a => a.schoolId.toString())));
     const schools = await School.find({ _id: { $in: schoolIds } }).select("name slug");
     const schoolMap = new Map(schools.map(s => [s._id.toString(), s.name]));
 
@@ -107,17 +107,32 @@ export async function POST(request: NextRequest) {
       `;
     }
 
-    await sendMail({ to: salesUser.email, subject, html });
-
-    // Mark all as sent to sales
     await Admission.updateMany(
-      { _id: { $in: ids } },
+      { _id: { $in: resolvedIds } },
       { sentToSales: true, sentToSalesAt: new Date(), sentToSalesBy: payload.userId, salesPersonId: salesUserId }
     );
 
-    return successResponse({ message: `${admissions.length} lead(s) sent to ${salesUser.name} (${salesUser.email})` });
+    let emailSent = false;
+    let emailWarning: string | undefined;
+    if (isEmailConfigured()) {
+      try {
+        await sendMail({ to: salesUser.email, subject, html });
+        emailSent = true;
+      } catch (emailError) {
+        console.error("Send to sales email error:", emailError);
+        emailWarning = "Leads assigned in portal but email notification failed. Check SMTP settings.";
+      }
+    } else {
+      emailWarning = "Leads assigned in portal. SMTP is not configured — no email sent.";
+    }
+
+    return successResponse({
+      message: `${admissions.length} lead(s) assigned to ${salesUser.name}${emailSent ? ` (${salesUser.email})` : ""}`,
+      emailSent,
+      emailWarning,
+    });
   } catch (error) {
     console.error("Send to sales error:", error);
-    return errorResponse("Failed to send email. Please check SMTP settings.", 500);
+    return errorResponse("Failed to assign leads to sales.", 500);
   }
 }

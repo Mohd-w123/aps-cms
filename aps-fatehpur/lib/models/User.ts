@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface IUser extends Document {
-  schoolId: Types.ObjectId;
+  schoolId?: Types.ObjectId;
   name: string;
   email: string;
   passwordHash: string;

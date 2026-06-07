@@ -5,7 +5,7 @@ import { successResponse, errorResponse } from "@/lib/api-helpers";
 import Enquiry from "@/lib/models/Enquiry";
 import User from "@/lib/models/User";
 import School from "@/lib/models/School";
-import { sendMail } from "@/lib/email";
+import { sendMail, isEmailConfigured } from "@/lib/email";
 
 // POST /api/enquiries/send-to-sales — send enquiry data to sales person via email (single or bulk)
 export async function POST(request: NextRequest) {
@@ -14,10 +14,10 @@ export async function POST(request: NextRequest) {
     if (!payload) return unauthorizedResponse();
 
     const body = await request.json();
-    const { enquiryId, enquiryIds, salesUserId } = body;
+    const { enquiryId, enquiryIds, id, ids, salesUserId } = body;
 
-    const ids: string[] = enquiryIds || (enquiryId ? [enquiryId] : []);
-    if (ids.length === 0) return errorResponse("Enquiry ID(s) required");
+    const resolvedIds: string[] = ids || enquiryIds || (id ? [id] : enquiryId ? [enquiryId] : []);
+    if (resolvedIds.length === 0) return errorResponse("Enquiry ID(s) required");
     if (!salesUserId) return errorResponse("Sales person ID is required");
 
     await connectDB();
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       return errorResponse("Sales person not found or inactive", 404);
     }
 
-    const enquiries = await Enquiry.find({ _id: { $in: ids } });
+    const enquiries = await Enquiry.find({ _id: { $in: resolvedIds } });
     if (enquiries.length === 0) return errorResponse("No enquiries found", 404);
 
     for (const enquiry of enquiries) {
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const schoolIds = [...new Set(enquiries.map(e => e.schoolId.toString()))];
+    const schoolIds = Array.from(new Set(enquiries.map(e => e.schoolId.toString())));
     const schools = await School.find({ _id: { $in: schoolIds } }).select("name slug");
     const schoolMap = new Map(schools.map(s => [s._id.toString(), s.name]));
 
@@ -95,16 +95,32 @@ export async function POST(request: NextRequest) {
       `;
     }
 
-    await sendMail({ to: salesUser.email, subject, html });
-
     await Enquiry.updateMany(
-      { _id: { $in: ids } },
+      { _id: { $in: resolvedIds } },
       { sentToSales: true, sentToSalesAt: new Date(), sentToSalesBy: payload.userId, salesPersonId: salesUserId }
     );
 
-    return successResponse({ message: `${enquiries.length} enquiry lead(s) sent to ${salesUser.name} (${salesUser.email})` });
+    let emailSent = false;
+    let emailWarning: string | undefined;
+    if (isEmailConfigured()) {
+      try {
+        await sendMail({ to: salesUser.email, subject, html });
+        emailSent = true;
+      } catch (emailError) {
+        console.error("Send enquiry to sales email error:", emailError);
+        emailWarning = "Leads assigned in portal but email notification failed. Check SMTP settings.";
+      }
+    } else {
+      emailWarning = "Leads assigned in portal. SMTP is not configured — no email sent.";
+    }
+
+    return successResponse({
+      message: `${enquiries.length} enquiry lead(s) assigned to ${salesUser.name}${emailSent ? ` (${salesUser.email})` : ""}`,
+      emailSent,
+      emailWarning,
+    });
   } catch (error) {
     console.error("Send enquiry to sales error:", error);
-    return errorResponse("Failed to send email. Please check SMTP settings.", 500);
+    return errorResponse("Failed to assign leads to sales.", 500);
   }
 }

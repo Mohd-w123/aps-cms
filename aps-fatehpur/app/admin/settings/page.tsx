@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useAdminApi } from "@/hooks/useAdminApi";
 import { useAuth } from "@/hooks/useAuth";
 import { FileUploader } from "@/components/admin/FileUploader";
