@@ -25,16 +25,9 @@
     --ring: 240 5.9% 10%;
     --radius: 0.625rem;
 
-    /* School theme defaults (overridden per school via JS) */
-    --school-primary: #499f42;
-    --school-primary-dark: #3d8a37;
-    --accent-yellow: #d4e96e;
+    /* School theme vars are set server-side on <html> per school — no :root defaults to avoid flash */
     --accent-red: #C0392B;
-    --accent-blue: #9ab5db;
-    --bg-light: #f6faf5;
     --border-gray: #E5E7EB;
-    --text-dark: #22235b;
-    --text-muted-color: #6B7280;
   }
 
   .dark {

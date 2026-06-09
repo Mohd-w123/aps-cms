@@ -8,6 +8,7 @@ import { SchoolProvider } from "@/hooks/useSchool";
 import { LayoutShell } from "@/components/layout/LayoutShell";
 import connectDB from "@/lib/db";
 import School from "@/lib/models/School";
+import { buildThemeCssVars } from "@/lib/theme";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -58,28 +59,17 @@ export default async function RootLayout({
     // Fallback to static config if DB is unavailable
   }
 
-  // Build CSS variables: DB theme (non-empty only) > static config > defaults
-  const cssVars: Record<string, string> = {};
-  const db = (key: string) => dbTheme?.[key] && dbTheme[key].trim() ? dbTheme[key] : "";
-  if (db("primaryColor") || school?.theme.primary) {
-    cssVars["--school-primary"] = db("primaryColor") || school?.theme.primary || "#499f42";
-    cssVars["--school-primary-dark"] = db("primaryDarkColor") || school?.theme.primaryDark || "#3d8a37";
-    cssVars["--accent-yellow"] = db("accentColor") || school?.theme.accentYellow || "#d4e96e";
-    cssVars["--accent-blue"] = db("accentBlueColor") || school?.theme.accentBlue || "#9ab5db";
-    cssVars["--bg-light"] = db("bgLightColor") || school?.theme.bgLight || "#f6faf5";
-    cssVars["--text-dark"] = db("textDarkColor") || school?.theme.textDark || "#22235b";
-    cssVars["--text-muted-color"] = db("textMutedColor") || school?.theme.textMuted || "#6B7280";
-    cssVars["--brand-secondary"] = db("secondaryColor") || school?.theme.textDark || "#22235b";
-    cssVars["--brand-lime"] = db("accentLimeColor") || school?.theme.accentYellow || "#d4e96e";
-  }
+  const cssVars = buildThemeCssVars(school, dbTheme);
 
   return (
-    <html lang="en" className={cn("font-sans", inter.variable, baloo2.variable, nunito.variable)}>
-      <body
-        className="antialiased"
-        style={Object.keys(cssVars).length > 0 ? (cssVars as React.CSSProperties) : undefined}
-      >
-        <SchoolProvider>
+    <html
+      lang="en"
+      className={cn("font-sans", inter.variable, baloo2.variable, nunito.variable)}
+      style={Object.keys(cssVars).length > 0 ? (cssVars as React.CSSProperties) : undefined}
+      suppressHydrationWarning
+    >
+      <body className="antialiased">
+        <SchoolProvider initialSlug={slug}>
           <LayoutShell>{children}</LayoutShell>
         </SchoolProvider>
       </body>
