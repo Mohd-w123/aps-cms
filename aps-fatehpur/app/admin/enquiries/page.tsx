@@ -2,19 +2,25 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useAdminApi } from "@/hooks/useAdminApi";
+import { useAuth } from "@/hooks/useAuth";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { exportToExcel } from "@/lib/export-excel";
+import { getSchoolName, type SchoolRef } from "@/lib/school-label";
 import { toast } from "sonner";
 import { Loader2, Eye, X, Send, MessageSquare, Download } from "lucide-react";
 
 interface Enquiry {
   _id: string; name: string; email: string; phone: string; subject: string; message: string; status: string; createdAt: string;
   sentToSales?: boolean; sentToSalesAt?: string;
+  schoolId?: SchoolRef | string;
+  schoolName?: string;
 }
 interface SalesPerson { _id: string; name: string; email: string; }
 
 export default function AdminEnquiriesPage() {
   const api = useAdminApi();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "superadmin";
   const [items, setItems] = useState<Enquiry[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
@@ -100,14 +106,19 @@ export default function AdminEnquiriesPage() {
   };
 
   const handleExport = () => {
-    const headers = ["Name", "Subject", "Status", "Sales", "Date"];
-    const rows = filtered.map(e => [
-      e.name,
-      e.subject,
-      e.status,
-      e.sentToSales ? "Sent" : "—",
-      new Date(e.createdAt).toLocaleDateString("en-IN"),
-    ]);
+    const headers = isSuperAdmin
+      ? ["School Name", "Name", "Subject", "Status", "Sales", "Date"]
+      : ["Name", "Subject", "Status", "Sales", "Date"];
+    const rows = filtered.map(e => {
+      const base = [
+        e.name,
+        e.subject,
+        e.status,
+        e.sentToSales ? "Sent" : "—",
+        new Date(e.createdAt).toLocaleDateString("en-IN"),
+      ];
+      return isSuperAdmin ? [getSchoolName(e.schoolId, e.schoolName), ...base] : base;
+    });
     exportToExcel(`enquiries_${new Date().toISOString().slice(0, 10)}`, headers, rows);
     toast.success("Export downloaded");
   };
@@ -115,7 +126,7 @@ export default function AdminEnquiriesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div><h2 className="text-2xl font-bold text-gray-900">Enquiries</h2><p className="text-sm text-gray-500 mt-1">Manage contact enquiries</p></div>
+        <div><h2 className="text-2xl font-bold text-gray-900">Enquiries</h2><p className="text-sm text-gray-500 mt-1">{isSuperAdmin ? "All schools — manage contact enquiries" : "Manage contact enquiries"}</p></div>
         <div className="flex gap-2">
           <button
             onClick={openBulkSend}
@@ -146,6 +157,7 @@ export default function AdminEnquiriesPage() {
                 <input type="checkbox" checked={filtered.length > 0 && selectedIds.size === filtered.length}
                   onChange={toggleSelectAll} className="rounded border-gray-300" aria-label="Select all" />
               </th>
+              {isSuperAdmin && <th className="text-left px-4 py-3 font-medium text-gray-600">School Name</th>}
               <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Subject</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
@@ -160,6 +172,13 @@ export default function AdminEnquiriesPage() {
                     <input type="checkbox" checked={selectedIds.has(e._id)} onChange={() => toggleSelect(e._id)}
                       className="rounded border-gray-300" aria-label={`Select ${e.name}`} />
                   </td>
+                  {isSuperAdmin && (
+                    <td className="px-4 py-3">
+                      <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-800 border border-sky-100">
+                        {getSchoolName(e.schoolId, e.schoolName)}
+                      </span>
+                    </td>
+                  )}
                   <td className="px-4 py-3 font-medium text-gray-900">{e.name}</td>
                   <td className="px-4 py-3 text-gray-500 max-w-[200px] truncate">{e.subject}</td>
                   <td className="px-4 py-3"><StatusBadge status={e.status} /></td>
@@ -170,7 +189,7 @@ export default function AdminEnquiriesPage() {
                       className="p-1.5 rounded hover:bg-gray-100 text-gray-500"><Eye className="h-4 w-4" /></button>
                   </td>
                 </tr>))}
-              {filtered.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No enquiries found</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={isSuperAdmin ? 8 : 7} className="px-4 py-8 text-center text-gray-400">No enquiries found</td></tr>}
             </tbody>
           </table>
         </div>
@@ -184,6 +203,9 @@ export default function AdminEnquiriesPage() {
               <button onClick={() => setDetail(null)} className="p-1 rounded hover:bg-gray-100"><X className="h-5 w-5 text-gray-500" /></button>
             </div>
             <div className="p-5 space-y-3 text-sm">
+              {isSuperAdmin && (
+                <div className="flex gap-4"><span className="w-24 text-gray-500">School Name</span><span className="text-gray-900 font-medium">{getSchoolName(detail.schoolId, detail.schoolName)}</span></div>
+              )}
               <div className="flex gap-4"><span className="w-20 text-gray-500">Email</span><span className="text-gray-900">{detail.email}</span></div>
               <div className="flex gap-4"><span className="w-20 text-gray-500">Phone</span><span className="text-gray-900">{detail.phone}</span></div>
               <div className="flex gap-4"><span className="w-20 text-gray-500">Subject</span><span className="text-gray-900 font-medium">{detail.subject}</span></div>

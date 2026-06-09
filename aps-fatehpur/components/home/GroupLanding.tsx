@@ -25,6 +25,8 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { SocialLinksBar, SocialIcon, socialPlatforms } from "@/components/shared/SocialIcons";
 import { TestimonialsSlider } from "@/components/home/TestimonialsSlider";
+import { HorizontalScrollCarousel } from "@/components/shared/HorizontalScrollCarousel";
+import { getBranchUrl } from "@/lib/school-urls";
 
 /* ── Fallbacks (used until API data loads) ── */
 const fallbackBranches = configSchools.filter((s) => s.slug !== "apsfatehpur");
@@ -579,13 +581,7 @@ function BranchesSection({ branches }: { branches: BranchCard[] }) {
 
 function PlayfulBranchCard({ school, colorSet }: { school: BranchCard; colorSet: typeof pastelColors[0] }) {
   const handleVisit = () => {
-    if (school.websiteUrl) {
-      window.location.href = school.websiteUrl;
-    } else if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname.includes("vercel.app"))) {
-      window.location.href = `/?school=${school.slug}`;
-    } else {
-      window.location.href = `https://${school.domain}`;
-    }
+    window.open(getBranchUrl(school), "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -625,21 +621,7 @@ function PlayfulBranchCard({ school, colorSet }: { school: BranchCard; colorSet:
 
 /* ───────────────────── TOPPERS ───────────────────── */
 function ToppersSection({ toppers }: { toppers: string[] }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const interval = setInterval(() => {
-      if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 5) {
-        el.scrollLeft = 0;
-      } else {
-        el.scrollBy({ left: 2 });
-      }
-    }, 30);
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <section id="toppers" className="relative py-24 bg-gradient-to-br from-[#f8fae8]/40 via-[#f6faf5] to-[#eef2f8]/40 overflow-hidden">
@@ -666,11 +648,7 @@ function ToppersSection({ toppers }: { toppers: string[] }) {
           </p>
         </div>
 
-        <div
-          ref={scrollRef}
-          className="flex gap-6 overflow-x-auto pb-4 px-2"
-          style={{ scrollbarWidth: "none" }}
-        >
+        <HorizontalScrollCarousel className="gap-6 pb-4 px-8 md:px-12">
           {toppers.map((src, i) => (
             <div
               key={i}
@@ -686,7 +664,7 @@ function ToppersSection({ toppers }: { toppers: string[] }) {
               />
             </div>
           ))}
-        </div>
+        </HorizontalScrollCarousel>
       </div>
 
       {/* Lightbox */}
@@ -973,18 +951,13 @@ function GroupFooter({ branches, contactInfo, groupName, footerLinks, socialLink
             <ul className="space-y-2.5">
               {branches.map((school) => (
                 <li key={school.slug}>
-                  <a
-                    href={`https://${school.domain}`}
-                    onClick={(e) => {
-                      if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname.includes("vercel.app"))) {
-                        e.preventDefault();
-                        window.location.href = `/?school=${school.slug}`;
-                      }
-                    }}
-                    className="text-sm text-[#9ab5db]/70 hover:text-white transition-colors hover:pl-1 inline-block"
+                  <button
+                    type="button"
+                    onClick={() => window.open(getBranchUrl(school), "_blank", "noopener,noreferrer")}
+                    className="text-sm text-[#9ab5db]/70 hover:text-white transition-colors hover:pl-1 inline-block text-left"
                   >
                     {school.name}
-                  </a>
+                  </button>
                 </li>
               ))}
             </ul>

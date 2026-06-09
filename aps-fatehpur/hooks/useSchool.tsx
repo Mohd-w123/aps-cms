@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { SchoolConfig, getSchoolBySlug } from "@/config/schools";
 
 interface SchoolContextValue {
@@ -65,14 +66,16 @@ function fetchAndApplyDbTheme(slug: string, staticTheme: SchoolConfig["theme"]) 
 }
 
 export function SchoolProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [slug, setSlug] = useState("apsfatehpur");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const paramSlug = new URLSearchParams(window.location.search).get("school");
     const cookieSlug = getSlugFromCookie();
-    setSlug(cookieSlug);
+    setSlug(paramSlug || cookieSlug);
     setIsLoading(false);
-  }, []);
+  }, [pathname]);
 
   const school = getSchoolBySlug(slug) || null;
 

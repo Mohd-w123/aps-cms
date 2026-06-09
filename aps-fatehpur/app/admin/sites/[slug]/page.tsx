@@ -8,8 +8,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { FileUploader } from "@/components/admin/FileUploader";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { schools } from "@/config/schools";
-import { Plus, Pencil, Trash2, X, Loader2, ShieldAlert, Eye, CheckCircle2, XCircle, MessageSquare, Send } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Loader2, ShieldAlert, Eye, CheckCircle2, XCircle, MessageSquare, Send, Download } from "lucide-react";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { exportToExcel } from "@/lib/export-excel";
+import { toast } from "sonner";
 
 type Tab = "homepage" | "sliders" | "pages" | "news" | "gallery" | "toppers" | "persons" | "aicu" | "alumni" | "admissions" | "enquiries" | "social";
 
@@ -1234,11 +1236,13 @@ function SchoolAdmissions({ schoolSlug }: { schoolSlug: string }) {
   const [items, setItems] = useState<AdmissionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [detail, setDetail] = useState<AdmissionItem | null>(null);
   const [salesPersons, setSalesPersons] = useState<SalesPerson[]>([]);
   const [showSalesConfirm, setShowSalesConfirm] = useState(false);
   const [selectedSales, setSelectedSales] = useState("");
   const [sending, setSending] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1247,7 +1251,6 @@ function SchoolAdmissions({ schoolSlug }: { schoolSlug: string }) {
     setLoading(false);
   }, [api, schoolSlug]);
 
-  // Load sales persons
   const loadSalesPersons = useCallback(async () => {
     const r = await api.get("/api/users?role=sales");
     if (r.success) setSalesPersons(r.data || []);
@@ -1261,32 +1264,97 @@ function SchoolAdmissions({ schoolSlug }: { schoolSlug: string }) {
     if (detail?._id === id) setDetail(prev => prev ? { ...prev, status } : null);
   };
 
-  const handleSendToSales = async () => {
-    if (!detail || !selectedSales) return;
-    setSending(true);
-    const r = await api.post("/api/admissions/send-to-sales", {
-      admissionId: detail._id,
-      salesUserId: selectedSales,
+  const statuses = ["", "pending", "reviewed", "accepted", "rejected"];
+  const filtered = filter ? items.filter(i => i.status === filter) : items;
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
     });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map(a => a._id)));
+    }
+  };
+
+  const openBulkSend = () => {
+    setBulkMode(true);
+    setSelectedSales(salesPersons[0]?._id || "");
+    setShowSalesConfirm(true);
+  };
+
+  const openSingleSend = () => {
+    setBulkMode(false);
+    setSelectedSales(salesPersons[0]?._id || "");
+    setShowSalesConfirm(true);
+  };
+
+  const handleSendToSales = async () => {
+    if (!selectedSales) return;
+    const idsToSend = bulkMode ? Array.from(selectedIds) : detail ? [detail._id] : [];
+    if (idsToSend.length === 0) return;
+
+    setSending(true);
+    const body = idsToSend.length === 1
+      ? { id: idsToSend[0], salesUserId: selectedSales }
+      : { ids: idsToSend, salesUserId: selectedSales };
+    const r = await api.post("/api/admissions/send-to-sales", body);
     setSending(false);
     setShowSalesConfirm(false);
     if (r.success) {
-      setDetail(prev => prev ? { ...prev, sentToSales: true, sentToSalesAt: new Date().toISOString() } : null);
+      if (r.data?.emailWarning) toast.warning(r.data.emailWarning);
+      if (bulkMode) {
+        setSelectedIds(new Set());
+      } else if (detail) {
+        setDetail(prev => prev ? { ...prev, sentToSales: true, sentToSalesAt: new Date().toISOString() } : null);
+      }
       load();
     }
   };
 
-  const statuses = ["", "pending", "reviewed", "accepted", "rejected"];
+  const handleExport = () => {
+    const headers = ["Student", "Class", "Parent", "Status", "Sales", "Date"];
+    const rows = filtered.map(a => [
+      a.studentName,
+      a.class,
+      a.parentName,
+      a.status,
+      a.sentToSales ? "Sent" : "—",
+      new Date(a.createdAt).toLocaleDateString("en-IN"),
+    ]);
+    exportToExcel(`admissions_${schoolSlug}_${new Date().toISOString().slice(0, 10)}`, headers, rows);
+    toast.success("Export downloaded");
+  };
 
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>;
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-600">Review and manage admission applications for this school.</p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <p className="text-sm text-gray-600">Review and manage admission applications for this school.</p>
+        <div className="flex gap-2">
+          <button
+            onClick={openBulkSend}
+            disabled={selectedIds.size === 0}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed">
+            <Send className="h-4 w-4" /> Send Selected to Sales ({selectedIds.size})
+          </button>
+          <button onClick={handleExport}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
+            <Download className="h-4 w-4" /> Export Excel
+          </button>
+        </div>
+      </div>
 
       <div className="flex gap-2 flex-wrap">
         {statuses.map(s => (
-          <button key={s} onClick={() => setFilter(s)}
+          <button key={s} onClick={() => { setFilter(s); setSelectedIds(new Set()); }}
             className={`px-4 py-1.5 rounded-full text-sm font-medium capitalize ${filter === s ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
             {s || "All"} ({s ? items.filter(i => i.status === s).length : items.length})
           </button>
@@ -1297,6 +1365,10 @@ function SchoolAdmissions({ schoolSlug }: { schoolSlug: string }) {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
+              <th className="px-4 py-3 w-10">
+                <input type="checkbox" checked={filtered.length > 0 && selectedIds.size === filtered.length}
+                  onChange={toggleSelectAll} className="rounded border-gray-300" aria-label="Select all" />
+              </th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Student</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Class</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Parent</th>
@@ -1307,8 +1379,12 @@ function SchoolAdmissions({ schoolSlug }: { schoolSlug: string }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {(filter ? items.filter(i => i.status === filter) : items).map(a => (
-              <tr key={a._id} className="hover:bg-gray-50">
+            {filtered.map(a => (
+              <tr key={a._id} className={`hover:bg-gray-50 ${selectedIds.has(a._id) ? "bg-purple-50/50" : ""}`}>
+                <td className="px-4 py-3">
+                  <input type="checkbox" checked={selectedIds.has(a._id)} onChange={() => toggleSelect(a._id)}
+                    className="rounded border-gray-300" aria-label={`Select ${a.studentName}`} />
+                </td>
                 <td className="px-4 py-3 font-medium text-gray-900">{a.studentName}</td>
                 <td className="px-4 py-3 text-gray-600">{a.class}</td>
                 <td className="px-4 py-3 text-gray-600">{a.parentName}</td>
@@ -1320,8 +1396,8 @@ function SchoolAdmissions({ schoolSlug }: { schoolSlug: string }) {
                 </td>
               </tr>
             ))}
-            {(filter ? items.filter(i => i.status === filter) : items).length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No admissions found.</td></tr>
+            {filtered.length === 0 && (
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">No admissions found.</td></tr>
             )}
           </tbody>
         </table>
@@ -1367,7 +1443,7 @@ function SchoolAdmissions({ schoolSlug }: { schoolSlug: string }) {
               {detail.status === "pending" && (
                 <button onClick={() => updateStatus(detail._id, "reviewed")} className="px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 flex items-center gap-1"><Eye className="h-4 w-4" /> Mark Reviewed</button>
               )}
-              <button onClick={() => { setSelectedSales(salesPersons[0]?._id || ""); setShowSalesConfirm(true); }}
+              <button onClick={openSingleSend}
                 className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 flex items-center gap-1">
                 <Send className="h-4 w-4" /> Send to Sales
               </button>
@@ -1382,7 +1458,11 @@ function SchoolAdmissions({ schoolSlug }: { schoolSlug: string }) {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-gray-900 mb-2">Send to Sales Person</h3>
             <p className="text-sm text-gray-600 mb-4">
-              Send admission data for <span className="font-medium">{detail?.studentName}</span> to a sales person via email.
+              {bulkMode ? (
+                <>Send <span className="font-medium">{selectedIds.size} selected admission(s)</span> to a sales person via email.</>
+              ) : (
+                <>Send admission data for <span className="font-medium">{detail?.studentName}</span> to a sales person via email.</>
+              )}
             </p>
             {salesPersons.length === 0 ? (
               <p className="text-sm text-red-500 mb-4">No sales persons found. Please create a user with the &quot;sales&quot; role first.</p>
@@ -1399,10 +1479,10 @@ function SchoolAdmissions({ schoolSlug }: { schoolSlug: string }) {
             )}
             <div className="flex gap-2 justify-end">
               <button onClick={() => setShowSalesConfirm(false)} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200">Cancel</button>
-              <button onClick={handleSendToSales} disabled={!selectedSales || sending || salesPersons.length === 0}
+              <button onClick={handleSendToSales} disabled={!selectedSales || sending || salesPersons.length === 0 || (bulkMode && selectedIds.size === 0)}
                 className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                {sending ? "Sending..." : "Confirm & Send"}
+                {sending ? "Sending..." : bulkMode ? `Confirm & Send (${selectedIds.size})` : "Confirm & Send"}
               </button>
             </div>
           </div>
@@ -1430,11 +1510,13 @@ function SchoolEnquiries({ schoolSlug }: { schoolSlug: string }) {
   const [items, setItems] = useState<EnquiryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [detail, setDetail] = useState<EnquiryItem | null>(null);
   const [salesPersons, setSalesPersons] = useState<SalesPerson[]>([]);
   const [showSalesConfirm, setShowSalesConfirm] = useState(false);
   const [selectedSales, setSelectedSales] = useState("");
   const [sending, setSending] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1456,32 +1538,96 @@ function SchoolEnquiries({ schoolSlug }: { schoolSlug: string }) {
     if (detail?._id === id) setDetail(prev => prev ? { ...prev, status } : null);
   };
 
-  const handleSendToSales = async () => {
-    if (!detail || !selectedSales) return;
-    setSending(true);
-    const r = await api.post("/api/enquiries/send-to-sales", {
-      enquiryId: detail._id,
-      salesUserId: selectedSales,
+  const statuses = ["", "new", "read", "replied"];
+  const filtered = filter ? items.filter(i => i.status === filter) : items;
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
     });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map(e => e._id)));
+    }
+  };
+
+  const openBulkSend = () => {
+    setBulkMode(true);
+    setSelectedSales(salesPersons[0]?._id || "");
+    setShowSalesConfirm(true);
+  };
+
+  const openSingleSend = () => {
+    setBulkMode(false);
+    setSelectedSales(salesPersons[0]?._id || "");
+    setShowSalesConfirm(true);
+  };
+
+  const handleSendToSales = async () => {
+    if (!selectedSales) return;
+    const idsToSend = bulkMode ? Array.from(selectedIds) : detail ? [detail._id] : [];
+    if (idsToSend.length === 0) return;
+
+    setSending(true);
+    const body = idsToSend.length === 1
+      ? { id: idsToSend[0], salesUserId: selectedSales }
+      : { ids: idsToSend, salesUserId: selectedSales };
+    const r = await api.post("/api/enquiries/send-to-sales", body);
     setSending(false);
     setShowSalesConfirm(false);
     if (r.success) {
-      setDetail(prev => prev ? { ...prev, sentToSales: true, sentToSalesAt: new Date().toISOString() } : null);
+      if (r.data?.emailWarning) toast.warning(r.data.emailWarning);
+      if (bulkMode) {
+        setSelectedIds(new Set());
+      } else if (detail) {
+        setDetail(prev => prev ? { ...prev, sentToSales: true, sentToSalesAt: new Date().toISOString() } : null);
+      }
       load();
     }
   };
 
-  const statuses = ["", "new", "read", "replied"];
+  const handleExport = () => {
+    const headers = ["Name", "Subject", "Status", "Sales", "Date"];
+    const rows = filtered.map(e => [
+      e.name,
+      e.subject,
+      e.status,
+      e.sentToSales ? "Sent" : "—",
+      new Date(e.createdAt).toLocaleDateString("en-IN"),
+    ]);
+    exportToExcel(`enquiries_${schoolSlug}_${new Date().toISOString().slice(0, 10)}`, headers, rows);
+    toast.success("Export downloaded");
+  };
 
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>;
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-600">Manage contact enquiries submitted to this school.</p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <p className="text-sm text-gray-600">Manage contact enquiries submitted to this school.</p>
+        <div className="flex gap-2">
+          <button
+            onClick={openBulkSend}
+            disabled={selectedIds.size === 0}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed">
+            <Send className="h-4 w-4" /> Send Selected to Sales ({selectedIds.size})
+          </button>
+          <button onClick={handleExport}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
+            <Download className="h-4 w-4" /> Export Excel
+          </button>
+        </div>
+      </div>
 
       <div className="flex gap-2 flex-wrap">
         {statuses.map(s => (
-          <button key={s} onClick={() => setFilter(s)}
+          <button key={s} onClick={() => { setFilter(s); setSelectedIds(new Set()); }}
             className={`px-4 py-1.5 rounded-full text-sm font-medium capitalize ${filter === s ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
             {s || "All"} ({s ? items.filter(i => i.status === s).length : items.length})
           </button>
@@ -1492,6 +1638,10 @@ function SchoolEnquiries({ schoolSlug }: { schoolSlug: string }) {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
+              <th className="px-4 py-3 w-10">
+                <input type="checkbox" checked={filtered.length > 0 && selectedIds.size === filtered.length}
+                  onChange={toggleSelectAll} className="rounded border-gray-300" aria-label="Select all" />
+              </th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Subject</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
@@ -1501,8 +1651,12 @@ function SchoolEnquiries({ schoolSlug }: { schoolSlug: string }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {(filter ? items.filter(i => i.status === filter) : items).map(e => (
-              <tr key={e._id} className="hover:bg-gray-50">
+            {filtered.map(e => (
+              <tr key={e._id} className={`hover:bg-gray-50 ${selectedIds.has(e._id) ? "bg-purple-50/50" : ""}`}>
+                <td className="px-4 py-3">
+                  <input type="checkbox" checked={selectedIds.has(e._id)} onChange={() => toggleSelect(e._id)}
+                    className="rounded border-gray-300" aria-label={`Select ${e.name}`} />
+                </td>
                 <td className="px-4 py-3 font-medium text-gray-900">{e.name}</td>
                 <td className="px-4 py-3 text-gray-600 truncate max-w-[200px]">{e.subject}</td>
                 <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${e.status === "replied" ? "bg-green-100 text-green-700" : e.status === "read" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"}`}>{e.status}</span></td>
@@ -1513,8 +1667,8 @@ function SchoolEnquiries({ schoolSlug }: { schoolSlug: string }) {
                 </td>
               </tr>
             ))}
-            {(filter ? items.filter(i => i.status === filter) : items).length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">No enquiries found.</td></tr>
+            {filtered.length === 0 && (
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No enquiries found.</td></tr>
             )}
           </tbody>
         </table>
@@ -1543,7 +1697,7 @@ function SchoolEnquiries({ schoolSlug }: { schoolSlug: string }) {
               {detail.status === "new" && (
                 <button onClick={() => updateStatus(detail._id, "read")} className="px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 flex items-center gap-1"><Eye className="h-4 w-4" /> Mark Read</button>
               )}
-              <button onClick={() => { setSelectedSales(salesPersons[0]?._id || ""); setShowSalesConfirm(true); }}
+              <button onClick={openSingleSend}
                 className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 flex items-center gap-1">
                 <Send className="h-4 w-4" /> Send to Sales
               </button>
@@ -1558,7 +1712,11 @@ function SchoolEnquiries({ schoolSlug }: { schoolSlug: string }) {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-gray-900 mb-2">Send to Sales Person</h3>
             <p className="text-sm text-gray-600 mb-4">
-              Send enquiry from <span className="font-medium">{detail?.name}</span> to a sales person via email.
+              {bulkMode ? (
+                <>Send <span className="font-medium">{selectedIds.size} selected enquiry(ies)</span> to a sales person via email.</>
+              ) : (
+                <>Send enquiry from <span className="font-medium">{detail?.name}</span> to a sales person via email.</>
+              )}
             </p>
             {salesPersons.length === 0 ? (
               <p className="text-sm text-red-500 mb-4">No sales persons found. Please create a user with the &quot;sales&quot; role first.</p>
@@ -1575,10 +1733,10 @@ function SchoolEnquiries({ schoolSlug }: { schoolSlug: string }) {
             )}
             <div className="flex gap-2 justify-end">
               <button onClick={() => setShowSalesConfirm(false)} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200">Cancel</button>
-              <button onClick={handleSendToSales} disabled={!selectedSales || sending || salesPersons.length === 0}
+              <button onClick={handleSendToSales} disabled={!selectedSales || sending || salesPersons.length === 0 || (bulkMode && selectedIds.size === 0)}
                 className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                {sending ? "Sending..." : "Confirm & Send"}
+                {sending ? "Sending..." : bulkMode ? `Confirm & Send (${selectedIds.size})` : "Confirm & Send"}
               </button>
             </div>
           </div>

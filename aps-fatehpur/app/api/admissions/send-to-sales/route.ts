@@ -24,9 +24,15 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     // Get the sales user
-    const salesUser = await User.findById(salesUserId).select("name email role isActive");
+    const salesUser = await User.findById(salesUserId).select("name email role isActive schoolId");
     if (!salesUser || salesUser.role !== "sales" || !salesUser.isActive) {
       return errorResponse("Sales person not found or inactive", 404);
+    }
+    if (payload.role === "school_admin") {
+      const salesSchoolId = salesUser.schoolId?.toString();
+      if (!salesSchoolId || salesSchoolId !== payload.schoolId) {
+        return errorResponse("Sales person not found or inactive", 404);
+      }
     }
 
     // Get all admissions

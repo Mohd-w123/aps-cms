@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
+import { SchoolLink } from "@/components/shared/SchoolLink";
 import { usePathname } from "next/navigation";
 import { X, ChevronDown, GraduationCap } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -77,7 +77,7 @@ export function MobileNav({ open, onClose, navItems }: MobileNavProps) {
                     />
                   </button>
                 ) : (
-                  <Link
+                  <SchoolLink
                     href={item.href}
                     onClick={onClose}
                     className={`block px-5 py-3 text-sm font-medium transition-colors hover:bg-gray-100 ${
@@ -85,14 +85,14 @@ export function MobileNav({ open, onClose, navItems }: MobileNavProps) {
                     }`}
                   >
                     {item.label}
-                  </Link>
+                  </SchoolLink>
                 )}
 
                 {/* Sub Items */}
                 {hasChildren && expanded && (
                   <div className="bg-gray-50">
                     {item.children!.map((child) => (
-                      <Link
+                      <SchoolLink
                         key={child.href}
                         href={child.href}
                         onClick={onClose}
@@ -103,7 +103,7 @@ export function MobileNav({ open, onClose, navItems }: MobileNavProps) {
                         }`}
                       >
                         {child.label}
-                      </Link>
+                      </SchoolLink>
                     ))}
                   </div>
                 )}
@@ -113,7 +113,7 @@ export function MobileNav({ open, onClose, navItems }: MobileNavProps) {
 
           {/* Apply CTA */}
           <div className="px-5 pt-4">
-            <Link
+            <SchoolLink
               href="/academy/admissions"
               onClick={onClose}
               className="block w-full rounded-full py-3 text-center text-sm font-semibold transition-colors"
@@ -123,7 +123,7 @@ export function MobileNav({ open, onClose, navItems }: MobileNavProps) {
               }}
             >
               Apply Now
-            </Link>
+            </SchoolLink>
           </div>
         </nav>
       </SheetContent>

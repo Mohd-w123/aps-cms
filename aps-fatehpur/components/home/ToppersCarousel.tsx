@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { PlayfulSection, SectionHeader } from "@/components/shared/PlayfulUI";
+import { HorizontalScrollCarousel } from "@/components/shared/HorizontalScrollCarousel";
 
 interface TopperData {
   _id: string;
@@ -26,7 +27,6 @@ const fallbackToppers: TopperData[] = [
 ];
 
 export function ToppersCarousel() {
-  const scrollRef = useRef<HTMLDivElement>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [toppers, setToppers] = useState<TopperData[]>(fallbackToppers);
 
@@ -35,22 +35,6 @@ export function ToppersCarousel() {
       .then(r => r.json())
       .then(r => { if (r.success && r.data?.length) setToppers(r.data); })
       .catch(() => {});
-  }, []);
-
-  // Auto-scroll left continuously
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const interval = setInterval(() => {
-      if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 5) {
-        el.scrollLeft = 0;
-      } else {
-        el.scrollBy({ left: 2 });
-      }
-    }, 30);
-
-    return () => clearInterval(interval);
   }, []);
 
   const openLightbox = (i: number) => setLightboxIndex(i);
@@ -65,12 +49,7 @@ export function ToppersCarousel() {
       <div className="container mx-auto px-4">
         <SectionHeader label="Achievements" title="Our Toppers" emoji="🏆" />
 
-        {/* Auto-scrolling Carousel */}
-        <div
-          ref={scrollRef}
-          className="flex gap-5 overflow-x-auto scrollbar-hide pb-2"
-          style={{ scrollbarWidth: "none" }}
-        >
+        <HorizontalScrollCarousel className="gap-5 pb-2 px-6 md:px-10">
           {toppers.map((t, i) => (
             <div
               key={t._id}
@@ -96,7 +75,7 @@ export function ToppersCarousel() {
               </div>
             </div>
           ))}
-        </div>
+        </HorizontalScrollCarousel>
 
         <div className="mt-8 text-center">
           <Link
