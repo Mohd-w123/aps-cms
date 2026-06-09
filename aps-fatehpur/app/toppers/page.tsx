@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useSchool } from "@/hooks/useSchool";
 import { PageBanner } from "@/components/layout/PageBanner";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { HorizontalScrollCarousel } from "@/components/shared/HorizontalScrollCarousel";
 
 interface TopperItem {
   _id: string;
@@ -22,7 +23,6 @@ export default function ToppersPage() {
   const [toppers, setToppers] = useState<TopperItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function fetchToppers() {
@@ -42,20 +42,6 @@ export default function ToppersPage() {
     }
     fetchToppers();
   }, [schoolSlug]);
-
-  // Auto-scroll carousel
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el || toppers.length === 0) return;
-    const interval = setInterval(() => {
-      if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 5) {
-        el.scrollLeft = 0;
-      } else {
-        el.scrollBy({ left: 2 });
-      }
-    }, 30);
-    return () => clearInterval(interval);
-  }, [toppers]);
 
   return (
     <>
@@ -91,12 +77,7 @@ export default function ToppersPage() {
             </div>
           ) : (
             <>
-              {/* Auto-scrolling carousel */}
-              <div
-                ref={scrollRef}
-                className="flex gap-5 overflow-x-auto pb-4"
-                style={{ scrollbarWidth: "none" }}
-              >
+              <HorizontalScrollCarousel className="gap-5 pb-4 px-6 md:px-10">
                 {toppers.map((topper, i) => (
                   <div
                     key={topper._id}
@@ -112,7 +93,7 @@ export default function ToppersPage() {
                     />
                   </div>
                 ))}
-              </div>
+              </HorizontalScrollCarousel>
 
               {/* Full grid below carousel */}
               <div className="mt-12">

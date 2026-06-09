@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
+import { SchoolLink } from "@/components/shared/SchoolLink";
 import {
   Phone,
   Mail,
@@ -97,12 +97,12 @@ export function Footer() {
               <ul className="space-y-2">
                 {group.links.map((link) => (
                   <li key={link.href}>
-                    <Link
+                    <SchoolLink
                       href={link.href}
                       className="text-sm hover:text-[var(--accent-yellow,#d4e96e)] transition-colors"
                     >
                       {link.label}
-                    </Link>
+                    </SchoolLink>
                   </li>
                 ))}
               </ul>
@@ -145,12 +145,12 @@ export function Footer() {
             © {year} {school?.name || "APS Fatehpur"}. All rights reserved.
           </span>
           <div className="flex gap-4">
-            <Link href="/privacy" className="hover:text-[var(--accent-yellow,#d4e96e)] transition-colors">
+            <SchoolLink href="/privacy" className="hover:text-[var(--accent-yellow,#d4e96e)] transition-colors">
               Privacy Policy
-            </Link>
-            <Link href="/terms" className="hover:text-[var(--accent-yellow,#d4e96e)] transition-colors">
+            </SchoolLink>
+            <SchoolLink href="/terms" className="hover:text-[var(--accent-yellow,#d4e96e)] transition-colors">
               Terms of Use
-            </Link>
+            </SchoolLink>
           </div>
         </div>
       </div>
