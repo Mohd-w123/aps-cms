@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { getSchoolName, type SchoolRef } from "@/lib/school-label";
 import {
   GraduationCap,
   Mail,
@@ -32,10 +33,12 @@ interface ActivityItem {
   class?: string;
   status: string;
   createdAt: string;
+  schoolName?: string;
 }
 
 export default function AdminDashboardPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const isSuperAdmin = user?.role === "superadmin";
   const [stats, setStats] = useState<DashboardStats>({
     admissions: 0,
     enquiries: 0,
@@ -75,7 +78,7 @@ export default function AdminDashboardPage() {
         if (enqRes.success && enqRes.data) {
           // Fetch more for activity
           const enqFull = await fetch("/api/enquiries?limit=5", { headers }).then((r) => r.json());
-          (enqFull.data || []).forEach((e: { _id: string; name: string; subject: string; status: string; createdAt: string }) => {
+          (enqFull.data || []).forEach((e: { _id: string; name: string; subject: string; status: string; createdAt: string; schoolId?: SchoolRef | string; schoolName?: string }) => {
             recentItems.push({
               _id: e._id,
               type: "enquiry",
@@ -83,13 +86,14 @@ export default function AdminDashboardPage() {
               subject: e.subject,
               status: e.status,
               createdAt: e.createdAt,
+              schoolName: getSchoolName(e.schoolId, e.schoolName),
             });
           });
         }
 
         if (admRes.success && admRes.data) {
           const admFull = await fetch("/api/admissions?limit=5", { headers }).then((r) => r.json());
-          (admFull.data || []).forEach((a: { _id: string; studentName: string; class: string; status: string; createdAt: string }) => {
+          (admFull.data || []).forEach((a: { _id: string; studentName: string; class: string; status: string; createdAt: string; schoolId?: SchoolRef | string; schoolName?: string }) => {
             recentItems.push({
               _id: a._id,
               type: "admission",
@@ -97,6 +101,7 @@ export default function AdminDashboardPage() {
               class: a.class,
               status: a.status,
               createdAt: a.createdAt,
+              schoolName: getSchoolName(a.schoolId, a.schoolName),
             });
           });
         }
@@ -168,7 +173,7 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
-        <p className="text-sm text-gray-500 mt-1">Overview of your school&apos;s activity</p>
+        <p className="text-sm text-gray-500 mt-1">{isSuperAdmin ? "Overview of all schools" : "Overview of your school's activity"}</p>
       </div>
 
       {/* Stat Cards */}
@@ -221,6 +226,10 @@ export default function AdminDashboardPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
                       <p className="text-xs text-gray-500 truncate">
+                        {isSuperAdmin && item.schoolName && item.schoolName !== "—" ? (
+                          <span className="text-sky-700 font-medium">{item.schoolName}</span>
+                        ) : null}
+                        {isSuperAdmin && item.schoolName && item.schoolName !== "—" ? " · " : ""}
                         {item.type === "enquiry" ? item.subject : `Class ${item.class}`}
                       </p>
                     </div>

@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useAdminApi } from "@/hooks/useAdminApi";
+import { useAuth } from "@/hooks/useAuth";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { exportToExcel } from "@/lib/export-excel";
+import { getSchoolName, type SchoolRef } from "@/lib/school-label";
 import { toast } from "sonner";
 import { Loader2, Eye, X, Send, CheckCircle2, XCircle, Download } from "lucide-react";
 
@@ -12,11 +14,15 @@ interface Admission {
   class: string; dob: string; gender: string; address: string; previousSchool?: string;
   documents: { name: string; url: string }[]; status: string; createdAt: string;
   sentToSales?: boolean; sentToSalesAt?: string;
+  schoolId?: SchoolRef | string;
+  schoolName?: string;
 }
 interface SalesPerson { _id: string; name: string; email: string; }
 
 export default function AdminAdmissionsPage() {
   const api = useAdminApi();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "superadmin";
   const [items, setItems] = useState<Admission[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
@@ -26,6 +32,7 @@ export default function AdminAdmissionsPage() {
   const [showSalesConfirm, setShowSalesConfirm] = useState(false);
   const [selectedSales, setSelectedSales] = useState("");
   const [sending, setSending] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -65,32 +72,56 @@ export default function AdminAdmissionsPage() {
     }
   };
 
-  const handleBulkSendToSales = async () => {
-    if (!selectedSales || selectedIds.size === 0) return;
+  const openBulkSend = () => {
+    setBulkMode(true);
+    setSelectedSales(salesPersons[0]?._id || "");
+    setShowSalesConfirm(true);
+  };
+
+  const openSingleSend = () => {
+    setBulkMode(false);
+    setSelectedSales(salesPersons[0]?._id || "");
+    setShowSalesConfirm(true);
+  };
+
+  const handleSendToSales = async () => {
+    if (!selectedSales) return;
+    const idsToSend = bulkMode ? Array.from(selectedIds) : detail ? [detail._id] : [];
+    if (idsToSend.length === 0) return;
+
     setSending(true);
-    const r = await api.post("/api/admissions/send-to-sales", {
-      ids: Array.from(selectedIds),
-      salesUserId: selectedSales,
-    });
+    const body = idsToSend.length === 1
+      ? { id: idsToSend[0], salesUserId: selectedSales }
+      : { ids: idsToSend, salesUserId: selectedSales };
+    const r = await api.post("/api/admissions/send-to-sales", body);
     setSending(false);
     setShowSalesConfirm(false);
     if (r.success) {
       if (r.data?.emailWarning) toast.warning(r.data.emailWarning);
-      setSelectedIds(new Set());
+      if (bulkMode) {
+        setSelectedIds(new Set());
+      } else if (detail) {
+        setDetail(prev => prev ? { ...prev, sentToSales: true, sentToSalesAt: new Date().toISOString() } : null);
+      }
       load();
     }
   };
 
   const handleExport = () => {
-    const headers = ["Student", "Class", "Parent", "Status", "Sales", "Date"];
-    const rows = filtered.map(a => [
-      a.studentName,
-      a.class,
-      a.parentName,
-      a.status,
-      a.sentToSales ? "Sent" : "—",
-      new Date(a.createdAt).toLocaleDateString("en-IN"),
-    ]);
+    const headers = isSuperAdmin
+      ? ["School Name", "Student", "Class", "Parent", "Status", "Sales", "Date"]
+      : ["Student", "Class", "Parent", "Status", "Sales", "Date"];
+    const rows = filtered.map(a => {
+      const base = [
+        a.studentName,
+        a.class,
+        a.parentName,
+        a.status,
+        a.sentToSales ? "Sent" : "—",
+        new Date(a.createdAt).toLocaleDateString("en-IN"),
+      ];
+      return isSuperAdmin ? [getSchoolName(a.schoolId, a.schoolName), ...base] : base;
+    });
     exportToExcel(`admissions_${new Date().toISOString().slice(0, 10)}`, headers, rows);
     toast.success("Export downloaded");
   };
@@ -98,10 +129,10 @@ export default function AdminAdmissionsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div><h2 className="text-2xl font-bold text-gray-900">Admissions</h2><p className="text-sm text-gray-500 mt-1">Review admission applications</p></div>
+        <div><h2 className="text-2xl font-bold text-gray-900">Admissions</h2><p className="text-sm text-gray-500 mt-1">{isSuperAdmin ? "All schools — review admission applications" : "Review admission applications"}</p></div>
         <div className="flex gap-2">
           <button
-            onClick={() => { setSelectedSales(salesPersons[0]?._id || ""); setShowSalesConfirm(true); }}
+            onClick={openBulkSend}
             disabled={selectedIds.size === 0}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed">
             <Send className="h-4 w-4" /> Send Selected to Sales ({selectedIds.size})
@@ -129,6 +160,7 @@ export default function AdminAdmissionsPage() {
                 <input type="checkbox" checked={filtered.length > 0 && selectedIds.size === filtered.length}
                   onChange={toggleSelectAll} className="rounded border-gray-300" aria-label="Select all" />
               </th>
+              {isSuperAdmin && <th className="text-left px-4 py-3 font-medium text-gray-600">School Name</th>}
               <th className="text-left px-4 py-3 font-medium text-gray-600">Student</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Class</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Parent</th>
@@ -144,6 +176,13 @@ export default function AdminAdmissionsPage() {
                     <input type="checkbox" checked={selectedIds.has(a._id)} onChange={() => toggleSelect(a._id)}
                       className="rounded border-gray-300" aria-label={`Select ${a.studentName}`} />
                   </td>
+                  {isSuperAdmin && (
+                    <td className="px-4 py-3">
+                      <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-800 border border-sky-100">
+                        {getSchoolName(a.schoolId, a.schoolName)}
+                      </span>
+                    </td>
+                  )}
                   <td className="px-4 py-3 font-medium text-gray-900">{a.studentName}</td>
                   <td className="px-4 py-3 text-gray-500">{a.class}</td>
                   <td className="px-4 py-3 text-gray-500">{a.parentName}</td>
@@ -154,7 +193,7 @@ export default function AdminAdmissionsPage() {
                     <button onClick={() => setDetail(a)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500"><Eye className="h-4 w-4" /></button>
                   </td>
                 </tr>))}
-              {filtered.length === 0 && <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">No admissions found</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={isSuperAdmin ? 9 : 8} className="px-4 py-8 text-center text-gray-400">No admissions found</td></tr>}
             </tbody>
           </table>
         </div>
@@ -168,6 +207,7 @@ export default function AdminAdmissionsPage() {
               <button onClick={() => setDetail(null)} className="p-1 rounded hover:bg-gray-100"><X className="h-5 w-5 text-gray-500" /></button>
             </div>
             <div className="p-5 space-y-3 text-sm">
+              {isSuperAdmin && <Row label="School Name" value={getSchoolName(detail.schoolId, detail.schoolName)} />}
               <Row label="Student" value={detail.studentName} />
               <Row label="DOB" value={new Date(detail.dob).toLocaleDateString("en-IN")} />
               <Row label="Gender" value={detail.gender} />
@@ -197,6 +237,10 @@ export default function AdminAdmissionsPage() {
                 {detail.status === "pending" && (
                   <button onClick={() => updateStatus(detail._id, "reviewed")} className="px-4 py-2 rounded-lg border text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-1"><Eye className="h-4 w-4" /> Mark Reviewed</button>
                 )}
+                <button onClick={openSingleSend}
+                  className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 flex items-center gap-1">
+                  <Send className="h-4 w-4" /> Send to Sales
+                </button>
               </div>
             </div>
           </div>
@@ -208,7 +252,11 @@ export default function AdminAdmissionsPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-gray-900 mb-2">Send to Sales Person</h3>
             <p className="text-sm text-gray-600 mb-4">
-              Send <span className="font-medium">{selectedIds.size} selected admission(s)</span> to a sales person via email.
+              {bulkMode ? (
+                <>Send <span className="font-medium">{selectedIds.size} selected admission(s)</span> to a sales person via email.</>
+              ) : (
+                <>Send admission data for <span className="font-medium">{detail?.studentName}</span> to a sales person via email.</>
+              )}
             </p>
             {salesPersons.length === 0 ? (
               <p className="text-sm text-red-500 mb-4">No sales persons found. Please create a user with the &quot;sales&quot; role first.</p>
@@ -225,10 +273,10 @@ export default function AdminAdmissionsPage() {
             )}
             <div className="flex gap-2 justify-end">
               <button onClick={() => setShowSalesConfirm(false)} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200">Cancel</button>
-              <button onClick={handleBulkSendToSales} disabled={!selectedSales || sending || salesPersons.length === 0 || selectedIds.size === 0}
+              <button onClick={handleSendToSales} disabled={!selectedSales || sending || salesPersons.length === 0 || (bulkMode && selectedIds.size === 0)}
                 className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                {sending ? "Sending..." : `Confirm & Send (${selectedIds.size})`}
+                {sending ? "Sending..." : bulkMode ? `Confirm & Send (${selectedIds.size})` : "Confirm & Send"}
               </button>
             </div>
           </div>

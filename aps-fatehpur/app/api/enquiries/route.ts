@@ -1,8 +1,10 @@
 import { NextRequest } from "next/server";
 import connectDB from "@/lib/db";
 import { requireAuth, unauthorizedResponse, canAccessSchool, forbiddenResponse } from "@/lib/auth";
-import { successResponse, errorResponse, getSchoolId, parsePagination, paginationMeta } from "@/lib/api-helpers";
+import { successResponse, errorResponse, getSchoolId, buildAdminSchoolFilter, parsePagination, paginationMeta } from "@/lib/api-helpers";
 import Enquiry from "@/lib/models/Enquiry";
+import "@/lib/models/School";
+import { withSchoolName } from "@/lib/school-label";
 import { enquiryCreateSchema, enquiryStatusSchema } from "@/lib/validations";
 
 // POST /api/enquiries — public
@@ -48,20 +50,19 @@ export async function GET(request: NextRequest) {
     if (payload.role === "sales") {
       filter = { salesPersonId: payload.userId, sentToSales: true };
     } else {
-      const explicitSchoolId = await getSchoolId(request);
-      const targetSchoolId = explicitSchoolId || payload.schoolId;
-      if (!targetSchoolId || !canAccessSchool(payload, targetSchoolId)) return forbiddenResponse();
-      filter = { schoolId: targetSchoolId };
+      const schoolFilter = await buildAdminSchoolFilter(request, payload);
+      if ("error" in schoolFilter) return schoolFilter.error;
+      filter = schoolFilter.filter;
     }
 
     if (status) filter.status = status;
 
     const [items, total] = await Promise.all([
-      Enquiry.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Enquiry.find(filter).populate("schoolId", "name slug").sort({ createdAt: -1 }).skip(skip).limit(limit),
       Enquiry.countDocuments(filter),
     ]);
 
-    return successResponse(items, 200, paginationMeta(page, limit, total));
+    return successResponse(withSchoolName(items), 200, paginationMeta(page, limit, total));
   } catch (error) {
     console.error("Enquiries GET error:", error);
     return errorResponse("Internal server error", 500);
