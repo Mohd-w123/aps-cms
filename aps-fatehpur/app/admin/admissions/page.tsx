@@ -40,7 +40,6 @@ export default function AdminAdmissionsPage() {
     if (r.success) setItems(r.data);
     setLoading(false);
   }, [api]);
-
   const loadSalesPersons = useCallback(async () => {
     const r = await api.get("/api/users?role=sales");
     if (r.success) setSalesPersons(r.data || []);

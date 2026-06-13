@@ -7,7 +7,6 @@ export default function PrincipalPage() {
     <PrincipalPageView
       breadcrumbs={[
         { label: "Home", href: "/" },
-        { label: "About", href: "/about" },
         { label: "Principal" },
       ]}
     />

@@ -25,9 +25,9 @@ export function CmsPage({ slug, title, breadcrumbs, children }: CmsPageProps) {
   useEffect(() => {
     async function fetchPage() {
       try {
-        const res = await fetch(`/api/pages?slug=${slug}`, {
-          headers: { "x-school-slug": schoolSlug },
-        });
+        const res = await fetch(
+          `/api/pages?slug=${encodeURIComponent(slug)}&school=${schoolSlug}`
+        );
         const json = await res.json();
         if (json.success && json.data) {
           setPage(json.data);
