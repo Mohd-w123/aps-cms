@@ -2,21 +2,19 @@
 
 import React from "react";
 import Image from "next/image";
-import { usePerson } from "@/hooks/usePerson";
+import { usePrincipal } from "@/hooks/usePrincipal";
 import { PageBanner } from "@/components/layout/PageBanner";
 
-interface PersonPageProps {
-  role: "director" | "chairman" | "principal";
-  title: string;
+interface PrincipalPageViewProps {
   breadcrumbs?: { label: string; href?: string }[];
 }
 
-export function PersonPage({ role, title, breadcrumbs }: PersonPageProps) {
-  const { person, loading } = usePerson(role);
+export function PrincipalPageView({ breadcrumbs }: PrincipalPageViewProps) {
+  const { content, loading } = usePrincipal();
 
   return (
     <>
-      <PageBanner title={title} breadcrumbs={breadcrumbs} />
+      <PageBanner title="Principal" breadcrumbs={breadcrumbs} />
       <section className="py-12">
         <div className="container mx-auto px-4 max-w-4xl">
           {loading ? (
@@ -29,44 +27,41 @@ export function PersonPage({ role, title, breadcrumbs }: PersonPageProps) {
                 <div className="h-4 bg-gray-200 rounded w-5/6" />
               </div>
             </div>
-          ) : person ? (
+          ) : content ? (
             <div className="flex flex-col md:flex-row gap-10 items-start">
-              {/* Photo */}
-              {person.photo && (
+              {content.photo && (
                 <div className="w-64 flex-shrink-0">
                   <Image
-                    src={person.photo}
-                    alt={person.name}
+                    src={content.photo}
+                    alt={content.name}
                     width={256}
                     height={320}
                     className="w-full rounded-xl shadow-lg object-cover"
                   />
                 </div>
               )}
-
-              {/* Info */}
               <div className="flex-1">
                 <h2
                   className="text-2xl md:text-3xl font-bold mb-1"
                   style={{ color: "var(--text-dark)" }}
                 >
-                  {person.name}
+                  {content.name}
                 </h2>
                 <p
                   className="text-lg font-medium mb-1"
                   style={{ color: "var(--school-primary)" }}
                 >
-                  {person.designation}
+                  {content.designation}
                 </p>
-                {person.qualifications && (
+                {content.qualifications && (
                   <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
-                    {person.qualifications}
+                    {content.qualifications}
                   </p>
                 )}
                 <div
                   className="prose prose-lg max-w-none mt-4"
                   style={{ color: "var(--text-dark)" }}
-                  dangerouslySetInnerHTML={{ __html: person.bio }}
+                  dangerouslySetInnerHTML={{ __html: content.bio }}
                 />
               </div>
             </div>
