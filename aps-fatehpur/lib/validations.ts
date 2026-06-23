@@ -184,7 +184,7 @@ export const userUpdateSchema = z.object({
 // ── Sliders ──
 export const sliderCreateSchema = z.object({
   image: z.string().min(1),
-  title: z.string().min(1).max(500),
+  title: z.string().max(500).optional().default(""),
   subtitle: z.string().max(500).optional().default(""),
   ctaLabel: z.string().max(100).optional(),
   ctaLink: z.string().max(500).optional(),

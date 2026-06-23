@@ -43,7 +43,7 @@ export function HeroCarousel() {
   const slide = slides[current];
 
   return (
-    <section className="relative h-[480px] md:h-[560px] lg:h-[620px] overflow-hidden">
+    <section className="relative h-[68vh] min-h-[560px] md:h-[78vh] lg:h-[84vh] max-h-[860px] overflow-hidden">
       {/* Background */}
       <div
         className="absolute inset-0 transition-all duration-700"

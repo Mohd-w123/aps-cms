@@ -16,7 +16,7 @@ const SliderSchema = new Schema<ISlider>(
   {
     schoolId: { type: Schema.Types.ObjectId, ref: "School", required: true, index: true },
     image: { type: String, required: true },
-    title: { type: String, required: true },
+    title: { type: String, default: "" },
     subtitle: { type: String, default: "" },
     ctaLabel: { type: String },
     ctaLink: { type: String },
