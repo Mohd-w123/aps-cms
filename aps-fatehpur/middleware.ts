@@ -11,7 +11,9 @@ const SCHOOL_MAP: Record<string, string> = {
 };
 
 export function middleware(request: NextRequest) {
-  const host = request.headers.get("host") || "";
+  const forwardedHost = request.headers.get("x-forwarded-host") || "";
+  const rawHost = forwardedHost || request.headers.get("host") || request.nextUrl.host || "";
+  const host = rawHost.toLowerCase().split(":")[0];
   let slug = SCHOOL_MAP[host];
 
   // Localhost/Vercel fallback: use ?school= query param, then existing cookie for inner pages, then default

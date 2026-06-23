@@ -941,7 +941,7 @@ function SchoolHomepage({ schoolSlug }: { schoolSlug: string }) {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-gray-600">Manage your homepage sections — About, Principal's Message, Features (Why Choose Us), and CTA Banner.</p>
+      <p className="text-sm text-gray-600">Manage your homepage sections — About, Principal&apos;s Message, Features (Why Choose Us), and CTA Banner.</p>
 
       {/* Sub-sections */}
       <div className="flex gap-2 flex-wrap">
