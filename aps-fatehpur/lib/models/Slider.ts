@@ -5,6 +5,8 @@ export interface ISlider extends Document {
   image: string;
   title: string;
   subtitle: string;
+  titleColor?: string;
+  subtitleColor?: string;
   ctaLabel?: string;
   ctaLink?: string;
   order: number;
@@ -18,6 +20,8 @@ const SliderSchema = new Schema<ISlider>(
     image: { type: String, required: true },
     title: { type: String, default: "" },
     subtitle: { type: String, default: "" },
+    titleColor: { type: String },
+    subtitleColor: { type: String },
     ctaLabel: { type: String },
     ctaLink: { type: String },
     order: { type: Number, default: 0 },

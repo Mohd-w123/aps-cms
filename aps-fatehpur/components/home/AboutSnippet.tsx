@@ -14,6 +14,7 @@ export function AboutSnippet() {
   const [title, setTitle] = useState("About Us");
   const [image, setImage] = useState("/images/school-campus.jpg");
   const [signoff, setSignoff] = useState("");
+  const [aboutHref, setAboutHref] = useState("/about");
 
   useEffect(() => {
     fetch("/api/pages?limit=50")
@@ -26,6 +27,8 @@ export function AboutSnippet() {
             if (aboutPage.content) setContent(aboutPage.content);
             if (aboutPage.featuredImage) setImage(aboutPage.featuredImage);
             if (aboutPage.seo?.metaDescription) setSignoff(aboutPage.seo.metaDescription);
+            // Use the page's actual slug for the link
+            if (aboutPage.slug) setAboutHref(`/${aboutPage.slug}`);
           }
         }
       })
@@ -65,7 +68,7 @@ export function AboutSnippet() {
               </p>
             )}
             <Link
-              href="/about"
+              href={aboutHref}
               className="inline-block rounded-full px-6 py-3 text-sm font-semibold text-white transition-all hover:scale-105 shadow-lg"
               style={{ backgroundColor: "var(--school-primary, #499f42)" }}
             >

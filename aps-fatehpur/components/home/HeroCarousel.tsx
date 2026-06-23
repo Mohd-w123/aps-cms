@@ -6,7 +6,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { WaveBottom, FloatingDecorations } from "@/components/shared/PlayfulUI";
 
 interface Slide {
-  _id: string; image: string; title: string; subtitle: string; ctaLabel?: string; ctaLink?: string;
+  _id: string; image: string; title: string; subtitle: string;
+  titleColor?: string; subtitleColor?: string;
+  ctaLabel?: string; ctaLink?: string;
 }
 
 const fallbackSlides: Slide[] = [
@@ -63,10 +65,16 @@ export function HeroCarousel() {
       <div className="relative z-10 flex h-full items-center">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl text-white">
-            <h1 className="font-heading text-3xl md:text-5xl font-bold leading-tight mb-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h1
+              className="font-heading text-3xl md:text-5xl font-bold leading-tight mb-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+              style={{ color: slide.titleColor || "#ffffff" }}
+            >
               {slide.title}
             </h1>
-            <p className="text-lg md:text-xl opacity-90 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
+            <p
+              className="text-lg md:text-xl mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150"
+              style={{ color: slide.subtitleColor || "rgba(255,255,255,0.9)" }}
+            >
               {slide.subtitle}
             </p>
             {slide.ctaLabel && slide.ctaLink && (
