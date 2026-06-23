@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { WaveBottom, FloatingDecorations } from "@/components/shared/PlayfulUI";
+import { FloatingDecorations } from "@/components/shared/PlayfulUI";
 
 interface Slide {
   _id: string; image: string; title: string; subtitle: string;
@@ -18,14 +18,22 @@ const fallbackSlides: Slide[] = [
 ];
 
 export function HeroCarousel() {
-  const [slides, setSlides] = useState<Slide[]>(fallbackSlides);
+  const [slides, setSlides] = useState<Slide[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
-    fetch("/api/sliders?scope=school&limit=10")
+    fetch("/api/sliders?scope=school&limit=10", { cache: "no-store" })
       .then(r => r.json())
-      .then(r => { if (r.success && r.data?.length) setSlides(r.data); })
-      .catch(() => {});
+      .then(r => {
+        if (r.success && r.data?.length) setSlides(r.data);
+        setLoaded(true);
+      })
+      .catch(() => {
+        // Use hardcoded slides only when API request fails.
+        setSlides(fallbackSlides);
+        setLoaded(true);
+      });
   }, []);
 
   const next = useCallback(
@@ -38,9 +46,22 @@ export function HeroCarousel() {
   );
 
   useEffect(() => {
+    if (slides.length < 2) return;
     const timer = setInterval(next, 5000);
     return () => clearInterval(timer);
-  }, [next]);
+  }, [next, slides.length]);
+
+  useEffect(() => {
+    if (current >= slides.length) setCurrent(0);
+  }, [current, slides.length]);
+
+  if (!loaded || slides.length === 0) {
+    return (
+      <section className="relative h-[68vh] min-h-[560px] md:h-[78vh] lg:h-[84vh] max-h-[860px] overflow-hidden" style={{ background: "linear-gradient(to right, var(--text-dark, #22235b), var(--school-primary, #499f42))" }}>
+        <FloatingDecorations />
+      </section>
+    );
+  }
 
   const slide = slides[current];
 
@@ -128,8 +149,6 @@ export function HeroCarousel() {
         ))}
       </div>
 
-      {/* Wave bottom divider */}
-      <WaveBottom className="text-white" />
     </section>
   );
 }

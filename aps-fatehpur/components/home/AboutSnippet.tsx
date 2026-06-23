@@ -27,8 +27,9 @@ export function AboutSnippet() {
             if (aboutPage.content) setContent(aboutPage.content);
             if (aboutPage.featuredImage) setImage(aboutPage.featuredImage);
             if (aboutPage.seo?.metaDescription) setSignoff(aboutPage.seo.metaDescription);
-            // Use the page's actual slug for the link
-            if (aboutPage.slug) setAboutHref(`/${aboutPage.slug}`);
+            // seo.metaTitle stores the custom Read More URL
+            if (aboutPage.seo?.metaTitle) setAboutHref(aboutPage.seo.metaTitle);
+            else if (aboutPage.slug) setAboutHref(`/${aboutPage.slug}`);
           }
         }
       })

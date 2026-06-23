@@ -11,6 +11,7 @@ export interface PrincipalContent {
   bio: string;
   photo?: string;
   qualifications?: string;
+  readMoreUrl?: string;
 }
 
 export function usePrincipal() {
@@ -19,7 +20,7 @@ export function usePrincipal() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!slug || slug === "apsfatehpur") {
+    if (!slug) {
       setContent(null);
       setLoading(false);
       return;
@@ -30,8 +31,35 @@ export function usePrincipal() {
 
     async function load() {
       try {
+        let pageLevelReadMoreUrl = "";
+        const principalSettingsRes = await fetch(`/api/pages?slug=home-principal`);
+        const principalSettingsJson = await principalSettingsRes.json();
+        if (principalSettingsJson.success && principalSettingsJson.data?.seo?.metaTitle) {
+          pageLevelReadMoreUrl = String(principalSettingsJson.data.seo.metaTitle).trim();
+        }
+
+        const personRes = await fetch(`/api/persons?role=principal`);
+        const personJson = await personRes.json();
+        if (!cancelled && personJson.success && personJson.data?.length > 0) {
+          const people = Array.isArray(personJson.data) ? personJson.data : [];
+          const person =
+            people.find(
+              (p: { readMoreUrl?: string }) =>
+                typeof p.readMoreUrl === "string" && p.readMoreUrl.trim().length > 0
+            ) || people[0];
+          setContent({
+            name: person.name,
+            designation: person.designation || "Principal",
+            bio: person.bio || "",
+            photo: person.photo,
+            qualifications: person.qualifications,
+            readMoreUrl: pageLevelReadMoreUrl || (typeof person.readMoreUrl === "string" ? person.readMoreUrl.trim() : ""),
+          });
+          return;
+        }
+
         const pageRes = await fetch(
-          `/api/pages?slug=${encodeURIComponent(PRINCIPAL_PAGE_SLUG)}&school=${slug}`
+          `/api/pages?slug=${encodeURIComponent(PRINCIPAL_PAGE_SLUG)}`
         );
         const pageJson = await pageRes.json();
         if (!cancelled && pageJson.success && pageJson.data?.content) {
@@ -41,20 +69,7 @@ export function usePrincipal() {
             designation: page.seo?.metaDescription || "Principal",
             bio: page.content,
             photo: page.featuredImage,
-          });
-          return;
-        }
-
-        const personRes = await fetch(`/api/persons?role=principal&school=${slug}`);
-        const personJson = await personRes.json();
-        if (!cancelled && personJson.success && personJson.data?.length > 0) {
-          const person = personJson.data[0];
-          setContent({
-            name: person.name,
-            designation: person.designation || "Principal",
-            bio: person.bio || "",
-            photo: person.photo,
-            qualifications: person.qualifications,
+            readMoreUrl: pageLevelReadMoreUrl || "/about/principal",
           });
           return;
         }

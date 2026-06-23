@@ -22,6 +22,7 @@ export const personSchema = z.object({
   bio: z.string().optional().default(""),
   photo: z.string().optional().or(z.literal("")),
   qualifications: z.string().optional(),
+  readMoreUrl: z.string().optional().or(z.literal("")),
   order: z.number().int().optional().default(0),
   isActive: z.boolean().optional().default(true),
 });
