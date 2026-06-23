@@ -9,13 +9,14 @@ import { Plus, Pencil, Trash2, X, Loader2 } from "lucide-react";
 
 interface SliderItem {
   _id: string; image: string; title: string; subtitle: string;
+  titleColor?: string; subtitleColor?: string;
   ctaLabel?: string; ctaLink?: string; order: number; isPublished: boolean; scope: string;
 }
 interface Form {
-  image: string; title: string; subtitle: string; ctaLabel: string; ctaLink: string;
-  order: number; isPublished: boolean; scope: string;
+  image: string; title: string; subtitle: string; titleColor: string; subtitleColor: string;
+  ctaLabel: string; ctaLink: string; order: number; isPublished: boolean; scope: string;
 }
-const empty: Form = { image: "", title: "", subtitle: "", ctaLabel: "", ctaLink: "", order: 0, isPublished: true, scope: "school" };
+const empty: Form = { image: "", title: "", subtitle: "", titleColor: "#ffffff", subtitleColor: "#ffffff", ctaLabel: "", ctaLink: "", order: 0, isPublished: true, scope: "school" };
 
 export default function AdminSlidersPage() {
   const api = useAdminApi();
@@ -27,6 +28,11 @@ export default function AdminSlidersPage() {
   const [saving, setSaving] = useState(false);
   const [delId, setDelId] = useState<string | null>(null);
   const [tab, setTab] = useState<"school" | "group">("school");
+
+  const normalizeHex = (value: string, fallback: string) => {
+    const v = value.trim();
+    return /^#[0-9A-Fa-f]{6}$/.test(v) ? v : fallback;
+  };
 
   const load = async () => {
     setLoading(true);
@@ -46,6 +52,7 @@ export default function AdminSlidersPage() {
   const doCreate = () => { setEditId(null); setForm({ ...empty, scope: tab }); setOpen(true); };
   const doEdit = (s: SliderItem) => {
     setEditId(s._id); setForm({ image: s.image, title: s.title, subtitle: s.subtitle || "",
+      titleColor: s.titleColor || "#ffffff", subtitleColor: s.subtitleColor || "#ffffff",
       ctaLabel: s.ctaLabel || "", ctaLink: s.ctaLink || "", order: s.order, isPublished: s.isPublished, scope: s.scope }); setOpen(true);
   };
   const close = () => { setOpen(false); setEditId(null); setForm(empty); };
@@ -62,6 +69,9 @@ export default function AdminSlidersPage() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+        DEBUG: Admin Sliders source = app/admin/sliders/page.tsx
+      </div>
       <div className="flex items-center justify-between">
         <div><h2 className="text-2xl font-bold text-gray-900">Sliders</h2><p className="text-sm text-gray-500 mt-1">Manage hero carousel slides</p></div>
         <button onClick={doCreate} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700"><Plus className="h-4 w-4" /> Add Slide</button>
@@ -113,13 +123,51 @@ export default function AdminSlidersPage() {
               <h3 className="text-lg font-bold text-gray-900">{editId ? "Edit Slide" : "Add Slide"}</h3>
               <button onClick={close} className="p-1 rounded hover:bg-gray-100"><X className="h-5 w-5 text-gray-500" /></button>
             </div>
-            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
               <div><label className="block text-sm font-medium text-gray-700 mb-1">Background Image *</label>
                 <FileUploader value={form.image} onChange={url => setForm(f => ({ ...f, image: url }))} /></div>
-              <div><label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-                <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
-              <div><label className="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
-                <input value={form.subtitle} onChange={e => setForm(f => ({ ...f, subtitle: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                <input
+                  value={form.title}
+                  onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <div className="mt-2 flex items-center gap-2">
+                  <label className="text-xs font-medium text-gray-600">Title color:</label>
+                  <input
+                    type="color"
+                    value={form.titleColor}
+                    onChange={e => setForm(f => ({ ...f, titleColor: e.target.value }))}
+                    style={{ width: 40, height: 32, padding: 2, border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer' }}
+                  />
+                  <span className="text-xs text-gray-400 font-mono">{form.titleColor}</span>
+                </div>
+                <div className="mt-1 rounded bg-gray-900 px-3 py-2">
+                  <span style={{ color: form.titleColor, fontSize: 14, fontWeight: 700 }}>{form.title || "Title preview"}</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
+                <input
+                  value={form.subtitle}
+                  onChange={e => setForm(f => ({ ...f, subtitle: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <div className="mt-2 flex items-center gap-2">
+                  <label className="text-xs font-medium text-gray-600">Subtitle color:</label>
+                  <input
+                    type="color"
+                    value={form.subtitleColor}
+                    onChange={e => setForm(f => ({ ...f, subtitleColor: e.target.value }))}
+                    style={{ width: 40, height: 32, padding: 2, border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer' }}
+                  />
+                  <span className="text-xs text-gray-400 font-mono">{form.subtitleColor}</span>
+                </div>
+                <div className="mt-1 rounded bg-gray-900 px-3 py-2">
+                  <span style={{ color: form.subtitleColor, fontSize: 14 }}>{form.subtitle || "Subtitle preview"}</span>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div><label className="block text-sm font-medium text-gray-700 mb-1">CTA Label</label>
                   <input value={form.ctaLabel} onChange={e => setForm(f => ({ ...f, ctaLabel: e.target.value }))} placeholder="e.g. Apply Now" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
