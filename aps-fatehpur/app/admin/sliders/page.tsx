@@ -29,11 +29,6 @@ export default function AdminSlidersPage() {
   const [delId, setDelId] = useState<string | null>(null);
   const [tab, setTab] = useState<"school" | "group">("school");
 
-  const normalizeHex = (value: string, fallback: string) => {
-    const v = value.trim();
-    return /^#[0-9A-Fa-f]{6}$/.test(v) ? v : fallback;
-  };
-
   const load = async () => {
     setLoading(true);
     // Fetch both scopes for admin view
@@ -69,9 +64,6 @@ export default function AdminSlidersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-        DEBUG: Admin Sliders source = app/admin/sliders/page.tsx
-      </div>
       <div className="flex items-center justify-between">
         <div><h2 className="text-2xl font-bold text-gray-900">Sliders</h2><p className="text-sm text-gray-500 mt-1">Manage hero carousel slides</p></div>
         <button onClick={doCreate} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700"><Plus className="h-4 w-4" /> Add Slide</button>
