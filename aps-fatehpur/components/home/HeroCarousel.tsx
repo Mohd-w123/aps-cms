@@ -76,24 +76,24 @@ export function HeroCarousel() {
           backgroundPosition: "center",
         }}
       >
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to right, var(--text-dark, #22235b)CC, var(--text-dark, #22235b)80, var(--school-primary, #499f42)4D)" }} />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#22235b]/70 via-[#22235b]/45 to-[#499f42]/25" />
       </div>
 
       {/* Floating decorations */}
       <FloatingDecorations />
 
       {/* Content */}
-      <div className="relative z-10 flex h-full items-center">
-        <div className="container mx-auto px-4">
+      <div className="relative z-10 flex h-full items-start">
+        <div className="container mx-auto px-4 md:px-8 pt-24 md:pt-28 lg:pt-32">
           <div className="max-w-2xl text-white">
             <h1
-              className="font-heading text-3xl md:text-5xl font-bold leading-tight mb-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+              className="font-heading text-3xl md:text-5xl font-bold leading-tight mb-4 animate-in fade-in slide-in-from-bottom-4 duration-500 drop-shadow-[0_3px_10px_rgba(0,0,0,0.7)]"
               style={{ color: slide.titleColor || "#ffffff" }}
             >
               {slide.title}
             </h1>
             <p
-              className="text-lg md:text-xl mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150"
+              className="text-lg md:text-xl mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150 drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]"
               style={{ color: slide.subtitleColor || "rgba(255,255,255,0.9)" }}
             >
               {slide.subtitle}
