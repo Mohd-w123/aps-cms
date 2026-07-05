@@ -10,16 +10,21 @@ export const dynamic = "force-dynamic";
 // GET /api/sliders — public, filtered by scope
 export async function GET(request: NextRequest) {
   try {
-    const schoolId = await getSchoolId(request);
-    if (!schoolId) return errorResponse("School not found", 404);
-
     const { searchParams } = new URL(request.url);
     const scope = searchParams.get("scope") || "school";
     const { page, limit, skip } = parsePagination(searchParams);
 
     await connectDB();
 
-    const filter: Record<string, unknown> = { schoolId, isPublished: true, scope };
+    // scope=all → fetch published sliders from all schools (group landing)
+    const filter: Record<string, unknown> = { isPublished: true };
+    if (scope !== "all") {
+      const schoolId = await getSchoolId(request);
+      if (!schoolId) return errorResponse("School not found", 404);
+      filter.schoolId = schoolId;
+      filter.scope = scope;
+    }
+
     const [items, total] = await Promise.all([
       Slider.find(filter).sort({ order: 1 }).skip(skip).limit(limit),
       Slider.countDocuments(filter),

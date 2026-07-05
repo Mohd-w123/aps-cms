@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { FloatingDecorations } from "@/components/shared/PlayfulUI";
+import { useSchool } from "@/hooks/useSchool";
 
 interface Slide {
   _id: string; image: string; title: string; subtitle: string;
@@ -18,23 +19,23 @@ const fallbackSlides: Slide[] = [
 ];
 
 export function HeroCarousel() {
+  const { slug: schoolSlug } = useSchool();
   const [slides, setSlides] = useState<Slide[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
-    fetch("/api/sliders?scope=school&limit=10", { cache: "no-store" })
+    if (!schoolSlug) return;
+    const controller = new AbortController();
+    setSlides([]);
+    setLoaded(false);
+    fetch(`/api/sliders?school=${schoolSlug}&scope=school&limit=10`, { cache: "no-store", signal: controller.signal })
       .then(r => r.json())
-      .then(r => {
-        if (r.success && r.data?.length) setSlides(r.data);
-        setLoaded(true);
-      })
-      .catch(() => {
-        // Use hardcoded slides only when API request fails.
-        setSlides(fallbackSlides);
-        setLoaded(true);
-      });
-  }, []);
+      .then(r => { setSlides(r.success && r.data?.length ? r.data : fallbackSlides); })
+      .catch(err => { if (err.name !== "AbortError") setSlides(fallbackSlides); })
+      .finally(() => setLoaded(true));
+    return () => controller.abort();
+  }, [schoolSlug]);
 
   const next = useCallback(
     () => setCurrent((c) => (c + 1) % slides.length),
