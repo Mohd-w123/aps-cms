@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Calendar, ArrowRight } from "lucide-react";
+import { useSchool } from "@/hooks/useSchool";
 
 interface NewsItem {
   _id: string;
@@ -21,14 +22,18 @@ const fallbackItems: NewsItem[] = [
 ];
 
 export function NewsEvents() {
+  const { slug: schoolSlug } = useSchool();
   const [items, setItems] = useState<NewsItem[]>(fallbackItems);
 
   useEffect(() => {
-    fetch("/api/news?limit=4")
+    if (!schoolSlug) return;
+    const controller = new AbortController();
+    fetch(`/api/news?school=${schoolSlug}&limit=4`, { signal: controller.signal })
       .then(r => r.json())
-      .then(r => { if (r.success && r.data?.length) setItems(r.data); })
-      .catch(() => {});
-  }, []);
+      .then(r => { setItems(r.success && r.data?.length ? r.data : fallbackItems); })
+      .catch(err => { if (err.name !== "AbortError") setItems(fallbackItems); });
+    return () => controller.abort();
+  }, [schoolSlug]);
 
   return (
     <section className="py-20 bg-white">

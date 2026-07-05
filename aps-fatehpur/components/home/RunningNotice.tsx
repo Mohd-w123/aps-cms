@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Megaphone } from "lucide-react";
+import { useSchool } from "@/hooks/useSchool";
 
 const fallbackNotices = [
   "Admissions open for 2026-27 session — Apply before 31st May!",
@@ -11,14 +12,18 @@ const fallbackNotices = [
 
 export function RunningNotice() {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { slug: schoolSlug } = useSchool();
   const [notices, setNotices] = useState<string[]>(fallbackNotices);
 
   useEffect(() => {
-    fetch("/api/news?category=notice&limit=10")
+    if (!schoolSlug) return;
+    const controller = new AbortController();
+    fetch(`/api/news?school=${schoolSlug}&category=notice&limit=10`, { signal: controller.signal })
       .then(r => r.json())
-      .then(r => { if (r.success && r.data?.length) setNotices(r.data.map((n: { title: string }) => n.title)); })
-      .catch(() => {});
-  }, []);
+      .then(r => { setNotices(r.success && r.data?.length ? r.data.map((n: { title: string }) => n.title) : fallbackNotices); })
+      .catch(err => { if (err.name !== "AbortError") setNotices(fallbackNotices); });
+    return () => controller.abort();
+  }, [schoolSlug]);
 
   useEffect(() => {
     const el = scrollRef.current;

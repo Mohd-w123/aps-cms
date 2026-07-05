@@ -37,9 +37,11 @@ export function SchoolProvider({
   useEffect(() => {
     const paramSlug = new URLSearchParams(window.location.search).get("school");
     const cookieSlug = getSlugFromCookie();
-    const resolved = paramSlug || cookieSlug;
-    setSlug((current) => (resolved !== current ? resolved : current));
-  }, [pathname]);
+    // Prefer: explicit ?school= param > cookie > keep server-provided initialSlug
+    // Never downgrade to "apsfatehpur" if the server already gave a specific school slug
+    const resolved = paramSlug || cookieSlug || initialSlug;
+    setSlug((current) => (resolved && resolved !== current ? resolved : current));
+  }, [pathname, initialSlug]);
 
   const school = getSchoolBySlug(slug) || null;
 

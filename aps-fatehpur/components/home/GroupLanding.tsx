@@ -164,7 +164,7 @@ export function GroupLanding() {
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    fetch("/api/sliders?scope=group&limit=10", { cache: "no-store" }).then(r => r.json())
+    fetch("/api/sliders?scope=all&limit=20", { cache: "no-store" }).then(r => r.json())
       .then(r => {
         if (r.success && r.data?.length) setSlides(r.data);
         setSlidesLoaded(true);
@@ -202,7 +202,7 @@ export function GroupLanding() {
     fetch("/api/toppers?scope=all&limit=20").then(r => r.json())
       .then(r => { if (r.success && r.data?.length) setToppers(r.data.map((t: { photo?: string; name?: string }) => t.photo || "/images/toppers/topper-1.jpg")); }).catch(() => {});
 
-    fetch("/api/gallery?scope=all&limit=20").then(r => r.json())
+    fetch("/api/gallery?scope=all&limit=40").then(r => r.json())
       .then(r => { if (r.success && r.data?.length) setGallery(r.data); }).catch(() => {});
   }, []);
 
