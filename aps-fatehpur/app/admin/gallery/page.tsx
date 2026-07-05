@@ -8,11 +8,11 @@ import { FileUploader } from "@/components/admin/FileUploader";
 import { Plus, Trash2, X, Loader2, ImageIcon, Film } from "lucide-react";
 
 interface GalleryItem {
-  _id: string; type: string; image: string; videoUrl?: string; order: number; isPublished: boolean;
+  _id: string; type: string; category: string; image: string; videoUrl?: string; order: number; isPublished: boolean;
 }
 
-interface Form { type: string; image: string; videoUrl: string; order: number; isPublished: boolean; }
-const empty: Form = { type: "image", image: "", videoUrl: "", order: 0, isPublished: true };
+interface Form { type: string; category: string; image: string; videoUrl: string; order: number; isPublished: boolean; }
+const empty: Form = { type: "image", category: "general", image: "", videoUrl: "", order: 0, isPublished: true };
 
 export default function AdminGalleryPage() {
   const api = useAdminApi();
@@ -31,7 +31,11 @@ export default function AdminGalleryPage() {
 
   const save = async () => {
     setSaving(true);
-    const body = { ...form, videoUrl: form.type === "video" && form.videoUrl ? form.videoUrl : undefined };
+    const body = {
+      ...form,
+      category: form.category.trim().toLowerCase() || "general",
+      videoUrl: form.type === "video" && form.videoUrl ? form.videoUrl : undefined,
+    };
     const r = await api.post("/api/gallery", body);
     if (r.success) { close(); load(); }
     setSaving(false);
@@ -45,6 +49,7 @@ export default function AdminGalleryPage() {
   const remove = async () => { if (!delId) return; await api.del(`/api/gallery?id=${delId}`); setDelId(null); load(); };
 
   const filtered = tab === "all" ? items : items.filter(i => i.type === tab);
+  const existingCategories = Array.from(new Set(items.map(i => i.category).filter(Boolean))).sort();
 
   return (
     <div className="space-y-6">
@@ -91,6 +96,19 @@ export default function AdminGalleryPage() {
                 <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                   <option value="image">Photo</option><option value="video">Video</option>
                 </select></div>
+              <div><label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <input
+                  list="gallery-categories"
+                  value={form.category}
+                  onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                  placeholder="e.g. annual function"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <datalist id="gallery-categories">
+                  {existingCategories.map(cat => <option key={cat} value={cat} />)}
+                </datalist>
+                <p className="text-xs text-gray-400 mt-1">Select an existing category or type a new one. Saved in lowercase.</p>
+              </div>
               <div><label className="block text-sm font-medium text-gray-700 mb-1">{form.type === "video" ? "Thumbnail Image *" : "Image *"}</label>
                 <FileUploader value={form.image} onChange={url => setForm(f => ({ ...f, image: url }))} /></div>
               {form.type === "video" && (
