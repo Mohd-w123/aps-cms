@@ -3,6 +3,8 @@ import { requireAuth, unauthorizedResponse } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/lib/api-helpers";
 import cloudinary from "@/lib/cloudinary";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/media — list uploaded images from Cloudinary
 export async function GET(request: NextRequest) {
   try {

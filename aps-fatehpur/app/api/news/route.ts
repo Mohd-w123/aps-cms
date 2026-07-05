@@ -5,6 +5,8 @@ import { successResponse, errorResponse, getSchoolId, parsePagination, paginatio
 import News from "@/lib/models/News";
 import { newsCreateSchema, newsUpdateSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/news — public, paginated
 export async function GET(request: NextRequest) {
   try {

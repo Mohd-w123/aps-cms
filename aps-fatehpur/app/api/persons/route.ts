@@ -5,6 +5,8 @@ import { successResponse, errorResponse, getSchoolId } from "@/lib/api-helpers";
 import Person from "@/lib/models/Person";
 import { personSchema, personUpdateSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/persons — public
 export async function GET(request: NextRequest) {
   try {

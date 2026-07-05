@@ -5,6 +5,8 @@ import { successResponse, errorResponse, getSchoolId, parsePagination, paginatio
 import Alumni from "@/lib/models/Alumni";
 import { alumniCreateSchema, alumniUpdateSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 // POST /api/alumni — public (submit for approval)
 export async function POST(request: NextRequest) {
   try {

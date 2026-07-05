@@ -3,6 +3,8 @@ import { requireAuth, unauthorizedResponse } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/lib/api-helpers";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
+export const dynamic = "force-dynamic";
+
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB
