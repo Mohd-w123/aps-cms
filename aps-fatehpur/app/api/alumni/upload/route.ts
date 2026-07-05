@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { successResponse, errorResponse } from "@/lib/api-helpers";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
+export const dynamic = "force-dynamic";
+
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB for alumni photos
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 

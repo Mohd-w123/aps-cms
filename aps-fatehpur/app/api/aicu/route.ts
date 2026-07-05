@@ -5,6 +5,8 @@ import { successResponse, errorResponse, getSchoolId } from "@/lib/api-helpers";
 import AICU from "@/lib/models/AICU";
 import { aicuSchema, aicuUpdateSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/aicu — public, returns single active AICU doc
 export async function GET(request: NextRequest) {
   try {

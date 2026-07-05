@@ -7,6 +7,8 @@ import User from "@/lib/models/User";
 import School from "@/lib/models/School";
 import { sendMail, isEmailConfigured } from "@/lib/email";
 
+export const dynamic = "force-dynamic";
+
 // POST /api/admissions/send-to-sales — send admission data to sales person via email (single or bulk)
 export async function POST(request: NextRequest) {
   try {

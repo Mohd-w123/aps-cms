@@ -5,6 +5,8 @@ import { successResponse, errorResponse, getSchoolId, parsePagination, paginatio
 import Topper from "@/lib/models/Topper";
 import { topperCreateSchema, topperUpdateSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/toppers — public, paginated
 export async function GET(request: NextRequest) {
   try {

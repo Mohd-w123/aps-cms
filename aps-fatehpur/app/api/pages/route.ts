@@ -5,6 +5,8 @@ import { successResponse, errorResponse, getSchoolId } from "@/lib/api-helpers";
 import Page from "@/lib/models/Page";
 import { pageCreateSchema, pageUpdateSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/pages — public
 export async function GET(request: NextRequest) {
   try {

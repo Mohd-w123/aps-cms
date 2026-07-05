@@ -5,6 +5,8 @@ import { successResponse, errorResponse, getSchoolId, parsePagination, paginatio
 import Gallery from "@/lib/models/Gallery";
 import { galleryCreateSchema, galleryUpdateSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/gallery — public, paginated
 export async function GET(request: NextRequest) {
   try {

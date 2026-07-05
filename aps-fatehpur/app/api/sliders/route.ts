@@ -5,6 +5,8 @@ import { successResponse, errorResponse, getSchoolId, parsePagination, paginatio
 import Slider from "@/lib/models/Slider";
 import { sliderCreateSchema, sliderUpdateSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/sliders — public, filtered by scope
 export async function GET(request: NextRequest) {
   try {
