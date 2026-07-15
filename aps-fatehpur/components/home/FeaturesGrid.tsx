@@ -79,9 +79,9 @@ export function FeaturesGrid() {
             return (
             <div
               key={f.title + i}
-              className={`group rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2 border border-white/50 ${pastelBgs[i % pastelBgs.length]}`}
+              className={`group rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2 border border-white/50 hover:ring-2 hover:ring-offset-1 hover:ring-emerald-400/60 ${pastelBgs[i % pastelBgs.length]}`}
             >
-              <div className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl mb-4 bg-white shadow-sm`}>
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl mb-4 bg-white shadow-sm transition-transform duration-300 group-hover:scale-110">
                 <Icon className="h-7 w-7" style={{ color: iconColorVars[i % iconColorVars.length] }} />
               </div>
               <h3 className="font-heading font-semibold text-lg mb-2" style={{ color: "var(--text-dark, #22235b)" }}>
