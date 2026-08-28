@@ -6,6 +6,7 @@ import { useSchool } from "@/hooks/useSchool";
 import { PageBanner } from "@/components/layout/PageBanner";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { HorizontalScrollCarousel } from "@/components/shared/HorizontalScrollCarousel";
+import { schools as allSchools } from "@/config/schools";
 
 interface TopperItem {
   _id: string;
@@ -16,19 +17,29 @@ interface TopperItem {
   exam: string;
   rank: number;
   order: number;
+  schoolId?: { _id: string; name: string; slug: string };
 }
 
 export default function ToppersPage() {
   const { slug: schoolSlug } = useSchool();
+  const isGroup = schoolSlug === "apsfatehpur";
+
   const [toppers, setToppers] = useState<TopperItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [activeSchool, setActiveSchool] = useState<string>("all");
+
+  const branchSchools = allSchools.filter((s) => s.slug !== "apsfatehpur");
 
   useEffect(() => {
     async function fetchToppers() {
+      setLoading(true);
       try {
-        const res = await fetch("/api/toppers?limit=50", {
-          headers: { "x-school-slug": schoolSlug },
+        const url = isGroup
+          ? "/api/toppers?limit=100&scope=all"
+          : "/api/toppers?limit=50";
+        const res = await fetch(url, {
+          headers: isGroup ? {} : { "x-school-slug": schoolSlug },
         });
         const json = await res.json();
         if (json.success) {
@@ -41,7 +52,12 @@ export default function ToppersPage() {
       }
     }
     fetchToppers();
-  }, [schoolSlug]);
+  }, [schoolSlug, isGroup]);
+
+  const displayToppers =
+    isGroup && activeSchool !== "all"
+      ? toppers.filter((t) => t.schoolId?.slug === activeSchool)
+      : toppers;
 
   return (
     <>
@@ -63,13 +79,55 @@ export default function ToppersPage() {
             </p>
           </div>
 
+          {/* School filter tabs (group mode only) */}
+          {isGroup && (
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
+              <button
+                onClick={() => setActiveSchool("all")}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  activeSchool === "all"
+                    ? "text-white shadow-sm"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                style={
+                  activeSchool === "all"
+                    ? { backgroundColor: "var(--school-primary)" }
+                    : undefined
+                }
+              >
+                All Schools ({toppers.length})
+              </button>
+              {branchSchools.map((s) => {
+                const count = toppers.filter((t) => t.schoolId?.slug === s.slug).length;
+                return (
+                  <button
+                    key={s.slug}
+                    onClick={() => setActiveSchool(s.slug)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      activeSchool === s.slug
+                        ? "text-white shadow-sm"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                    style={
+                      activeSchool === s.slug
+                        ? { backgroundColor: s.theme.primary || "var(--school-primary)" }
+                        : undefined
+                    }
+                  >
+                    {s.name} {count > 0 ? `(${count})` : ""}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {loading ? (
             <div className="flex gap-5 overflow-hidden">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="flex-shrink-0 w-56 h-72 bg-gray-200 rounded-xl animate-pulse" />
               ))}
             </div>
-          ) : toppers.length === 0 ? (
+          ) : displayToppers.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-lg" style={{ color: "var(--text-muted)" }}>
                 Topper results will be available soon.
@@ -78,10 +136,10 @@ export default function ToppersPage() {
           ) : (
             <>
               <HorizontalScrollCarousel className="gap-5 pb-4 px-6 md:px-10">
-                {toppers.map((topper, i) => (
+                {displayToppers.map((topper, i) => (
                   <div
                     key={topper._id}
-                    className="flex-shrink-0 w-56 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer"
+                    className="flex-shrink-0 w-56 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer relative bg-white border border-gray-100"
                     onClick={() => setLightboxIndex(i)}
                   >
                     <Image
@@ -91,6 +149,11 @@ export default function ToppersPage() {
                       height={300}
                       className="w-full h-auto object-contain"
                     />
+                    {isGroup && topper.schoolId && (
+                      <div className="bg-black/70 text-white text-[11px] py-1.5 px-2 text-center truncate font-medium">
+                        {topper.schoolId.name}
+                      </div>
+                    )}
                   </div>
                 ))}
               </HorizontalScrollCarousel>
@@ -101,10 +164,10 @@ export default function ToppersPage() {
                   All Results
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-                  {toppers.map((topper, i) => (
+                  {displayToppers.map((topper, i) => (
                     <div
                       key={topper._id}
-                      className="rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer"
+                      className="rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer relative bg-white border border-gray-100 flex flex-col"
                       onClick={() => setLightboxIndex(i)}
                     >
                       <Image
@@ -112,8 +175,13 @@ export default function ToppersPage() {
                         alt={topper.name || `Topper ${i + 1}`}
                         width={224}
                         height={300}
-                        className="w-full h-auto object-contain"
+                        className="w-full h-auto object-contain flex-1"
                       />
+                      {isGroup && topper.schoolId && (
+                        <div className="bg-black/70 text-white text-[11px] py-1.5 px-2 text-center truncate font-medium">
+                          {topper.schoolId.name}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -124,7 +192,7 @@ export default function ToppersPage() {
       </section>
 
       {/* Lightbox */}
-      {lightboxIndex !== null && toppers[lightboxIndex] && (
+      {lightboxIndex !== null && displayToppers[lightboxIndex] && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90"
           onClick={() => setLightboxIndex(null)}
@@ -139,7 +207,7 @@ export default function ToppersPage() {
             onClick={(e) => {
               e.stopPropagation();
               setLightboxIndex((c) =>
-                c !== null ? (c - 1 + toppers.length) % toppers.length : null
+                c !== null ? (c - 1 + displayToppers.length) % displayToppers.length : null
               );
             }}
             className="absolute left-4 top-1/2 -translate-y-1/2 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
@@ -150,21 +218,26 @@ export default function ToppersPage() {
             onClick={(e) => {
               e.stopPropagation();
               setLightboxIndex((c) =>
-                c !== null ? (c + 1) % toppers.length : null
+                c !== null ? (c + 1) % displayToppers.length : null
               );
             }}
             className="absolute right-4 top-1/2 -translate-y-1/2 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
           >
             <ChevronRight className="h-6 w-6" />
           </button>
-          <div className="relative max-w-[90vw] max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
+          <div className="relative max-w-[90vw] max-h-[85vh] text-center" onClick={(e) => e.stopPropagation()}>
             <Image
-              src={toppers[lightboxIndex].photo}
-              alt={toppers[lightboxIndex].name || `Topper ${lightboxIndex + 1}`}
+              src={displayToppers[lightboxIndex].photo}
+              alt={displayToppers[lightboxIndex].name || `Topper ${lightboxIndex + 1}`}
               width={800}
               height={1000}
-              className="max-h-[85vh] w-auto object-contain rounded-lg"
+              className="max-h-[80vh] w-auto object-contain rounded-lg mx-auto"
             />
+            {isGroup && displayToppers[lightboxIndex].schoolId && (
+              <p className="text-white/80 text-sm mt-3 font-medium">
+                {displayToppers[lightboxIndex].schoolId!.name}
+              </p>
+            )}
           </div>
         </div>
       )}

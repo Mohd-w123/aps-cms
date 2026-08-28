@@ -3,15 +3,25 @@ import connectDB from "@/lib/db";
 import { requireAuth, unauthorizedResponse, canAccessSchool } from "@/lib/auth";
 import { successResponse, errorResponse, getSchoolId } from "@/lib/api-helpers";
 import AICU from "@/lib/models/AICU";
+import "@/lib/models/School"; // Ensure School model is registered for populate
 import { aicuSchema, aicuUpdateSchema } from "@/lib/validations";
 
-// GET /api/aicu — public, returns single active AICU doc
+// GET /api/aicu — public, returns single active AICU doc (or all if scope=all)
 export async function GET(request: NextRequest) {
   try {
-    const schoolId = await getSchoolId(request);
-    if (!schoolId) return errorResponse("School not found", 404);
+    const { searchParams } = new URL(request.url);
+    const scope = searchParams.get("scope");
 
     await connectDB();
+
+    // scope=all → fetch from all schools (for group landing page)
+    if (scope === "all") {
+      const items = await AICU.find({ isActive: true }).populate("schoolId", "name slug");
+      return successResponse(items);
+    }
+
+    const schoolId = await getSchoolId(request);
+    if (!schoolId) return errorResponse("School not found", 404);
 
     const aicu = await AICU.findOne({ schoolId, isActive: true });
     return successResponse(aicu);

@@ -3,25 +3,34 @@ import connectDB from "@/lib/db";
 import { requireAuth, unauthorizedResponse, forbiddenResponse, canAccessSchool } from "@/lib/auth";
 import { successResponse, errorResponse, getSchoolId, parsePagination, paginationMeta } from "@/lib/api-helpers";
 import News from "@/lib/models/News";
+import "@/lib/models/School"; // Ensure School model is registered for populate
 import { newsCreateSchema, newsUpdateSchema } from "@/lib/validations";
 
 // GET /api/news — public, paginated
 export async function GET(request: NextRequest) {
   try {
-    const schoolId = await getSchoolId(request);
-    if (!schoolId) return errorResponse("School not found", 404);
-
     const { searchParams } = new URL(request.url);
+    const scope = searchParams.get("scope");
     const category = searchParams.get("category");
     const { page, limit, skip } = parsePagination(searchParams);
 
     await connectDB();
 
-    const filter: Record<string, unknown> = { schoolId, isPublished: true };
+    const filter: Record<string, unknown> = { isPublished: true };
+
+    // scope=all → fetch from all schools (for group landing page)
+    if (scope !== "all") {
+      const schoolId = await getSchoolId(request);
+      if (!schoolId) return errorResponse("School not found", 404);
+      filter.schoolId = schoolId;
+    }
+
     if (category) filter.category = category;
 
     const [items, total] = await Promise.all([
-      News.find(filter).sort({ publishedAt: -1 }).skip(skip).limit(limit),
+      scope === "all"
+        ? News.find(filter).populate("schoolId", "name slug").sort({ publishedAt: -1 }).skip(skip).limit(limit)
+        : News.find(filter).sort({ publishedAt: -1 }).skip(skip).limit(limit),
       News.countDocuments(filter),
     ]);
 
