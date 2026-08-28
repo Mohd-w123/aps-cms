@@ -3,6 +3,7 @@ import connectDB from "@/lib/db";
 import { requireAuth, unauthorizedResponse, forbiddenResponse, canAccessSchool, getAuthPayload } from "@/lib/auth";
 import { successResponse, errorResponse, getSchoolId } from "@/lib/api-helpers";
 import Page from "@/lib/models/Page";
+import "@/lib/models/School"; // Ensure School model is registered for populate
 import { pageCreateSchema, pageUpdateSchema } from "@/lib/validations";
 
 export const dynamic = "force-dynamic";
@@ -10,14 +11,25 @@ export const dynamic = "force-dynamic";
 // GET /api/pages — public (isPublished filter) or admin (all pages)
 export async function GET(request: NextRequest) {
   try {
-    const schoolId = await getSchoolId(request);
-    if (!schoolId) return errorResponse("School not found", 404);
-
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get("slug");
+    const scope = searchParams.get("scope");
     const isAdmin = !!getAuthPayload(request);
 
     await connectDB();
+
+    // scope=all → fetch across all schools (for group landing inner pages)
+    if (scope === "all") {
+      if (slug) {
+        const pages = await Page.find({ slug, isPublished: true }).populate("schoolId", "name slug");
+        return successResponse(pages);
+      }
+      const pages = await Page.find({ isPublished: true }).populate("schoolId", "name slug").sort({ createdAt: -1 });
+      return successResponse(pages);
+    }
+
+    const schoolId = await getSchoolId(request);
+    if (!schoolId) return errorResponse("School not found", 404);
 
     if (slug) {
       const filter: Record<string, unknown> = { schoolId, slug };

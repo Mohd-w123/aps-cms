@@ -48,6 +48,18 @@ export async function PUT(request: NextRequest) {
       delete data.isActive;
     }
 
+    if (data.socialLinks && typeof data.socialLinks === "object") {
+      const cleanedLinks: Record<string, string> = {};
+      for (const [k, v] of Object.entries(data.socialLinks)) {
+        if (typeof v === "string") {
+          let clean = v.trim().replace(/^[#\s]+/, "").trim();
+          if (clean === "#") clean = "";
+          cleanedLinks[k] = clean;
+        }
+      }
+      data.socialLinks = cleanedLinks;
+    }
+
     const school = await School.findByIdAndUpdate(id, data, { new: true });
     if (!school) return errorResponse("School not found", 404);
 

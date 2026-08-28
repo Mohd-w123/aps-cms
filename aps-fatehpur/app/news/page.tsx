@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSchool } from "@/hooks/useSchool";
 import { PageBanner } from "@/components/layout/PageBanner";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { schools as allSchools } from "@/config/schools";
 
 interface NewsItem {
   _id: string;
@@ -16,6 +17,7 @@ interface NewsItem {
   featuredImage?: string;
   publishedAt?: string;
   createdAt: string;
+  schoolId?: { _id: string; name: string; slug: string };
 }
 
 interface Pagination {
@@ -26,7 +28,7 @@ interface Pagination {
 }
 
 const categories = [
-  { label: "All", value: "" },
+  { label: "All Types", value: "" },
   { label: "Announcements", value: "announcement" },
   { label: "Events", value: "event" },
   { label: "Tours", value: "tour" },
@@ -52,11 +54,16 @@ const categoryColors: Record<string, string> = {
 
 export default function NewsPage() {
   const { slug: schoolSlug } = useSchool();
+  const isGroup = schoolSlug === "apsfatehpur";
+
   const [news, setNews] = useState<NewsItem[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("");
+  const [activeSchool, setActiveSchool] = useState("all");
   const [page, setPage] = useState(1);
+
+  const branchSchools = allSchools.filter((s) => s.slug !== "apsfatehpur");
 
   useEffect(() => {
     async function fetchNews() {
@@ -64,9 +71,16 @@ export default function NewsPage() {
       try {
         const params = new URLSearchParams({ page: String(page), limit: "9" });
         if (activeCategory) params.set("category", activeCategory);
+        if (isGroup) {
+          if (activeSchool !== "all") {
+            params.set("school", activeSchool);
+          } else {
+            params.set("scope", "all");
+          }
+        }
 
         const res = await fetch(`/api/news?${params}`, {
-          headers: { "x-school-slug": schoolSlug },
+          headers: isGroup ? {} : { "x-school-slug": schoolSlug },
         });
         const json = await res.json();
         if (json.success) {
@@ -80,10 +94,15 @@ export default function NewsPage() {
       }
     }
     fetchNews();
-  }, [schoolSlug, activeCategory, page]);
+  }, [schoolSlug, activeCategory, activeSchool, page, isGroup]);
 
   const handleCategoryChange = (value: string) => {
     setActiveCategory(value);
+    setPage(1);
+  };
+
+  const handleSchoolChange = (value: string) => {
+    setActiveSchool(value);
     setPage(1);
   };
 
@@ -95,7 +114,46 @@ export default function NewsPage() {
       />
       <section className="py-12">
         <div className="container mx-auto px-4">
-          {/* Filter tabs */}
+          {/* School filter tabs (group mode only) */}
+          {isGroup && (
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+              <button
+                onClick={() => handleSchoolChange("all")}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  activeSchool === "all"
+                    ? "text-white shadow-sm"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                style={
+                  activeSchool === "all"
+                    ? { backgroundColor: "var(--school-primary)" }
+                    : undefined
+                }
+              >
+                All Schools
+              </button>
+              {branchSchools.map((s) => (
+                <button
+                  key={s.slug}
+                  onClick={() => handleSchoolChange(s.slug)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    activeSchool === s.slug
+                      ? "text-white shadow-sm"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                  style={
+                    activeSchool === s.slug
+                      ? { backgroundColor: s.theme.primary || "var(--school-primary)" }
+                      : undefined
+                  }
+                >
+                  {s.name}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Type filter tabs */}
           <div className="flex flex-wrap justify-center gap-3 mb-10">
             {categories.map((cat) => (
               <button
@@ -103,7 +161,7 @@ export default function NewsPage() {
                 onClick={() => handleCategoryChange(cat.value)}
                 className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
                   activeCategory === cat.value
-                    ? "text-white"
+                    ? "text-white shadow-sm"
                     : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
                 }`}
                 style={
@@ -143,10 +201,10 @@ export default function NewsPage() {
                   <Link
                     key={item._id}
                     href={`/news/${item.slug}`}
-                    className="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden border border-gray-100"
+                    className="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden border border-gray-100 flex flex-col"
                   >
                     {/* Image */}
-                    <div className="relative aspect-[16/10] overflow-hidden">
+                    <div className="relative aspect-[16/10] overflow-hidden bg-gray-50">
                       {item.featuredImage ? (
                         <Image
                           src={item.featuredImage}
@@ -162,10 +220,18 @@ export default function NewsPage() {
                           <Calendar className="h-12 w-12 text-gray-300" />
                         </div>
                       )}
+                      {/* School badge in group mode */}
+                      {isGroup && item.schoolId && (
+                        <div className="absolute top-2 left-2">
+                          <span className="px-2.5 py-0.5 bg-black/70 text-white text-[10px] font-semibold rounded-full backdrop-blur-sm">
+                            {item.schoolId.name}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Content */}
-                    <div className="p-5">
+                    <div className="p-5 flex-1 flex flex-col">
                       <div className="flex items-center gap-3 mb-3">
                         <time
                           className="text-xs"
@@ -194,7 +260,7 @@ export default function NewsPage() {
                         {stripHtml(item.content)}
                       </p>
                       <span
-                        className="inline-block mt-3 text-sm font-medium"
+                        className="inline-block mt-auto pt-3 text-sm font-medium"
                         style={{ color: "var(--school-primary)" }}
                       >
                         Read More →

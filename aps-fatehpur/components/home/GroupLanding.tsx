@@ -23,7 +23,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { SocialLinksBar, SocialIcon, socialPlatforms } from "@/components/shared/SocialIcons";
+import { SocialLinksBar, SocialIcon, socialPlatforms, normalizeSocialUrl } from "@/components/shared/SocialIcons";
 import { TestimonialsSlider } from "@/components/home/TestimonialsSlider";
 import { HorizontalScrollCarousel } from "@/components/shared/HorizontalScrollCarousel";
 import { getBranchUrl } from "@/lib/school-urls";
@@ -147,15 +147,18 @@ function CursorTrail() {
 }
 
 /* ───────────────────── GROUP LANDING ───────────────────── */
-interface SlideData { _id: string; image: string; title: string; subtitle: string; ctaLabel?: string; ctaLink?: string; }
+interface SlideData { _id: string; image: string; title: string; subtitle: string; ctaLabel?: string; ctaLink?: string; schoolId?: { _id: string; name: string; slug: string }; }
 interface BranchData { slug: string; name: string; domain?: string; logo?: string; cardImage?: string; cardBgColor?: string; websiteUrl?: string; theme: { primaryColor?: string }; contactInfo?: { phone?: string; email?: string; address?: string }; isActive: boolean; }
-interface GalleryData { _id: string; type: string; image: string; videoUrl?: string; category?: string; title?: string; }
+interface TopperData { _id: string; photo: string; name?: string; percentage?: number; year?: string; exam?: string; rank?: number; schoolId?: { _id: string; name: string; slug: string }; }
+interface GalleryData { _id: string; type: string; image: string; videoUrl?: string; category?: string; title?: string; schoolId?: { _id: string; name: string; slug: string }; }
 
 export function GroupLanding() {
   const [slides, setSlides] = useState<SlideData[]>([]);
   const [slidesLoaded, setSlidesLoaded] = useState(false);
   const [branches, setBranches] = useState<BranchData[]>([]);
-  const [toppers, setToppers] = useState<string[]>(fallbackToppers);
+  const [toppers, setToppers] = useState<TopperData[]>(
+    fallbackToppers.map((photo, i) => ({ _id: `f-${i}`, photo }))
+  );
   const [gallery, setGallery] = useState<GalleryData[]>([]);
   const [groupName, setGroupName] = useState("APS Group");
   const [contactInfo, setContactInfo] = useState({ phone: "+91-XXXX-XXXXXX", email: "info@apsfatehpur.com", address: "Fatehpur Shekhawati, Rajasthan, India" });
@@ -164,6 +167,7 @@ export function GroupLanding() {
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    // Combined sliders from all school websites
     fetch("/api/sliders?scope=all&limit=20", { cache: "no-store" }).then(r => r.json())
       .then(r => {
         if (r.success && r.data?.length) setSlides(r.data);
@@ -199,9 +203,15 @@ export function GroupLanding() {
         }
       }).catch(() => {});
 
-    fetch("/api/toppers?scope=all&limit=20").then(r => r.json())
-      .then(r => { if (r.success && r.data?.length) setToppers(r.data.map((t: { photo?: string; name?: string }) => t.photo || "/images/toppers/topper-1.jpg")); }).catch(() => {});
+    // Combined toppers from all school websites
+    fetch("/api/toppers?scope=all&limit=30").then(r => r.json())
+      .then(r => {
+        if (r.success && r.data?.length) {
+          setToppers(r.data);
+        }
+      }).catch(() => {});
 
+    // Combined gallery from all school websites
     fetch("/api/gallery?scope=all&limit=40").then(r => r.json())
       .then(r => { if (r.success && r.data?.length) setGallery(r.data); }).catch(() => {});
   }, []);
@@ -284,12 +294,14 @@ function GroupNav({ groupName, navLinks, socialLinks, contactInfo }: { groupName
                 {contactInfo.address}
               </span>
             )}
-            {hasSocial && (
-              <span className="flex items-center gap-2 ml-2">
-                {socialPlatforms.filter(p => socialLinks[p.key]).map(p => (
+            <span className="flex items-center gap-2 ml-2">
+              {socialPlatforms.map(p => {
+                const url = normalizeSocialUrl(socialLinks[p.key], p.key);
+                if (!url) return null;
+                return (
                   <a
                     key={p.key}
-                    href={socialLinks[p.key]}
+                    href={url}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={p.label}
@@ -297,9 +309,9 @@ function GroupNav({ groupName, navLinks, socialLinks, contactInfo }: { groupName
                   >
                     <SocialIcon platform={p.key} />
                   </a>
-                ))}
-              </span>
-            )}
+                );
+              })}
+            </span>
           </div>
         </div>
       </div>
@@ -426,17 +438,31 @@ function HeroSlider({ slides, loaded }: { slides: SlideData[]; loaded: boolean }
       <div className="relative z-10 flex h-full items-center">
         <div className="w-full mx-auto px-6 md:px-12 lg:px-16">
           <div className="max-w-2xl text-white">
+            {slide.schoolId?.name && (
+              <span className="inline-block px-3.5 py-1 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-md text-white border border-white/30 mb-3">
+                {slide.schoolId.name}
+              </span>
+            )}
             <h1 className="font-heading text-4xl md:text-5xl lg:text-7xl font-bold leading-tight mb-4 drop-shadow-lg">
               {slide.title}
             </h1>
             <p className="text-lg md:text-xl opacity-90 mb-8 font-light">{slide.subtitle}</p>
             <div className="flex gap-4 flex-wrap">
-              <a
-                href="#branches"
-                className="inline-block rounded-full px-8 py-3.5 font-semibold text-base bg-gradient-to-r from-[#499f42] to-[#3d8a37] text-white shadow-lg shadow-[#499f42]/25 transition-all hover:scale-105 hover:shadow-xl hover:shadow-[#499f42]/30"
-              >
-                Our Branches
-              </a>
+              {slide.ctaLabel && slide.ctaLink ? (
+                <a
+                  href={slide.ctaLink}
+                  className="inline-block rounded-full px-8 py-3.5 font-semibold text-base bg-gradient-to-r from-[#499f42] to-[#3d8a37] text-white shadow-lg shadow-[#499f42]/25 transition-all hover:scale-105 hover:shadow-xl hover:shadow-[#499f42]/30"
+                >
+                  {slide.ctaLabel}
+                </a>
+              ) : (
+                <a
+                  href="#branches"
+                  className="inline-block rounded-full px-8 py-3.5 font-semibold text-base bg-gradient-to-r from-[#499f42] to-[#3d8a37] text-white shadow-lg shadow-[#499f42]/25 transition-all hover:scale-105 hover:shadow-xl hover:shadow-[#499f42]/30"
+                >
+                  Our Branches
+                </a>
+              )}
               <a
                 href="#about"
                 className="inline-block rounded-full px-8 py-3.5 font-semibold text-base border-2 border-white/70 text-white transition-all hover:scale-105 hover:bg-white/10 hover:border-white backdrop-blur-sm"
@@ -645,7 +671,7 @@ function PlayfulBranchCard({ school, colorSet }: { school: BranchCard; colorSet:
 }
 
 /* ───────────────────── TOPPERS ───────────────────── */
-function ToppersSection({ toppers }: { toppers: string[] }) {
+function ToppersSection({ toppers }: { toppers: TopperData[] }) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   return (
@@ -669,31 +695,47 @@ function ToppersSection({ toppers }: { toppers: string[] }) {
             Our Toppers
           </h2>
           <p className="mt-4 text-gray-500 max-w-md mx-auto">
-            Celebrating the brilliant minds who make us proud every year
+            Celebrating the brilliant minds across our schools who make us proud every year
           </p>
         </div>
 
         <HorizontalScrollCarousel className="gap-6 pb-4 px-8 md:px-12">
-          {toppers.map((src, i) => (
+          {toppers.map((topper, i) => (
             <div
-              key={i}
-              className="flex-shrink-0 w-52 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-2 cursor-pointer ring-2 ring-white bg-white"
+              key={topper._id || i}
+              className="flex-shrink-0 w-52 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-2 cursor-pointer ring-2 ring-white bg-white relative flex flex-col"
               onClick={() => setLightboxIndex(i)}
             >
-              <Image
-                src={src}
-                alt={`Topper ${i + 1}`}
-                width={224}
-                height={300}
-                className="w-full h-auto object-contain"
-              />
+              <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-50">
+                <Image
+                  src={topper.photo}
+                  alt={topper.name || `Topper ${i + 1}`}
+                  fill
+                  className="object-contain"
+                />
+                {topper.schoolId?.name && (
+                  <div className="absolute top-2 left-2 right-2">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-black/60 text-white backdrop-blur-sm truncate block text-center">
+                      {topper.schoolId.name}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {topper.name && (
+                <div className="p-3 text-center bg-white border-t border-gray-50">
+                  <p className="font-bold text-xs text-[#22235b] truncate">{topper.name}</p>
+                  {topper.percentage ? (
+                    <p className="text-[11px] text-[#499f42] font-semibold">{topper.percentage}%</p>
+                  ) : null}
+                </div>
+              )}
             </div>
           ))}
         </HorizontalScrollCarousel>
       </div>
 
       {/* Lightbox */}
-      {lightboxIndex !== null && (
+      {lightboxIndex !== null && toppers[lightboxIndex] && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm"
           onClick={() => setLightboxIndex(null)}
@@ -726,14 +768,19 @@ function ToppersSection({ toppers }: { toppers: string[] }) {
           >
             <ChevronRight className="h-6 w-6" />
           </button>
-          <div className="relative max-w-[90vw] max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
+          <div className="relative max-w-[90vw] max-h-[85vh] text-center" onClick={(e) => e.stopPropagation()}>
             <Image
-              src={toppers[lightboxIndex]}
-              alt={`Topper ${lightboxIndex + 1}`}
+              src={toppers[lightboxIndex].photo}
+              alt={toppers[lightboxIndex].name || `Topper ${lightboxIndex + 1}`}
               width={800}
               height={1000}
-              className="max-h-[85vh] w-auto object-contain rounded-2xl"
+              className="max-h-[80vh] w-auto object-contain rounded-2xl mx-auto"
             />
+            {toppers[lightboxIndex].schoolId?.name && (
+              <p className="text-white/80 text-sm mt-3 font-medium">
+                {toppers[lightboxIndex].schoolId?.name}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -756,6 +803,7 @@ type GalleryItemLocal = {
   videoUrl?: string;
   alt: string;
   category: string;
+  schoolName?: string;
 };
 
 const fallbackGallery: GalleryItemLocal[] = [
@@ -774,7 +822,14 @@ function GallerySection({ items }: { items: GalleryData[] }) {
   const [catFilter, setCatFilter] = useState("all");
 
   const galleryItems: GalleryItemLocal[] = items.length > 0
-    ? items.map(g => ({ type: g.type, src: g.image, videoUrl: g.videoUrl, alt: g.title || "Gallery", category: g.category || "general" }))
+    ? items.map(g => ({
+        type: g.type,
+        src: g.image,
+        videoUrl: g.videoUrl,
+        alt: g.title || "Gallery",
+        category: g.category || "general",
+        schoolName: g.schoolId?.name,
+      }))
     : fallbackGallery;
 
   const categories = ["all", ...Array.from(new Set(galleryItems.map(g => g.category)))];
@@ -835,6 +890,13 @@ function GallerySection({ items }: { items: GalleryData[] }) {
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-110"
               />
+              {item.schoolName && (
+                <div className="absolute top-2.5 left-2.5 z-10">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-black/60 text-white backdrop-blur-sm">
+                    {item.schoolName}
+                  </span>
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-[#22235b]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 {item.type === "video" ? (
                   <Play className="h-10 w-10 text-white drop-shadow-lg" />

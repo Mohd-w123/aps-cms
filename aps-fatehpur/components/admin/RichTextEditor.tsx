@@ -4,17 +4,7 @@ import React from "react";
 import dynamic from "next/dynamic";
 import "react-quill/dist/quill.snow.css";
 
-// Register ImageResize module client-side only
-const ReactQuill = dynamic(
-  async () => {
-    const { default: RQ } = await import("react-quill");
-    const { default: Quill } = await import("quill");
-    const { default: ImageResize } = await import("quill-resize-image");
-    Quill.register("modules/imageResize", ImageResize);
-    return RQ;
-  },
-  { ssr: false }
-);
+const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
 interface RichTextEditorProps {
   value: string;
@@ -31,10 +21,6 @@ const modules = {
     [{ align: [] }],
     ["clean"],
   ],
-  imageResize: {
-    parchment: {},
-    modules: ["Resize", "DisplaySize"],
-  },
 };
 
 export function RichTextEditor({ value, onChange }: RichTextEditorProps) {

@@ -3,6 +3,7 @@ import connectDB from "@/lib/db";
 import { requireAuth, unauthorizedResponse, canAccessSchool, forbiddenResponse } from "@/lib/auth";
 import { successResponse, errorResponse, getSchoolId, parsePagination, paginationMeta } from "@/lib/api-helpers";
 import Alumni from "@/lib/models/Alumni";
+import "@/lib/models/School"; // Ensure School model is registered for populate
 import { alumniCreateSchema, alumniUpdateSchema } from "@/lib/validations";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const scope = searchParams.get("scope");
     const { page, limit, skip } = parsePagination(searchParams);
 
     const payload = requireAuth(request);
@@ -44,6 +46,16 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     let filter: Record<string, unknown>;
+
+    // scope=all → fetch approved alumni across all schools (for group landing & alumni page)
+    if (scope === "all" && !payload) {
+      filter = { isApproved: true };
+      const [items, total] = await Promise.all([
+        Alumni.find(filter).populate("schoolId", "name slug").sort({ createdAt: -1 }).skip(skip).limit(limit),
+        Alumni.countDocuments(filter),
+      ]);
+      return successResponse(items, 200, paginationMeta(page, limit, total));
+    }
 
     if (payload) {
       // Admin mode: use ?school= param if provided (for superadmin viewing other schools)

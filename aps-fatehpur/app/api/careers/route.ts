@@ -3,6 +3,7 @@ import connectDB from "@/lib/db";
 import { requireAuth, unauthorizedResponse, canAccessSchool, forbiddenResponse } from "@/lib/auth";
 import { successResponse, errorResponse, getSchoolId, parsePagination, paginationMeta } from "@/lib/api-helpers";
 import Career from "@/lib/models/Career";
+import "@/lib/models/School"; // Ensure School model is registered for populate
 import { careerCreateSchema, careerUpdateSchema } from "@/lib/validations";
 
 export const dynamic = "force-dynamic";
@@ -10,18 +11,25 @@ export const dynamic = "force-dynamic";
 // GET /api/careers — public, active only, paginated
 export async function GET(request: NextRequest) {
   try {
-    const schoolId = await getSchoolId(request);
-    if (!schoolId) return errorResponse("School not found", 404);
-
     const { searchParams } = new URL(request.url);
+    const scope = searchParams.get("scope");
     const { page, limit, skip } = parsePagination(searchParams);
 
     await connectDB();
 
-    const filter = { schoolId, isActive: true };
+    const filter: Record<string, unknown> = { isActive: true };
+
+    // scope=all → fetch from all schools (for group landing page)
+    if (scope !== "all") {
+      const schoolId = await getSchoolId(request);
+      if (!schoolId) return errorResponse("School not found", 404);
+      filter.schoolId = schoolId;
+    }
 
     const [items, total] = await Promise.all([
-      Career.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      scope === "all"
+        ? Career.find(filter).populate("schoolId", "name slug").sort({ createdAt: -1 }).skip(skip).limit(limit)
+        : Career.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
       Career.countDocuments(filter),
     ]);
 

@@ -18,19 +18,29 @@ export function TestimonialsSlider() {
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
-    const slug = document.cookie.match(/school-slug=([^;]+)/)?.[1] || "apsfatehpur";
-    fetch(`/api/alumni?limit=20&school=${slug}`)
+    const isLocalhost = typeof window !== "undefined" && window.location.hostname === "localhost";
+    const paramSchool = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("school") : null;
+    const cookieSlug = typeof document !== "undefined" ? document.cookie.match(/school-slug=([^;]+)/)?.[1] : "apsfatehpur";
+    const slug = paramSchool || cookieSlug || "apsfatehpur";
+    const isGroup = isLocalhost ? !paramSchool : slug === "apsfatehpur";
+
+    const url = isGroup ? "/api/alumni?limit=30&scope=all" : `/api/alumni?limit=20&school=${slug}`;
+
+    fetch(url)
       .then(r => r.json())
       .then(r => {
         if (r.success && r.data?.length) {
           const approved = r.data.filter((a: { isApproved: boolean; testimonial?: string }) => a.isApproved && a.testimonial);
           if (approved.length) {
-            setTestimonials(approved.map((a: { name: string; batch?: string; currentRole?: string; testimonial: string; photo?: string }) => ({
-              name: a.name,
-              role: [a.currentRole, a.batch ? `Batch ${a.batch}` : ""].filter(Boolean).join(", ") || "Alumni",
-              quote: a.testimonial,
-              photo: a.photo || "",
-            })));
+            setTestimonials(approved.map((a: { name: string; batch?: string; currentRole?: string; testimonial: string; photo?: string; schoolId?: { name: string } }) => {
+              const parts = [a.currentRole, a.batch ? `Batch ${a.batch}` : "", isGroup && a.schoolId?.name ? a.schoolId.name : ""].filter(Boolean);
+              return {
+                name: a.name,
+                role: parts.join(" • ") || "Alumni",
+                quote: a.testimonial,
+                photo: a.photo || "",
+              };
+            }));
           }
         }
       })
