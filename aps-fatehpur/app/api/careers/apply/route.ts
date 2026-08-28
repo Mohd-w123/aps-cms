@@ -5,6 +5,8 @@ import { successResponse, errorResponse, getSchoolId, parsePagination, paginatio
 import CareerApplication from "@/lib/models/CareerApplication";
 import { careerApplySchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/careers/apply — admin, list applications
 export async function GET(request: NextRequest) {
   try {

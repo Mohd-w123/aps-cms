@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Calendar, ArrowRight } from "lucide-react";
+import { useSchool } from "@/hooks/useSchool";
 
 interface NewsItem {
   _id: string;
@@ -21,38 +22,36 @@ const fallbackItems: NewsItem[] = [
 ];
 
 export function NewsEvents() {
+  const { slug: schoolSlug } = useSchool();
   const [items, setItems] = useState<NewsItem[]>(fallbackItems);
 
   useEffect(() => {
-    fetch("/api/news?limit=4")
+    if (!schoolSlug) return;
+    const controller = new AbortController();
+    fetch(`/api/news?school=${schoolSlug}&limit=4`, { signal: controller.signal })
       .then(r => r.json())
-      .then(r => { if (r.success && r.data?.length) setItems(r.data); })
-      .catch(() => {});
-  }, []);
+      .then(r => { setItems(r.success && r.data?.length ? r.data : fallbackItems); })
+      .catch(err => { if (err.name !== "AbortError") setItems(fallbackItems); });
+    return () => controller.abort();
+  }, [schoolSlug]);
 
   return (
-    <section className="py-16 bg-white">
+    <section className="py-20 bg-white">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="flex items-end justify-between mb-10">
           <div>
-            <p
-              className="text-sm font-semibold uppercase tracking-wider mb-2"
-              style={{ color: "var(--school-primary)" }}
-            >
-              Stay Updated
+            <p className="text-sm font-bold uppercase tracking-widest mb-2 font-heading" style={{ color: "var(--school-primary, #499f42)" }}>
+              📰 Stay Updated
             </p>
-            <h2
-              className="text-3xl md:text-4xl font-bold"
-              style={{ color: "var(--text-dark)" }}
-            >
+            <h2 className="font-heading text-3xl md:text-4xl font-bold" style={{ color: "var(--text-dark, #22235b)" }}>
               News & Events
             </h2>
           </div>
           <Link
             href="/news"
-            className="hidden sm:flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-80"
-            style={{ color: "var(--school-primary)" }}
+            className="hidden sm:flex items-center gap-1.5 text-sm font-semibold transition-colors"
+            style={{ color: "var(--school-primary, #499f42)" }}
           >
             View All <ArrowRight className="h-4 w-4" />
           </Link>
@@ -63,33 +62,27 @@ export function NewsEvents() {
           {items.map((item) => (
             <article
               key={item._id}
-              className="group rounded-xl border bg-white shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 overflow-hidden"
+              className="group rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-xl transition-all hover:-translate-y-2 overflow-hidden"
             >
               {/* Category header */}
-              <div
-                className="px-4 py-2 text-xs font-semibold text-white"
-                style={{ backgroundColor: "var(--school-primary)" }}
-              >
+              <div className="px-4 py-2 text-xs font-semibold text-white" style={{ background: "linear-gradient(to right, var(--school-primary, #499f42), var(--school-primary-dark, #3d8a37))" }}>
                 {item.category}
               </div>
               <div className="p-5">
-                <div className="flex items-center gap-1.5 text-xs mb-3" style={{ color: "var(--text-muted)" }}>
+                <div className="flex items-center gap-1.5 text-xs mb-3 text-gray-400">
                   <Calendar className="h-3.5 w-3.5" />
                   {item.publishedAt ? new Date(item.publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : ""}
                 </div>
-                <h3
-                  className="font-semibold text-base mb-2 line-clamp-2"
-                  style={{ color: "var(--text-dark)" }}
-                >
+                <h3 className="font-heading font-semibold text-base mb-2 line-clamp-2" style={{ color: "var(--text-dark, #22235b)" }}>
                   {item.title}
                 </h3>
-                <p className="text-sm line-clamp-3 mb-4" style={{ color: "var(--text-muted)" }}>
+                <p className="text-sm line-clamp-3 mb-4 text-gray-500">
                   {item.excerpt}
                 </p>
                 <Link
                   href={`/news/${item.slug}`}
-                  className="text-sm font-semibold hover:opacity-80 transition-colors"
-                  style={{ color: "var(--school-primary)" }}
+                  className="text-sm font-semibold transition-colors"
+                  style={{ color: "var(--school-primary, #499f42)" }}
                 >
                   Read More →
                 </Link>
@@ -102,7 +95,7 @@ export function NewsEvents() {
         <div className="mt-8 text-center sm:hidden">
           <Link
             href="/news"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#499f42]"
             style={{ color: "var(--school-primary)" }}
           >
             View All News <ArrowRight className="h-4 w-4" />

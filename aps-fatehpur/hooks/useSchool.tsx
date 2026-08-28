@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { SchoolConfig, getSchoolBySlug } from "@/config/schools";
 
 interface SchoolContextValue {
@@ -21,15 +22,26 @@ function getSlugFromCookie(): string {
   return match?.[1] || "apsfatehpur";
 }
 
-export function SchoolProvider({ children }: { children: React.ReactNode }) {
-  const [slug, setSlug] = useState("apsfatehpur");
-  const [isLoading, setIsLoading] = useState(true);
+export function SchoolProvider({
+  children,
+  initialSlug = "apsfatehpur",
+}: {
+  children: React.ReactNode;
+  initialSlug?: string;
+}) {
+  const pathname = usePathname();
+  const [slug, setSlug] = useState(initialSlug);
+  const [isLoading, setIsLoading] = useState(false);
 
+  // Keep slug in sync on client navigations — theme is server-rendered only (no client overrides).
   useEffect(() => {
+    const paramSlug = new URLSearchParams(window.location.search).get("school");
     const cookieSlug = getSlugFromCookie();
-    setSlug(cookieSlug);
-    setIsLoading(false);
-  }, []);
+    // Prefer: explicit ?school= param > cookie > keep server-provided initialSlug
+    // Never downgrade to "apsfatehpur" if the server already gave a specific school slug
+    const resolved = paramSlug || cookieSlug || initialSlug;
+    setSlug((current) => (resolved && resolved !== current ? resolved : current));
+  }, [pathname, initialSlug]);
 
   const school = getSchoolBySlug(slug) || null;
 

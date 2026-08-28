@@ -25,8 +25,14 @@ export interface ISchool extends Document {
   tagline?: string;
   theme: {
     primaryColor: string;
+    primaryDarkColor: string;
     secondaryColor: string;
     accentColor: string;
+    accentBlueColor: string;
+    accentLimeColor: string;
+    bgLightColor: string;
+    textDarkColor: string;
+    textMutedColor: string;
   };
   contactInfo: {
     phone: string;
@@ -70,9 +76,15 @@ const SchoolSchema = new Schema<ISchool>(
     description: { type: String, default: "" },
     tagline: { type: String, default: "" },
     theme: {
-      primaryColor: { type: String, default: "#2F3E8F" },
-      secondaryColor: { type: String, default: "#1a2556" },
-      accentColor: { type: String, default: "#F4D21F" },
+      primaryColor: { type: String, default: "" },
+      primaryDarkColor: { type: String, default: "" },
+      secondaryColor: { type: String, default: "" },
+      accentColor: { type: String, default: "" },
+      accentBlueColor: { type: String, default: "" },
+      accentLimeColor: { type: String, default: "" },
+      bgLightColor: { type: String, default: "" },
+      textDarkColor: { type: String, default: "" },
+      textMutedColor: { type: String, default: "" },
     },
     contactInfo: {
       phone: { type: String, default: "" },

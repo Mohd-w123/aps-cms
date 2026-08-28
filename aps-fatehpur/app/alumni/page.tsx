@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useSchool } from "@/hooks/useSchool";
 import { PageBanner } from "@/components/layout/PageBanner";
+import { schools as allSchools } from "@/config/schools";
 import {
   Users,
   GraduationCap,
@@ -22,6 +23,7 @@ interface AlumniMember {
   company?: string;
   photo?: string;
   testimonial?: string;
+  schoolId?: { _id: string; name: string; slug: string };
 }
 
 interface FormData {
@@ -32,6 +34,7 @@ interface FormData {
   company: string;
   photo: string;
   testimonial: string;
+  schoolSlug: string;
 }
 
 const initialForm: FormData = {
@@ -42,12 +45,18 @@ const initialForm: FormData = {
   company: "",
   photo: "",
   testimonial: "",
+  schoolSlug: "apsgirls",
 };
 
 export default function AlumniPage() {
-  const { slug: schoolSlug } = useSchool();
+  const { slug: schoolSlug, isLoading: schoolLoading } = useSchool();
+  const isGroup = schoolSlug === "apsfatehpur";
+
   const [alumni, setAlumni] = useState<AlumniMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeSchool, setActiveSchool] = useState<string>("all");
+
+  const branchSchools = allSchools.filter((s) => s.slug !== "apsfatehpur");
 
   // Registration form
   const [showForm, setShowForm] = useState(false);
@@ -55,12 +64,18 @@ export default function AlumniPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [photoUploading, setPhotoUploading] = useState(false);
 
   useEffect(() => {
+    if (schoolLoading) return;
     const fetchAlumni = async () => {
+      setLoading(true);
       try {
-        const res = await fetch(`/api/alumni?limit=50`, {
-          headers: { "x-school-slug": schoolSlug },
+        const url = isGroup
+          ? "/api/alumni?limit=100&scope=all"
+          : `/api/alumni?limit=50&school=${schoolSlug}`;
+        const res = await fetch(url, {
+          headers: isGroup ? {} : { "x-school-slug": schoolSlug },
         });
         const json = await res.json();
         if (json.success) setAlumni(json.data);
@@ -70,11 +85,44 @@ export default function AlumniPage() {
         setLoading(false);
       }
     };
-    if (schoolSlug) fetchAlumni();
-  }, [schoolSlug]);
+    fetchAlumni();
+  }, [schoolSlug, schoolLoading, isGroup]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const displayAlumni =
+    isGroup && activeSchool !== "all"
+      ? alumni.filter((m) => m.schoolId?.slug === activeSchool)
+      : alumni;
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Photo must be under 2MB");
+      return;
+    }
+    setPhotoUploading(true);
+    setError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/alumni/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (json.success && json.data?.url) {
+        setForm((prev) => ({ ...prev, photo: json.data.url }));
+      } else {
+        setError(json.error || "Upload failed");
+      }
+    } catch {
+      setError("Upload failed");
+    } finally {
+      setPhotoUploading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,11 +141,11 @@ export default function AlumniPage() {
       if (form.photo) payload.photo = form.photo;
       if (form.testimonial) payload.testimonial = form.testimonial;
 
-      const res = await fetch("/api/alumni", {
+      const targetSchool = isGroup ? form.schoolSlug || "apsgirls" : schoolSlug;
+      const res = await fetch(`/api/alumni?school=${targetSchool}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-school-slug": schoolSlug,
         },
         body: JSON.stringify(payload),
       });
@@ -125,13 +173,13 @@ export default function AlumniPage() {
       <section className="py-12">
         <div className="container mx-auto px-4">
           {/* Header + Register Button */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
             <div>
               <h2 className="text-2xl font-bold mb-1" style={{ color: "var(--text-dark)" }}>
                 Alumni Network
               </h2>
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                Connecting our past, present, and future — proud alumni of our school family.
+                Connecting our past, present, and future — proud alumni across all our institutions.
               </p>
             </div>
             <button
@@ -139,13 +187,55 @@ export default function AlumniPage() {
                 setShowForm(true);
                 setSubmitted(false);
               }}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold text-white transition-transform hover:scale-105"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold text-white transition-transform hover:scale-105 shadow-sm"
               style={{ backgroundColor: "var(--school-primary)" }}
             >
               <Users className="h-4 w-4" />
               Register as Alumni
             </button>
           </div>
+
+          {/* School filter tabs (group mode only) */}
+          {isGroup && (
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
+              <button
+                onClick={() => setActiveSchool("all")}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  activeSchool === "all"
+                    ? "text-white shadow-sm"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                style={
+                  activeSchool === "all"
+                    ? { backgroundColor: "var(--school-primary)" }
+                    : undefined
+                }
+              >
+                All Schools ({alumni.length})
+              </button>
+              {branchSchools.map((s) => {
+                const count = alumni.filter((m) => m.schoolId?.slug === s.slug).length;
+                return (
+                  <button
+                    key={s.slug}
+                    onClick={() => setActiveSchool(s.slug)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      activeSchool === s.slug
+                        ? "text-white shadow-sm"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                    style={
+                      activeSchool === s.slug
+                        ? { backgroundColor: s.theme.primary || "var(--school-primary)" }
+                        : undefined
+                    }
+                  >
+                    {s.name} {count > 0 ? `(${count})` : ""}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {/* Alumni Grid */}
           {loading ? (
@@ -154,7 +244,7 @@ export default function AlumniPage() {
                 <div key={i} className="h-72 rounded-xl bg-gray-100 animate-pulse" />
               ))}
             </div>
-          ) : alumni.length === 0 ? (
+          ) : displayAlumni.length === 0 ? (
             <div className="text-center py-16">
               <GraduationCap className="h-14 w-14 mx-auto mb-4 text-gray-300" />
               <p className="text-lg font-medium" style={{ color: "var(--text-muted)" }}>
@@ -163,10 +253,10 @@ export default function AlumniPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {alumni.map((member) => (
+              {displayAlumni.map((member) => (
                 <div
                   key={member._id}
-                  className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
+                  className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col"
                 >
                   <div className="h-48 relative bg-gray-100">
                     {member.photo ? (
@@ -182,13 +272,19 @@ export default function AlumniPage() {
                       </div>
                     )}
                     <span
-                      className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold text-white"
+                      className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold text-white shadow-sm"
                       style={{ backgroundColor: "var(--school-primary)" }}
                     >
                       Batch {member.batch}
                     </span>
+                    {/* School badge in group mode */}
+                    {isGroup && member.schoolId && (
+                      <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-black/70 text-white backdrop-blur-sm">
+                        {member.schoolId.name}
+                      </span>
+                    )}
                   </div>
-                  <div className="p-4">
+                  <div className="p-4 flex-1 flex flex-col">
                     <h3 className="font-bold text-sm mb-1" style={{ color: "var(--text-dark)" }}>
                       {member.name}
                     </h3>
@@ -256,6 +352,28 @@ export default function AlumniPage() {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* School selector in group mode */}
+                  {isGroup && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-dark)" }}>
+                        Select Your School *
+                      </label>
+                      <select
+                        name="schoolSlug"
+                        value={form.schoolSlug}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--school-primary)] bg-white"
+                      >
+                        {branchSchools.map((s) => (
+                          <option key={s.slug} value={s.slug}>
+                            {s.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-dark)" }}>
                       Full Name *
@@ -328,16 +446,24 @@ export default function AlumniPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-dark)" }}>
-                      Photo URL
+                      Photo
                     </label>
-                    <input
-                      type="url"
-                      name="photo"
-                      value={form.photo}
-                      onChange={handleChange}
-                      placeholder="https://..."
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--school-primary)]"
-                    />
+                    <div className="flex items-center gap-3">
+                      {form.photo && (
+                        <Image src={form.photo} alt="Preview" width={48} height={48} className="w-12 h-12 rounded-full object-cover border" />
+                      )}
+                      <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                        {photoUploading ? "Uploading..." : form.photo ? "Change Photo" : "Upload Photo"}
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={handlePhotoUpload}
+                          disabled={photoUploading}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">Max 2MB. JPEG, PNG, or WebP.</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-dark)" }}>

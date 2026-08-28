@@ -3,7 +3,10 @@ import connectDB from "@/lib/db";
 import { requireAuth, unauthorizedResponse, canAccessSchool } from "@/lib/auth";
 import { successResponse, errorResponse, getSchoolId, parsePagination, paginationMeta } from "@/lib/api-helpers";
 import Topper from "@/lib/models/Topper";
+import "@/lib/models/School"; // Ensure School model is registered for populate
 import { topperCreateSchema, topperUpdateSchema } from "@/lib/validations";
+
+export const dynamic = "force-dynamic";
 
 // GET /api/toppers — public, paginated
 export async function GET(request: NextRequest) {
@@ -24,7 +27,9 @@ export async function GET(request: NextRequest) {
     }
 
     const [items, total] = await Promise.all([
-      Topper.find(filter).sort({ order: 1 }).skip(skip).limit(limit),
+      scope === "all"
+        ? Topper.find(filter).populate("schoolId", "name slug").sort({ order: 1, createdAt: -1 }).skip(skip).limit(limit)
+        : Topper.find(filter).sort({ order: 1, createdAt: -1 }).skip(skip).limit(limit),
       Topper.countDocuments(filter),
     ]);
 

@@ -6,6 +6,9 @@ import { cn } from "@/lib/utils";
 import { getSchoolBySlug } from "@/config/schools";
 import { SchoolProvider } from "@/hooks/useSchool";
 import { LayoutShell } from "@/components/layout/LayoutShell";
+import connectDB from "@/lib/db";
+import School from "@/lib/models/School";
+import { buildThemeCssVars } from "@/lib/theme";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -35,7 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -43,28 +46,30 @@ export default function RootLayout({
   const headersList = headers();
   const slug = headersList.get("x-school-slug") || "apsfatehpur";
   const school = getSchoolBySlug(slug);
-  const theme = school?.theme;
+
+  // Fetch theme from database (admin-managed colors take priority)
+  let dbTheme: Record<string, string> | null = null;
+  try {
+    await connectDB();
+    const dbSchool = await School.findOne({ slug, isActive: true }).select("theme").lean();
+    if (dbSchool?.theme) {
+      dbTheme = dbSchool.theme as Record<string, string>;
+    }
+  } catch {
+    // Fallback to static config if DB is unavailable
+  }
+
+  const cssVars = buildThemeCssVars(school, dbTheme);
 
   return (
-    <html lang="en" className={cn("font-sans", inter.variable, baloo2.variable, nunito.variable)}>
-      <body
-        className="antialiased"
-        style={
-          theme
-            ? ({
-                "--school-primary": theme.primary,
-                "--school-primary-dark": theme.primaryDark,
-                "--accent-yellow": theme.accentYellow,
-                "--accent-red": theme.accentRed,
-                "--accent-blue": theme.accentBlue,
-                "--bg-light": theme.bgLight,
-                "--text-dark": theme.textDark,
-                "--text-muted": theme.textMuted,
-              } as React.CSSProperties)
-            : undefined
-        }
-      >
-        <SchoolProvider>
+    <html
+      lang="en"
+      className={cn("font-sans", inter.variable, baloo2.variable, nunito.variable)}
+      style={Object.keys(cssVars).length > 0 ? (cssVars as React.CSSProperties) : undefined}
+      suppressHydrationWarning
+    >
+      <body className="antialiased">
+        <SchoolProvider initialSlug={slug}>
           <LayoutShell>{children}</LayoutShell>
         </SchoolProvider>
       </body>

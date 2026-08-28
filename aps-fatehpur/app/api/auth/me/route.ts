@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { getAuthUser, unauthorizedResponse } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthUser(request);

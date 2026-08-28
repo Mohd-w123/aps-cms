@@ -8,6 +8,7 @@ export interface IPerson extends Document {
   bio: string;
   photo?: string;
   qualifications?: string;
+  readMoreUrl?: string;
   order: number;
   isActive: boolean;
 }
@@ -25,6 +26,7 @@ const PersonSchema = new Schema<IPerson>(
     bio: { type: String, default: "" },
     photo: { type: String },
     qualifications: { type: String },
+    readMoreUrl: { type: String },
     order: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
   },

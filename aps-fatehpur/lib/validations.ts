@@ -22,6 +22,7 @@ export const personSchema = z.object({
   bio: z.string().optional().default(""),
   photo: z.string().optional().or(z.literal("")),
   qualifications: z.string().optional(),
+  readMoreUrl: z.string().optional().or(z.literal("")),
   order: z.number().int().optional().default(0),
   isActive: z.boolean().optional().default(true),
 });
@@ -150,27 +151,44 @@ export const alumniUpdateSchema = alumniCreateSchema.partial().extend({
 });
 
 // ── Users ──
-export const userCreateSchema = z.object({
-  name: z.string().min(1).max(200),
-  email: z.string().email(),
-  password: z.string().min(8).max(100),
-  role: z.enum(["superadmin", "school_admin", "editor"]),
-  schoolId: z.string().min(1),
-  isActive: z.boolean().optional().default(true),
-});
+const ROLES_WITHOUT_SCHOOL = ["superadmin", "sales"] as const;
+
+export const userCreateSchema = z
+  .object({
+    name: z.string().min(1).max(200),
+    email: z.string().email(),
+    password: z.string().min(8).max(100),
+    role: z.enum(["superadmin", "school_admin", "editor", "sales"]),
+    schoolId: z.preprocess(
+      (val) => (val === "" || val === null ? undefined : val),
+      z.string().min(1).optional()
+    ),
+    isActive: z.boolean().optional().default(true),
+  })
+  .superRefine((data, ctx) => {
+    if (!ROLES_WITHOUT_SCHOOL.includes(data.role as (typeof ROLES_WITHOUT_SCHOOL)[number]) && !data.schoolId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "School is required for this role",
+        path: ["schoolId"],
+      });
+    }
+  });
 export const userUpdateSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   email: z.string().email().optional(),
   password: z.string().min(8).max(100).optional(),
-  role: z.enum(["superadmin", "school_admin", "editor"]).optional(),
+  role: z.enum(["superadmin", "school_admin", "editor", "sales"]).optional(),
   isActive: z.boolean().optional(),
 });
 
 // ── Sliders ──
 export const sliderCreateSchema = z.object({
   image: z.string().min(1),
-  title: z.string().min(1).max(500),
+  title: z.string().max(500).optional().default(""),
   subtitle: z.string().max(500).optional().default(""),
+  titleColor: z.string().max(20).optional(),
+  subtitleColor: z.string().max(20).optional(),
   ctaLabel: z.string().max(100).optional(),
   ctaLink: z.string().max(500).optional(),
   order: z.number().int().optional().default(0),
@@ -191,8 +209,14 @@ export const schoolUpdateSchema = z.object({
   tagline: z.string().optional(),
   theme: z.object({
     primaryColor: z.string().optional(),
+    primaryDarkColor: z.string().optional(),
     secondaryColor: z.string().optional(),
     accentColor: z.string().optional(),
+    accentBlueColor: z.string().optional(),
+    accentLimeColor: z.string().optional(),
+    bgLightColor: z.string().optional(),
+    textDarkColor: z.string().optional(),
+    textMutedColor: z.string().optional(),
   }).optional(),
   contactInfo: z.object({
     phone: z.string().optional(),
@@ -206,6 +230,10 @@ export const schoolUpdateSchema = z.object({
     instagram: z.string().optional(),
     youtube: z.string().optional(),
     twitter: z.string().optional(),
+    whatsapp: z.string().optional(),
+    linkedin: z.string().optional(),
+    telegram: z.string().optional(),
+    website: z.string().optional(),
   }).optional(),
   stats: z.object({
     students: z.number().optional(),

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { useSchool } from "@/hooks/useSchool";
 
 interface GalleryImage {
   _id: string;
@@ -12,32 +13,27 @@ interface GalleryImage {
   category?: string;
 }
 
-const fallbackImages: GalleryImage[] = [
-  { _id: "f1", image: "/images/gallery-3.jpg", title: "Sports Day", category: "sports" },
-  { _id: "f2", image: "/images/gallery-4.jpg", title: "Republic Day", category: "event" },
-  { _id: "f3", image: "/images/gallery-5.jpg", title: "Cultural Program", category: "cultural" },
-  { _id: "f4", image: "/images/gallery-6.jpg", title: "Classroom Activity", category: "classroom" },
-  { _id: "f5", image: "/images/gallery-7.jpg", title: "Award Ceremony", category: "event" },
-  { _id: "f6", image: "/images/gallery-8.jpg", title: "School Assembly", category: "general" },
-  { _id: "f7", image: "/images/gallery-9.jpg", title: "Art & Craft", category: "cultural" },
-  { _id: "f8", image: "/images/gallery-10.jpg", title: "School Event", category: "event" },
-  { _id: "f9", image: "/images/gallery-11.jpg", title: "Sports Meet", category: "sports" },
-  { _id: "f10", image: "/images/gallery-12.jpg", title: "Annual Function", category: "annual function" },
-  { _id: "f11", image: "/images/gallery-13.jpg", title: "Outdoor Activity", category: "sports" },
-  { _id: "f12", image: "/images/gallery-14.jpg", title: "Campus Life", category: "general" },
-];
-
 export function GalleryPreview() {
-  const [allImages, setAllImages] = useState<GalleryImage[]>(fallbackImages);
+  const { slug: schoolSlug } = useSchool();
+  const [allImages, setAllImages] = useState<GalleryImage[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [catFilter, setCatFilter] = useState("all");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch("/api/gallery?limit=30")
+    if (!schoolSlug) return;
+    const controller = new AbortController();
+    setLoaded(false);
+    setAllImages([]);
+    fetch(`/api/gallery?school=${schoolSlug}&limit=30`, {
+      signal: controller.signal,
+    })
       .then(r => r.json())
-      .then(r => { if (r.success && r.data?.length) setAllImages(r.data); })
-      .catch(() => {});
-  }, []);
+      .then(r => { setAllImages(r.success && r.data?.length ? r.data : []); })
+      .catch(err => { if (err.name !== "AbortError") setAllImages([]); })
+      .finally(() => setLoaded(true));
+    return () => controller.abort();
+  }, [schoolSlug]);
 
   const categories = ["all", ...Array.from(new Set(allImages.map(g => g.category || "general")))];
   const images = catFilter === "all" ? allImages : allImages.filter(g => (g.category || "general") === catFilter);
@@ -49,21 +45,18 @@ export function GalleryPreview() {
   const next = () =>
     setLightboxIndex((c) => (c !== null ? (c + 1) % images.length : null));
 
+  // Don't render until loaded; hide section if school has no gallery photos
+  if (!loaded || allImages.length === 0) return null;
+
   return (
-    <section className="py-16 bg-white">
+    <section className="py-20 bg-white">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-10">
-          <p
-            className="text-sm font-semibold uppercase tracking-wider mb-2"
-            style={{ color: "var(--school-primary)" }}
-          >
-            Moments
+          <p className="text-sm font-bold uppercase tracking-widest mb-2 font-heading" style={{ color: "var(--school-primary, #499f42)" }}>
+            📸 Moments
           </p>
-          <h2
-            className="text-3xl md:text-4xl font-bold"
-            style={{ color: "var(--text-dark)" }}
-          >
+          <h2 className="font-heading text-3xl md:text-4xl font-bold" style={{ color: "var(--text-dark, #22235b)" }}>
             Photo Gallery
           </h2>
         </div>
@@ -77,9 +70,9 @@ export function GalleryPreview() {
               className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
                 catFilter === c
                   ? "text-white shadow-md"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  : "bg-gray-100 text-gray-600"
               }`}
-              style={catFilter === c ? { backgroundColor: "var(--school-primary)" } : undefined}
+              style={catFilter === c ? { backgroundColor: "var(--school-primary, #499f42)" } : undefined}
             >
               {c === "all" ? "All" : c.charAt(0).toUpperCase() + c.slice(1)}
             </button>
@@ -91,7 +84,7 @@ export function GalleryPreview() {
           {images.map((img, i) => (
             <div
               key={img._id}
-              className={`group relative overflow-hidden rounded-xl cursor-pointer ${
+              className={`group relative overflow-hidden rounded-2xl cursor-pointer ${
                 i === 0 ? "md:row-span-2" : ""
               }`}
               onClick={() => openLightbox(i)}
@@ -118,8 +111,8 @@ export function GalleryPreview() {
         <div className="mt-8 text-center">
           <Link
             href="/gallery"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold hover:opacity-80 transition-colors"
-            style={{ color: "var(--school-primary)" }}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors"
+            style={{ color: "var(--school-primary, #499f42)" }}
           >
             View Full Gallery <ArrowRight className="h-4 w-4" />
           </Link>

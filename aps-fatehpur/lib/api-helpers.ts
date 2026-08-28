@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import connectDB from "@/lib/db";
 import School from "@/lib/models/School";
-import { getAuthPayload } from "@/lib/auth";
+import { getAuthPayload, JWTPayload, canAccessSchool, forbiddenResponse } from "@/lib/auth";
 
 /**
  * Get schoolId for a request.
@@ -33,6 +33,46 @@ export async function getSchoolId(request: NextRequest): Promise<string | null> 
   await connectDB();
   const school = await School.findOne({ slug, isActive: true }).select("_id");
   return school?._id?.toString() || null;
+}
+
+/**
+ * Resolve school from ?school=slug only (not JWT). Used for admin list filtering.
+ */
+export async function resolveSchoolParamSchoolId(request: NextRequest): Promise<string | null> {
+  const schoolParam = new URL(request.url).searchParams.get("school");
+  if (!schoolParam) return null;
+  await connectDB();
+  const school = await School.findOne({ slug: schoolParam, isActive: true }).select("_id");
+  return school?._id?.toString() || null;
+}
+
+/**
+ * Build school filter for admin list endpoints.
+ * Superadmin without ?school= sees all schools; with ?school= sees that school only.
+ */
+export async function buildAdminSchoolFilter(
+  request: NextRequest,
+  payload: JWTPayload
+): Promise<{ filter: Record<string, unknown> } | { error: Response }> {
+  const schoolParam = new URL(request.url).searchParams.get("school");
+  let explicitSchoolId: string | null = null;
+
+  if (schoolParam) {
+    explicitSchoolId = await resolveSchoolParamSchoolId(request);
+    if (!explicitSchoolId) {
+      return { error: errorResponse("School not found", 404) };
+    }
+  }
+
+  if (payload.role === "superadmin") {
+    return { filter: explicitSchoolId ? { schoolId: explicitSchoolId } : {} };
+  }
+
+  const targetSchoolId = explicitSchoolId || payload.schoolId;
+  if (!targetSchoolId || !canAccessSchool(payload, targetSchoolId)) {
+    return { error: forbiddenResponse() };
+  }
+  return { filter: { schoolId: targetSchoolId } };
 }
 
 /**

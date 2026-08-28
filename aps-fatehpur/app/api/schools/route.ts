@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import connectDB from "@/lib/db";
 import School from "@/lib/models/School";
-import { requireAuth, unauthorizedResponse } from "@/lib/auth";
+import { requireAuth, unauthorizedResponse, forbiddenResponse, canAccessSchool } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/lib/api-helpers";
 import { schoolUpdateSchema } from "@/lib/validations";
 
@@ -20,10 +20,10 @@ export async function GET() {
   }
 }
 
-// PUT /api/schools — superadmin update a school
+// PUT /api/schools — superadmin or school_admin update a school
 export async function PUT(request: NextRequest) {
   try {
-    const payload = requireAuth(request, ["superadmin"]);
+    const payload = requireAuth(request, ["superadmin", "school_admin"]);
     if (!payload) return unauthorizedResponse();
 
     const body = await request.json();
@@ -36,7 +36,31 @@ export async function PUT(request: NextRequest) {
     }
 
     await connectDB();
-    const school = await School.findByIdAndUpdate(id, parsed.data, { new: true });
+    const existing = await School.findById(id);
+    if (!existing) return errorResponse("School not found", 404);
+
+    if (!canAccessSchool(payload, existing._id.toString())) {
+      return forbiddenResponse();
+    }
+
+    const data = { ...parsed.data };
+    if (payload.role !== "superadmin") {
+      delete data.isActive;
+    }
+
+    if (data.socialLinks && typeof data.socialLinks === "object") {
+      const cleanedLinks: Record<string, string> = {};
+      for (const [k, v] of Object.entries(data.socialLinks)) {
+        if (typeof v === "string") {
+          let clean = v.trim().replace(/^[#\s]+/, "").trim();
+          if (clean === "#") clean = "";
+          cleanedLinks[k] = clean;
+        }
+      }
+      data.socialLinks = cleanedLinks;
+    }
+
+    const school = await School.findByIdAndUpdate(id, data, { new: true });
     if (!school) return errorResponse("School not found", 404);
 
     return successResponse(school);

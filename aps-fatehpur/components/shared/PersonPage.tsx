@@ -1,17 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Image from "next/image";
-import { useSchool } from "@/hooks/useSchool";
+import { usePerson } from "@/hooks/usePerson";
 import { PageBanner } from "@/components/layout/PageBanner";
-
-interface PersonData {
-  name: string;
-  designation: string;
-  bio: string;
-  photo?: string;
-  qualifications?: string;
-}
 
 interface PersonPageProps {
   role: "director" | "chairman" | "principal";
@@ -20,28 +12,7 @@ interface PersonPageProps {
 }
 
 export function PersonPage({ role, title, breadcrumbs }: PersonPageProps) {
-  const { slug: schoolSlug } = useSchool();
-  const [person, setPerson] = useState<PersonData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchPerson() {
-      try {
-        const res = await fetch(`/api/persons?role=${role}`, {
-          headers: { "x-school-slug": schoolSlug },
-        });
-        const json = await res.json();
-        if (json.success && json.data?.length > 0) {
-          setPerson(json.data[0]);
-        }
-      } catch {
-        // not found
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchPerson();
-  }, [role, schoolSlug]);
+  const { person, loading } = usePerson(role);
 
   return (
     <>

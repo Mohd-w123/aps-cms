@@ -9,12 +9,20 @@ import { Plus, Pencil, Trash2, X, Loader2 } from "lucide-react";
 interface UserItem {
   _id: string; name: string; email: string; role: string; schoolId?: string; isActive: boolean; lastLogin?: string;
 }
+interface SchoolItem { _id: string; name: string; }
 interface Form { name: string; email: string; password: string; role: string; schoolId: string; isActive: boolean; }
 const empty: Form = { name: "", email: "", password: "", role: "editor", schoolId: "", isActive: true };
+
+const ROLES_WITHOUT_SCHOOL = ["superadmin", "sales"];
+
+function requiresSchool(role: string) {
+  return !ROLES_WITHOUT_SCHOOL.includes(role);
+}
 
 export default function AdminUsersPage() {
   const api = useAdminApi();
   const [items, setItems] = useState<UserItem[]>([]);
+  const [schools, setSchools] = useState<SchoolItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -23,7 +31,8 @@ export default function AdminUsersPage() {
   const [delId, setDelId] = useState<string | null>(null);
 
   const load = async () => { const r = await api.get("/api/users"); if (r.success) setItems(Array.isArray(r.data) ? r.data : []); setLoading(false); };
-  useEffect(() => { if (api.token) load(); }, [api.token]); // eslint-disable-line react-hooks/exhaustive-deps
+  const loadSchools = async () => { const r = await api.get("/api/schools"); if (r.success) setSchools(Array.isArray(r.data) ? r.data : []); };
+  useEffect(() => { if (api.token) { load(); loadSchools(); } }, [api.token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const doCreate = () => { setEditId(null); setForm(empty); setOpen(true); };
   const doEdit = (u: UserItem) => {
@@ -32,15 +41,33 @@ export default function AdminUsersPage() {
   };
   const close = () => { setOpen(false); setEditId(null); setForm(empty); };
 
+  const handleRoleChange = (role: string) => {
+    setForm(f => ({
+      ...f,
+      role,
+      schoolId: requiresSchool(role) ? f.schoolId : "",
+    }));
+  };
+
   const save = async () => {
     setSaving(true);
-    const body: Record<string, unknown> = { name: form.name, email: form.email, role: form.role, schoolId: form.schoolId || undefined, isActive: form.isActive };
+    const body: Record<string, unknown> = {
+      name: form.name,
+      email: form.email,
+      role: form.role,
+      isActive: form.isActive,
+    };
+    if (requiresSchool(form.role) && form.schoolId) {
+      body.schoolId = form.schoolId;
+    }
     if (form.password) body.password = form.password;
     const r = editId ? await api.put("/api/users", { id: editId, ...body }) : await api.post("/api/users", body);
     if (r.success) { close(); load(); } setSaving(false);
   };
 
   const remove = async () => { if (!delId) return; await api.del(`/api/users?id=${delId}`); setDelId(null); load(); };
+
+  const canSave = form.name && form.email && (!requiresSchool(form.role) || form.schoolId);
 
   return (
     <div className="space-y-6">
@@ -92,11 +119,18 @@ export default function AdminUsersPage() {
               <div><label className="block text-sm font-medium text-gray-700 mb-1">{editId ? "New Password (leave blank to keep)" : "Password *"}</label>
                 <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
               <div><label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                  <option value="editor">Editor</option><option value="school_admin">School Admin</option><option value="superadmin">Super Admin</option>
+                <select value={form.role} onChange={e => handleRoleChange(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                  <option value="editor">Editor</option><option value="school_admin">School Admin</option><option value="superadmin">Super Admin</option><option value="sales">Sales</option>
                 </select></div>
-              <div><label className="block text-sm font-medium text-gray-700 mb-1">School ID</label>
-                <input value={form.schoolId} onChange={e => setForm(f => ({ ...f, schoolId: e.target.value }))} placeholder="Leave blank for superadmin" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
+              {requiresSchool(form.role) && (
+                <div><label className="block text-sm font-medium text-gray-700 mb-1">School *</label>
+                  <select value={form.schoolId} onChange={e => setForm(f => ({ ...f, schoolId: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <option value="">Select a school</option>
+                    {schools.map(s => (
+                      <option key={s._id} value={s._id}>{s.name}</option>
+                    ))}
+                  </select></div>
+              )}
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={form.isActive} onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))} className="rounded border-gray-300" />
                 <span className="text-sm font-medium text-gray-700">Active</span>
@@ -104,7 +138,7 @@ export default function AdminUsersPage() {
             </div>
             <div className="flex justify-end gap-3 p-5 border-t">
               <button onClick={close} className="px-4 py-2 rounded-lg border text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-              <button onClick={save} disabled={saving || !form.name || !form.email} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2">
+              <button onClick={save} disabled={saving || !canSave} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2">
                 {saving && <Loader2 className="h-4 w-4 animate-spin" />}{editId ? "Update" : "Create"}</button>
             </div>
           </div>

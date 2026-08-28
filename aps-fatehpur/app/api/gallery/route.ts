@@ -3,7 +3,10 @@ import connectDB from "@/lib/db";
 import { requireAuth, unauthorizedResponse, canAccessSchool } from "@/lib/auth";
 import { successResponse, errorResponse, getSchoolId, parsePagination, paginationMeta } from "@/lib/api-helpers";
 import Gallery from "@/lib/models/Gallery";
+import "@/lib/models/School"; // Ensure School model is registered for populate
 import { galleryCreateSchema, galleryUpdateSchema } from "@/lib/validations";
+
+export const dynamic = "force-dynamic";
 
 // GET /api/gallery — public, paginated
 export async function GET(request: NextRequest) {
@@ -27,7 +30,9 @@ export async function GET(request: NextRequest) {
     if (type === "image" || type === "video") filter.type = type;
 
     const [items, total] = await Promise.all([
-      Gallery.find(filter).sort({ order: 1 }).skip(skip).limit(limit),
+      scope === "all"
+        ? Gallery.find(filter).populate("schoolId", "name slug").sort({ order: 1, createdAt: -1 }).skip(skip).limit(limit)
+        : Gallery.find(filter).sort({ order: 1, createdAt: -1 }).skip(skip).limit(limit),
       Gallery.countDocuments(filter),
     ]);
 

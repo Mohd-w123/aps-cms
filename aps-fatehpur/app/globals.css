@@ -25,16 +25,9 @@
     --ring: 240 5.9% 10%;
     --radius: 0.625rem;
 
-    /* School theme defaults (overridden per school via JS) */
-    --school-primary: #3FA34D;
-    --school-primary-dark: #2d7a38;
-    --accent-yellow: #F4D03F;
+    /* School theme vars are set server-side on <html> per school — no :root defaults to avoid flash */
     --accent-red: #C0392B;
-    --accent-blue: #2F3C8F;
-    --bg-light: #F8F9FA;
     --border-gray: #E5E7EB;
-    --text-dark: #1F2937;
-    --text-muted-color: #6B7280;
   }
 
   .dark {
@@ -70,4 +63,37 @@
   html {
     @apply scroll-smooth;
   }
+}
+
+/* Optimize rich text content paragraph spacing */
+.prose p {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.75;
+}
+.prose p:empty,
+.prose p:has(br:only-child) {
+  margin: 0;
+  height: 0.5rem;
+}
+
+/* Specific styling for Principal message signature lines and short blocks */
+.principal-bio p {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.principal-bio p:empty,
+.principal-bio p:has(br:only-child) {
+  display: none;
+}
+.principal-bio p:has(strong),
+.principal-bio p:has(em) {
+  margin-top: 0.15rem !important;
+  margin-bottom: 0.15rem !important;
+  line-height: 1.4 !important;
+}
+/* Separation before signature block */
+.principal-bio p:not(:has(em)):not(:has(strong)) + p:has(em),
+.principal-bio p:not(:has(em)):not(:has(strong)) + p:has(strong) {
+  margin-top: 1.5rem !important;
 }

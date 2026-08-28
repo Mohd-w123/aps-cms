@@ -1,12 +1,10 @@
 "use client";
 
-import { PersonPage } from "@/components/shared/PersonPage";
+import { PrincipalPageView } from "@/components/shared/PrincipalPageView";
 
 export default function PrincipalPage() {
   return (
-    <PersonPage
-      role="principal"
-      title="Principal"
+    <PrincipalPageView
       breadcrumbs={[
         { label: "Home", href: "/" },
         { label: "About", href: "/about" },

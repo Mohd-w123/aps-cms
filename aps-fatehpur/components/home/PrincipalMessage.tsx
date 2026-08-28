@@ -1,80 +1,70 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Image from "next/image";
 import { Quote } from "lucide-react";
+import { usePrincipal } from "@/hooks/usePrincipal";
+import { SchoolLink } from "@/components/shared/SchoolLink";
+import { PlayfulSection, BlobDecoration } from "@/components/shared/PlayfulUI";
 
-interface PersonData {
-  name: string; designation: string; bio: string; photo?: string;
-}
+import { cleanBioHtml } from "@/components/shared/PrincipalPageView";
 
 export function PrincipalMessage() {
-  const [person, setPerson] = useState<PersonData>({
-    name: "Nazneen Bano",
-    designation: "Principal",
-    bio: "<p>&ldquo;Education is not just about academics — it is about building character, instilling values, and preparing young minds to face the challenges of tomorrow. At our school, every child is valued and nurtured to reach their fullest potential.&rdquo;</p><p>&ldquo;We believe in holistic development — academics, sports, arts, and community service — all play an integral role in shaping well-rounded individuals. I invite parents and students to join our family and experience a journey of growth and discovery.&rdquo;</p>",
-    photo: "/images/principal.jpg",
-  });
+  const { content, loading } = usePrincipal();
 
-  useEffect(() => {
-    fetch("/api/persons?role=principal")
-      .then(r => r.json())
-      .then(r => {
-        if (r.success && r.data?.length) {
-          const p = r.data[0];
-          setPerson({ name: p.name, designation: p.designation || "Principal", bio: p.bio || "", photo: p.photo || "/images/principal.jpg" });
-        }
-      })
-      .catch(() => {});
-  }, []);
+  if (loading || !content) return null;
+
+  const designation = content.designation || "Principal";
   return (
-    <section className="py-16 bg-white">
+    <PlayfulSection className="py-20 bg-white" blobs>
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-[240px_1fr] gap-8 items-start">
             {/* Principal Photo */}
-            <div className="flex flex-col items-center text-center">
-              <div className="w-48 h-48 rounded-full overflow-hidden mb-4">
+            <div className="flex flex-col items-center text-center relative">
+              <BlobDecoration className="absolute -top-6 -left-6 w-32 h-32 opacity-30 animate-float-slow" style={{ color: "var(--accent-yellow, #d4e96e)" }} />
+              <div className="w-48 h-48 rounded-full overflow-hidden mb-4 shadow-xl" style={{ outline: "4px solid var(--school-primary, #499f42)", outlineOffset: "2px" }}>
                 <Image
-                  src={person.photo || "/images/principal.jpg"}
-                  alt={`${person.name} - ${person.designation}`}
+                  src={content.photo || "/images/principal.jpg"}
+                  alt={`${content.name} - ${designation}`}
                   width={192}
                   height={192}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <h3
-                className="font-bold text-lg"
-                style={{ color: "var(--text-dark)" }}
-              >
-                {person.name}
+              <h3 className="font-heading font-bold text-lg" style={{ color: "var(--text-dark, #22235b)" }}>
+                {content.name}
               </h3>
-              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                {person.designation}
+              <p className="text-sm text-gray-500">
+                {designation}
               </p>
             </div>
 
-            {/* Message */}
+            {/* Message preview — max 5 lines; full message on /about/principal */}
             <div className="relative">
-              <Quote
-                className="h-10 w-10 mb-4 opacity-20"
-                style={{ color: "var(--school-primary)" }}
-              />
-              <h2
-                className="text-2xl md:text-3xl font-bold mb-4"
-                style={{ color: "var(--text-dark)" }}
-              >
-                {person.designation}&apos;s Message
+              <Quote className="h-10 w-10 mb-4 opacity-30" style={{ color: "var(--school-primary, #499f42)" }} />
+              <h2 className="font-heading text-2xl md:text-3xl font-bold mb-4" style={{ color: "var(--text-dark, #22235b)" }}>
+                {designation}&apos;s Message
               </h2>
               <div
-                className="text-base leading-relaxed prose prose-gray max-w-none"
-                style={{ color: "var(--text-muted)" }}
-                dangerouslySetInnerHTML={{ __html: person.bio }}
+                className="text-base leading-relaxed prose prose-gray max-w-none line-clamp-5"
+                style={{ color: "var(--text-muted-color)" }}
+                dangerouslySetInnerHTML={{ __html: cleanBioHtml(content.bio) }}
               />
+                {/* Show button always; href = custom URL or default /about/principal */}
+                {(
+                <SchoolLink
+                    href={content.readMoreUrl || "/about/principal"}
+                  className="inline-block mt-6 rounded-full px-6 py-3 text-sm font-semibold text-white transition-all hover:scale-105 shadow-lg"
+                  style={{ backgroundColor: "var(--school-primary, #499f42)" }}
+                >
+                  Read Full Message →
+                </SchoolLink>
+                )}
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </PlayfulSection>
   );
 }

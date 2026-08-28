@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import { SchoolLink } from "@/components/shared/SchoolLink";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
@@ -13,19 +13,27 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { useSchool } from "@/hooks/useSchool";
+import { getSchoolHomeUrl, navigateToSchoolHome } from "@/lib/school-urls";
 import { navigation as defaultNavigation, NavItem } from "@/config/navigation";
 import { MobileNav } from "./MobileNav";
-import { SocialIcon, socialPlatforms } from "@/components/shared/SocialIcons";
+import { SocialIcon, socialPlatforms, normalizeSocialUrl } from "@/components/shared/SocialIcons";
 
 export function Header() {
-  const { school } = useSchool();
+  const { school, slug } = useSchool();
   const pathname = usePathname();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [contactInfo, setContactInfo] = useState({ phone: "", email: "", address: "" });
   const [tagline, setTagline] = useState("");
+  const [schoolLogo, setSchoolLogo] = useState("");
+  const [schoolName, setSchoolName] = useState("");
+  const [logoErrored, setLogoErrored] = useState(false);
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
   const [navItems, setNavItems] = useState<NavItem[]>(defaultNavigation);
+
+  const resolvedLogo = logoErrored
+    ? "/logos/apsfatehpur.png"
+    : (schoolLogo || school?.logo || "/logos/apsfatehpur.png");
 
   useEffect(() => {
     fetch("/api/schools")
@@ -33,9 +41,14 @@ export function Header() {
       .then(r => {
         if (r.success && r.data?.length) {
           const arr = Array.isArray(r.data) ? r.data : [r.data];
-          // Find current school by slug from cookie
-          const slug = document.cookie.match(/school-slug=([^;]+)/)?.[1] || "apsfatehpur";
-          const s = arr.find((sc: { slug: string }) => sc.slug === slug) || arr[0];
+          const host = typeof window !== "undefined" ? window.location.hostname.toLowerCase().replace(/^www\./, "") : "";
+          const s =
+            arr.find((sc: { slug: string }) => sc.slug === slug) ||
+            arr.find((sc: { domain?: string }) => (sc.domain || "").toLowerCase().replace(/^www\./, "") === host) ||
+            arr[0];
+          setLogoErrored(false);
+          if (s?.logo) setSchoolLogo(s.logo);
+          if (s?.name) setSchoolName(s.name);
           if (s?.contactInfo) {
             setContactInfo({
               phone: s.contactInfo.phone || "",
@@ -49,7 +62,7 @@ export function Header() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [slug]);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -61,7 +74,7 @@ export function Header() {
       {/* ── Top Info Bar ── */}
       <div
         className="hidden md:block text-white text-sm"
-        style={{ backgroundColor: "var(--school-primary-dark)" }}
+        style={{ backgroundColor: "var(--text-dark, #22235b)" }}
       >
         <div className="container mx-auto flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-6">
@@ -85,22 +98,22 @@ export function Header() {
                 {contactInfo.address}
               </span>
             )}
-            {socialPlatforms.filter(p => socialLinks[p.key]).length > 0 && (
-              <span className="flex items-center gap-2 ml-2">
-                {socialPlatforms.filter(p => socialLinks[p.key]).map(p => (
-                  <a
-                    key={p.key}
-                    href={socialLinks[p.key]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={p.label}
-                    className="hover:opacity-80 transition-opacity"
-                  >
-                    <SocialIcon platform={p.key} />
-                  </a>
-                ))}
-              </span>
-            )}
+            {socialPlatforms.map(p => {
+              const url = normalizeSocialUrl(socialLinks[p.key], p.key);
+              if (!url) return null;
+              return (
+                <a
+                  key={p.key}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={p.label}
+                  className="hover:opacity-80 transition-opacity"
+                >
+                  <SocialIcon platform={p.key} />
+                </a>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -108,29 +121,38 @@ export function Header() {
       {/* ── Main Navbar ── */}
       <nav
         className="text-white"
-        style={{ backgroundColor: "var(--school-primary)" }}
+        style={{ backgroundColor: "var(--school-primary, #499f42)" }}
       >
         <div className="container mx-auto flex items-center justify-between px-4 py-3">
           {/* Logo + School Name */}
-          <Link href="/" className="flex items-center gap-3 shrink-0">
-            {school?.logo ? (
+          <a
+            href={getSchoolHomeUrl(slug)}
+            onClick={(e) => {
+              e.preventDefault();
+              navigateToSchoolHome(slug);
+            }}
+            className="flex items-center gap-3 shrink-0"
+          >
+            {schoolLogo || school?.logo ? (
               <Image
-                src={school.logo}
-                alt={school.name}
+                key={resolvedLogo}
+                src={resolvedLogo}
+                alt={schoolName || school?.name || "School"}
                 width={44}
                 height={44}
                 className="rounded-full bg-white p-0.5"
+                onError={() => setLogoErrored(true)}
               />
             ) : (
               <GraduationCap className="h-10 w-10" />
             )}
             <div className="hidden sm:block">
               <p className="font-bold text-lg leading-tight">
-                {school?.name || "APS Fatehpur"}
+                {schoolName || school?.name || "APS Fatehpur"}
               </p>
-              <p className="text-xs opacity-80">{tagline || school?.name || ""}</p>
+              <p className="text-xs opacity-80">{tagline || schoolName || school?.name || ""}</p>
             </div>
-          </Link>
+          </a>
 
           {/* Desktop Nav */}
           <ul className="hidden lg:flex items-center gap-1">
@@ -144,16 +166,16 @@ export function Header() {
               />
             ))}
             <li>
-              <Link
+              <SchoolLink
                 href="/academy/admissions"
-                className="ml-2 inline-block rounded-full px-4 py-2 text-sm font-semibold transition-colors"
+                className="ml-2 inline-block rounded-full px-4 py-2 text-sm font-semibold transition-all hover:scale-105"
                 style={{
-                  backgroundColor: "var(--accent-yellow)",
-                  color: "var(--text-dark)",
+                  backgroundColor: "var(--accent-yellow, #d4e96e)",
+                  color: "var(--text-dark, #22235b)",
                 }}
               >
                 Apply Now
-              </Link>
+              </SchoolLink>
             </li>
           </ul>
 
@@ -192,14 +214,14 @@ function NavDesktopItem({
   if (!hasChildren) {
     return (
       <li>
-        <Link
+        <SchoolLink
           href={item.href}
           className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-white/15 ${
             active ? "bg-white/20" : ""
           }`}
         >
           {item.label}
-        </Link>
+        </SchoolLink>
       </li>
     );
   }
@@ -225,14 +247,14 @@ function NavDesktopItem({
 
       {openDropdown === item.label && (
         <ul className="absolute left-0 top-full mt-0.5 w-52 rounded-lg bg-white text-gray-800 shadow-xl py-1 z-50">
-          {item.children!.map((child) => (
+          {item.children!.map((child: { label: string; href: string }) => (
             <li key={child.href}>
-              <Link
+              <SchoolLink
                 href={child.href}
                 className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors"
               >
                 {child.label}
-              </Link>
+              </SchoolLink>
             </li>
           ))}
         </ul>

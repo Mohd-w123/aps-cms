@@ -12,6 +12,7 @@ import {
   Leaf,
   type LucideIcon,
 } from "lucide-react";
+import { PlayfulSection, SectionHeader } from "@/components/shared/PlayfulUI";
 
 interface FeatureData { title: string; desc: string; }
 
@@ -57,24 +58,19 @@ export function FeaturesGrid() {
     return iconMap[title.toLowerCase()] || defaultIcons[index % defaultIcons.length];
   };
 
+  const pastelBgs = [
+    "bg-green-50", "bg-blue-50", "bg-purple-50", "bg-amber-50",
+    "bg-pink-50", "bg-cyan-50", "bg-lime-50", "bg-indigo-50",
+  ];
+  const iconColorVars = [
+    "var(--school-primary, #499f42)", "var(--accent-blue, #9ab5db)", "var(--text-dark, #22235b)", "var(--accent-yellow, #d4e96e)",
+    "var(--school-primary, #499f42)", "var(--accent-blue, #9ab5db)", "var(--text-dark, #22235b)", "var(--accent-yellow, #d4e96e)",
+  ];
+
   return (
-    <section className="py-16" style={{ backgroundColor: "var(--bg-light)" }}>
+    <PlayfulSection className="py-20" style={{ backgroundColor: "var(--bg-light, #f6faf5)" }} floatingIcons blobs>
       <div className="container mx-auto px-4">
-        {/* Section Header */}
-        <div className="text-center mb-12">
-          <p
-            className="text-sm font-semibold uppercase tracking-wider mb-2"
-            style={{ color: "var(--school-primary)" }}
-          >
-            Why Choose Us
-          </p>
-          <h2
-            className="text-3xl md:text-4xl font-bold"
-            style={{ color: "var(--text-dark)" }}
-          >
-            Our Key Features
-          </h2>
-        </div>
+        <SectionHeader label="Why Choose Us" title="Our Key Features" emoji="✨" />
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -83,21 +79,15 @@ export function FeaturesGrid() {
             return (
             <div
               key={f.title + i}
-              className="group bg-white rounded-xl p-6 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1"
+              className={`group rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2 border border-white/50 hover:ring-2 hover:ring-offset-1 hover:ring-emerald-400/60 ${pastelBgs[i % pastelBgs.length]}`}
             >
-              <div
-                className="inline-flex h-12 w-12 items-center justify-center rounded-lg mb-4 transition-colors"
-                style={{ backgroundColor: "var(--school-primary)" }}
-              >
-                <Icon className="h-6 w-6 text-white" />
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl mb-4 bg-white shadow-sm transition-transform duration-300 group-hover:scale-110">
+                <Icon className="h-7 w-7" style={{ color: iconColorVars[i % iconColorVars.length] }} />
               </div>
-              <h3
-                className="font-semibold text-lg mb-2"
-                style={{ color: "var(--text-dark)" }}
-              >
+              <h3 className="font-heading font-semibold text-lg mb-2" style={{ color: "var(--text-dark, #22235b)" }}>
                 {f.title}
               </h3>
-              <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
+              <p className="text-sm leading-relaxed text-gray-500">
                 {f.desc}
               </p>
             </div>
@@ -105,6 +95,6 @@ export function FeaturesGrid() {
           })}
         </div>
       </div>
-    </section>
+    </PlayfulSection>
   );
 }

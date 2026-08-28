@@ -3,6 +3,8 @@ import connectDB from "@/lib/db";
 import School from "@/lib/models/School";
 import { successResponse, errorResponse } from "@/lib/api-helpers";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/schools/[slug]
 export async function GET(
   request: NextRequest,

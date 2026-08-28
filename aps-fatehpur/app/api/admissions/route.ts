@@ -1,9 +1,13 @@
 import { NextRequest } from "next/server";
 import connectDB from "@/lib/db";
 import { requireAuth, unauthorizedResponse, canAccessSchool, forbiddenResponse } from "@/lib/auth";
-import { successResponse, errorResponse, getSchoolId, parsePagination, paginationMeta } from "@/lib/api-helpers";
+import { successResponse, errorResponse, getSchoolId, buildAdminSchoolFilter, parsePagination, paginationMeta } from "@/lib/api-helpers";
 import Admission from "@/lib/models/Admission";
+import "@/lib/models/School";
+import { withSchoolName } from "@/lib/school-label";
 import { admissionCreateSchema, admissionStatusSchema } from "@/lib/validations";
+
+export const dynamic = "force-dynamic";
 
 // POST /api/admissions — public
 export async function POST(request: NextRequest) {
@@ -44,15 +48,24 @@ export async function GET(request: NextRequest) {
 
     await connectDB();
 
-    const filter: Record<string, unknown> = { schoolId: payload.schoolId };
+    let filter: Record<string, unknown>;
+
+    if (payload.role === "sales") {
+      filter = { salesPersonId: payload.userId, sentToSales: true };
+    } else {
+      const schoolFilter = await buildAdminSchoolFilter(request, payload);
+      if ("error" in schoolFilter) return schoolFilter.error;
+      filter = schoolFilter.filter;
+    }
+
     if (status) filter.status = status;
 
     const [items, total] = await Promise.all([
-      Admission.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Admission.find(filter).populate("schoolId", "name slug").sort({ createdAt: -1 }).skip(skip).limit(limit),
       Admission.countDocuments(filter),
     ]);
 
-    return successResponse(items, 200, paginationMeta(page, limit, total));
+    return successResponse(withSchoolName(items), 200, paginationMeta(page, limit, total));
   } catch (error) {
     console.error("Admissions GET error:", error);
     return errorResponse("Internal server error", 500);
@@ -62,7 +75,7 @@ export async function GET(request: NextRequest) {
 // PUT /api/admissions — admin protected, update status
 export async function PUT(request: NextRequest) {
   try {
-    const payload = requireAuth(request);
+    const payload = requireAuth(request, ["superadmin", "school_admin"]);
     if (!payload) return unauthorizedResponse();
 
     const body = await request.json();

@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { PlayfulSection, SectionHeader } from "@/components/shared/PlayfulUI";
+import { HorizontalScrollCarousel } from "@/components/shared/HorizontalScrollCarousel";
+import { useSchool } from "@/hooks/useSchool";
 
 interface TopperData {
   _id: string;
@@ -25,32 +28,19 @@ const fallbackToppers: TopperData[] = [
 ];
 
 export function ToppersCarousel() {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const { slug: schoolSlug } = useSchool();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [toppers, setToppers] = useState<TopperData[]>(fallbackToppers);
 
   useEffect(() => {
-    fetch("/api/toppers?limit=20")
+    if (!schoolSlug) return;
+    const controller = new AbortController();
+    fetch(`/api/toppers?school=${schoolSlug}&limit=20`, { signal: controller.signal })
       .then(r => r.json())
-      .then(r => { if (r.success && r.data?.length) setToppers(r.data); })
-      .catch(() => {});
-  }, []);
-
-  // Auto-scroll left continuously
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const interval = setInterval(() => {
-      if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 5) {
-        el.scrollLeft = 0;
-      } else {
-        el.scrollBy({ left: 2 });
-      }
-    }, 30);
-
-    return () => clearInterval(interval);
-  }, []);
+      .then(r => { setToppers(r.success && r.data?.length ? r.data : fallbackToppers); })
+      .catch(err => { if (err.name !== "AbortError") setToppers(fallbackToppers); });
+    return () => controller.abort();
+  }, [schoolSlug]);
 
   const openLightbox = (i: number) => setLightboxIndex(i);
   const closeLightbox = () => setLightboxIndex(null);
@@ -60,34 +50,15 @@ export function ToppersCarousel() {
     setLightboxIndex((c) => (c !== null ? (c + 1) % toppers.length : null));
 
   return (
-    <section className="py-16" style={{ backgroundColor: "var(--bg-light)" }}>
+    <PlayfulSection className="py-20" style={{ backgroundColor: "var(--bg-light, #f6faf5)" }} blobs floatingIcons>
       <div className="container mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <p
-            className="text-sm font-semibold uppercase tracking-wider mb-2"
-            style={{ color: "var(--school-primary)" }}
-          >
-            Achievements
-          </p>
-          <h2
-            className="text-3xl md:text-4xl font-bold"
-            style={{ color: "var(--text-dark)" }}
-          >
-            Our Toppers
-          </h2>
-        </div>
+        <SectionHeader label="Achievements" title="Our Toppers" emoji="🏆" />
 
-        {/* Auto-scrolling Carousel */}
-        <div
-          ref={scrollRef}
-          className="flex gap-5 overflow-x-auto scrollbar-hide pb-2"
-          style={{ scrollbarWidth: "none" }}
-        >
+        <HorizontalScrollCarousel className="gap-5 pb-2 px-6 md:px-10">
           {toppers.map((t, i) => (
             <div
               key={t._id}
-              className="flex-shrink-0 w-56 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer"
+              className="flex-shrink-0 w-56 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all hover:-translate-y-2 cursor-pointer border border-gray-100"
               onClick={() => openLightbox(i)}
             >
               {t.photo ? (
@@ -99,23 +70,23 @@ export function ToppersCarousel() {
                   className="w-full h-auto object-contain"
                 />
               ) : (
-                <div className="w-full h-[300px] bg-gray-100 flex items-center justify-center">
-                  <span className="text-4xl font-bold text-gray-300">{t.name?.charAt(0)}</span>
+                <div className="w-full h-[300px] bg-gradient-to-br from-[var(--accent-blue,#9ab5db)]/20 to-[var(--school-primary,#499f42)]/10 flex items-center justify-center">
+                  <span className="text-4xl font-heading font-bold opacity-30" style={{ color: "var(--text-dark, #22235b)" }}>{t.name?.charAt(0)}</span>
                 </div>
               )}
-              <div className="p-2 text-center bg-white">
-                <p className="text-sm font-semibold text-gray-900 truncate">{t.name}</p>
-                {t.percentage && <p className="text-xs text-gray-500">{t.percentage}%{t.year ? ` • ${t.year}` : ""}</p>}
+              <div className="p-3 text-center bg-white">
+                <p className="text-sm font-heading font-semibold truncate" style={{ color: "var(--text-dark, #22235b)" }}>{t.name}</p>
+                {t.percentage && <p className="text-xs" style={{ color: "var(--school-primary, #499f42)" }}>{t.percentage}%{t.year ? ` • ${t.year}` : ""}</p>}
               </div>
             </div>
           ))}
-        </div>
+        </HorizontalScrollCarousel>
 
         <div className="mt-8 text-center">
           <Link
             href="/toppers"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold hover:opacity-80 transition-colors"
-            style={{ color: "var(--school-primary)" }}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors"
+            style={{ color: "var(--school-primary, #499f42)" }}
           >
             View All Toppers <ArrowRight className="h-4 w-4" />
           </Link>
@@ -167,6 +138,6 @@ export function ToppersCarousel() {
           </div>
         </div>
       )}
-    </section>
+    </PlayfulSection>
   );
 }

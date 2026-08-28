@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Megaphone } from "lucide-react";
+import { useSchool } from "@/hooks/useSchool";
 
 const fallbackNotices = [
   "Admissions open for 2026-27 session — Apply before 31st May!",
@@ -11,14 +12,18 @@ const fallbackNotices = [
 
 export function RunningNotice() {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { slug: schoolSlug } = useSchool();
   const [notices, setNotices] = useState<string[]>(fallbackNotices);
 
   useEffect(() => {
-    fetch("/api/news?category=notice&limit=10")
+    if (!schoolSlug) return;
+    const controller = new AbortController();
+    fetch(`/api/news?school=${schoolSlug}&category=notice&limit=10`, { signal: controller.signal })
       .then(r => r.json())
-      .then(r => { if (r.success && r.data?.length) setNotices(r.data.map((n: { title: string }) => n.title)); })
-      .catch(() => {});
-  }, []);
+      .then(r => { setNotices(r.success && r.data?.length ? r.data.map((n: { title: string }) => n.title) : fallbackNotices); })
+      .catch(err => { if (err.name !== "AbortError") setNotices(fallbackNotices); });
+    return () => controller.abort();
+  }, [schoolSlug]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -41,19 +46,19 @@ export function RunningNotice() {
   return (
     <section
       className="overflow-hidden text-white py-2.5"
-      style={{ backgroundColor: "var(--school-primary-dark)" }}
+      style={{ backgroundColor: "var(--school-primary-dark, #22235b)" }}
     >
       <div className="container mx-auto flex items-center gap-4 px-4">
         <div className="flex items-center gap-2 shrink-0 font-semibold text-sm">
-          <Megaphone className="h-4 w-4" />
-          <span>Notice:</span>
+          <Megaphone className="h-4 w-4" style={{ color: "var(--accent-yellow, #d4e96e)" }} />
+          <span style={{ color: "var(--accent-yellow, #d4e96e)" }}>Notice:</span>
         </div>
         <div className="overflow-hidden flex-1">
           <div ref={scrollRef} className="flex gap-12 whitespace-nowrap text-sm">
             {/* Duplicate for seamless loop */}
             {[...notices, ...notices].map((notice, i) => (
               <span key={i} className="inline-block">
-                ★ {notice}
+                <span style={{ color: "var(--accent-yellow, #d4e96e)" }}>★</span> {notice}
               </span>
             ))}
           </div>

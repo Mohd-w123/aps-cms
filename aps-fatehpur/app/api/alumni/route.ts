@@ -3,7 +3,10 @@ import connectDB from "@/lib/db";
 import { requireAuth, unauthorizedResponse, canAccessSchool, forbiddenResponse } from "@/lib/auth";
 import { successResponse, errorResponse, getSchoolId, parsePagination, paginationMeta } from "@/lib/api-helpers";
 import Alumni from "@/lib/models/Alumni";
+import "@/lib/models/School"; // Ensure School model is registered for populate
 import { alumniCreateSchema, alumniUpdateSchema } from "@/lib/validations";
+
+export const dynamic = "force-dynamic";
 
 // POST /api/alumni — public (submit for approval)
 export async function POST(request: NextRequest) {
@@ -35,6 +38,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const scope = searchParams.get("scope");
     const { page, limit, skip } = parsePagination(searchParams);
 
     const payload = requireAuth(request);
@@ -43,9 +47,25 @@ export async function GET(request: NextRequest) {
 
     let filter: Record<string, unknown>;
 
+    // scope=all → fetch approved alumni across all schools (for group landing & alumni page)
+    if (scope === "all" && !payload) {
+      filter = { isApproved: true };
+      const [items, total] = await Promise.all([
+        Alumni.find(filter).populate("schoolId", "name slug").sort({ createdAt: -1 }).skip(skip).limit(limit),
+        Alumni.countDocuments(filter),
+      ]);
+      return successResponse(items, 200, paginationMeta(page, limit, total));
+    }
+
     if (payload) {
-      // Admin mode: all alumni for their school
-      filter = { schoolId: payload.schoolId };
+      // Admin mode: use ?school= param if provided (for superadmin viewing other schools)
+      const explicitSchoolId = await getSchoolId(request);
+      const targetSchoolId = explicitSchoolId || payload.schoolId;
+
+      // Permission check: non-superadmin can only view their own school
+      if (!canAccessSchool(payload, targetSchoolId)) return forbiddenResponse();
+
+      filter = { schoolId: targetSchoolId };
     } else {
       // Public mode: approved alumni only
       const schoolId = await getSchoolId(request);
@@ -92,6 +112,32 @@ export async function PUT(request: NextRequest) {
     return successResponse(updated);
   } catch (error) {
     console.error("Alumni PUT error:", error);
+    return errorResponse("Internal server error", 500);
+  }
+}
+
+// DELETE /api/alumni?id=xxx — admin protected
+export async function DELETE(request: NextRequest) {
+  try {
+    const payload = requireAuth(request);
+    if (!payload) return unauthorizedResponse();
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) return errorResponse("Alumni id is required");
+
+    await connectDB();
+    const alumni = await Alumni.findById(id);
+    if (!alumni) return errorResponse("Alumni not found", 404);
+
+    if (!canAccessSchool(payload, alumni.schoolId.toString())) {
+      return forbiddenResponse();
+    }
+
+    await Alumni.findByIdAndDelete(id);
+    return successResponse({ deleted: true });
+  } catch (error) {
+    console.error("Alumni DELETE error:", error);
     return errorResponse("Internal server error", 500);
   }
 }

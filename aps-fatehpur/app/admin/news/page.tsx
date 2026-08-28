@@ -115,8 +115,10 @@ export default function AdminNewsPage() {
               </div>
               <div><label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
                 <RichTextEditor value={form.content} onChange={v => setForm(f => ({ ...f, content: v }))} /></div>
-              <div><label className="block text-sm font-medium text-gray-700 mb-1">Featured Image</label>
-                <FileUploader value={form.featuredImage} onChange={url => setForm(f => ({ ...f, featuredImage: url }))} /></div>
+              {form.category !== "notice" && (
+                <div><label className="block text-sm font-medium text-gray-700 mb-1">Featured Image</label>
+                  <FileUploader value={form.featuredImage} onChange={url => setForm(f => ({ ...f, featuredImage: url }))} /></div>
+              )}
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={form.isPublished} onChange={e => setForm(f => ({ ...f, isPublished: e.target.checked }))} className="rounded border-gray-300" />
                 <span className="text-sm font-medium text-gray-700">Published</span>

@@ -4,22 +4,23 @@ import React, { useState, useEffect, useCallback, useContext, createContext } fr
 
 interface AuthUser {
   _id: string;
-  schoolId: string;
+  schoolId?: string;
   schoolSlug?: string;
   name: string;
   email: string;
-  role: "superadmin" | "school_admin" | "editor";
+  role: "superadmin" | "school_admin" | "editor" | "sales";
   isActive: boolean;
 }
 
 interface AuthState {
   user: AuthUser | null;
   token: string | null;
-  isLoading: boolean;
+  authReady: boolean;
   isAuthenticated: boolean;
 }
 
 interface AuthContextValue extends AuthState {
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<{ token: string; user: AuthUser }>;
   logout: () => void;
 }
@@ -30,20 +31,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
     token: null,
-    isLoading: true,
+    authReady: false,
     isAuthenticated: false,
   });
 
-  // Load token from localStorage on mount
   useEffect(() => {
     const token = localStorage.getItem("admin-token");
     if (!token) {
-      setState((s) => ({ ...s, isLoading: false }));
+      setState({ user: null, token: null, authReady: true, isAuthenticated: false });
       return;
     }
-    // Verify token
+
+    const controller = new AbortController();
+
     fetch("/api/auth/me", {
       headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
     })
       .then((res) => res.json())
       .then((data) => {
@@ -51,18 +54,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setState({
             user: data.data.user,
             token,
-            isLoading: false,
+            authReady: true,
             isAuthenticated: true,
           });
         } else {
           localStorage.removeItem("admin-token");
-          setState({ user: null, token: null, isLoading: false, isAuthenticated: false });
+          setState({ user: null, token: null, authReady: true, isAuthenticated: false });
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        if (err.name === "AbortError") return;
         localStorage.removeItem("admin-token");
-        setState({ user: null, token: null, isLoading: false, isAuthenticated: false });
+        setState({ user: null, token: null, authReady: true, isAuthenticated: false });
       });
+
+    return () => controller.abort();
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -81,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setState({
       user: data.data.user,
       token: data.data.token,
-      isLoading: false,
+      authReady: true,
       isAuthenticated: true,
     });
 
@@ -90,12 +96,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem("admin-token");
-    setState({ user: null, token: null, isLoading: false, isAuthenticated: false });
+    setState({ user: null, token: null, authReady: true, isAuthenticated: false });
   }, []);
 
   return React.createElement(
     AuthContext.Provider,
-    { value: { ...state, login, logout } },
+    { value: { ...state, isLoading: !state.authReady, login, logout } },
     children
   );
 }
