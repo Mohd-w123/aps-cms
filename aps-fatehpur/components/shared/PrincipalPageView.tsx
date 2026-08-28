@@ -59,7 +59,7 @@ export function PrincipalPageView({ breadcrumbs }: PrincipalPageViewProps) {
                   </p>
                 )}
                 <div
-                  className="prose prose-lg max-w-none mt-4"
+                  className="prose prose-lg max-w-none mt-6 [&_p]:my-3 [&_p:has(strong)]:my-1 [&_p:empty]:hidden"
                   style={{ color: "var(--text-dark)" }}
                   dangerouslySetInnerHTML={{ __html: content.bio }}
                 />

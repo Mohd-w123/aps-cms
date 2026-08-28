@@ -45,7 +45,7 @@ export function PrincipalMessage() {
                 {designation}&apos;s Message
               </h2>
               <div
-                className="text-base leading-relaxed prose prose-gray max-w-none line-clamp-5"
+                className="text-base leading-relaxed prose prose-gray max-w-none line-clamp-5 [&_p]:my-2 [&_p:has(strong)]:my-0.5"
                 style={{ color: "var(--text-muted-color)" }}
                 dangerouslySetInnerHTML={{ __html: content.bio }}
               />
