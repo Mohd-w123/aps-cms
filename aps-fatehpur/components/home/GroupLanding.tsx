@@ -23,7 +23,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { SocialLinksBar, SocialIcon, socialPlatforms } from "@/components/shared/SocialIcons";
+import { SocialLinksBar, SocialIcon, socialPlatforms, normalizeSocialUrl } from "@/components/shared/SocialIcons";
 import { TestimonialsSlider } from "@/components/home/TestimonialsSlider";
 import { HorizontalScrollCarousel } from "@/components/shared/HorizontalScrollCarousel";
 import { getBranchUrl } from "@/lib/school-urls";
@@ -294,12 +294,14 @@ function GroupNav({ groupName, navLinks, socialLinks, contactInfo }: { groupName
                 {contactInfo.address}
               </span>
             )}
-            {hasSocial && (
-              <span className="flex items-center gap-2 ml-2">
-                {socialPlatforms.filter(p => socialLinks[p.key]).map(p => (
+            <span className="flex items-center gap-2 ml-2">
+              {socialPlatforms.map(p => {
+                const url = normalizeSocialUrl(socialLinks[p.key], p.key);
+                if (!url) return null;
+                return (
                   <a
                     key={p.key}
-                    href={socialLinks[p.key]}
+                    href={url}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={p.label}
@@ -307,9 +309,9 @@ function GroupNav({ groupName, navLinks, socialLinks, contactInfo }: { groupName
                   >
                     <SocialIcon platform={p.key} />
                   </a>
-                ))}
-              </span>
-            )}
+                );
+              })}
+            </span>
           </div>
         </div>
       </div>

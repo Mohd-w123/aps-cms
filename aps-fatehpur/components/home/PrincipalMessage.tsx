@@ -7,6 +7,8 @@ import { usePrincipal } from "@/hooks/usePrincipal";
 import { SchoolLink } from "@/components/shared/SchoolLink";
 import { PlayfulSection, BlobDecoration } from "@/components/shared/PlayfulUI";
 
+import { cleanBioHtml } from "@/components/shared/PrincipalPageView";
+
 export function PrincipalMessage() {
   const { content, loading } = usePrincipal();
 
@@ -45,9 +47,9 @@ export function PrincipalMessage() {
                 {designation}&apos;s Message
               </h2>
               <div
-                className="text-base leading-relaxed prose prose-gray max-w-none line-clamp-5 [&_p]:my-2 [&_p:has(strong)]:my-0.5"
+                className="text-base leading-relaxed prose prose-gray max-w-none line-clamp-5"
                 style={{ color: "var(--text-muted-color)" }}
-                dangerouslySetInnerHTML={{ __html: content.bio }}
+                dangerouslySetInnerHTML={{ __html: cleanBioHtml(content.bio) }}
               />
                 {/* Show button always; href = custom URL or default /about/principal */}
                 {(

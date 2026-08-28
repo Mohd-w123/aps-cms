@@ -16,7 +16,7 @@ import { useSchool } from "@/hooks/useSchool";
 import { getSchoolHomeUrl, navigateToSchoolHome } from "@/lib/school-urls";
 import { navigation as defaultNavigation, NavItem } from "@/config/navigation";
 import { MobileNav } from "./MobileNav";
-import { SocialIcon, socialPlatforms } from "@/components/shared/SocialIcons";
+import { SocialIcon, socialPlatforms, normalizeSocialUrl } from "@/components/shared/SocialIcons";
 
 export function Header() {
   const { school, slug } = useSchool();
@@ -98,22 +98,22 @@ export function Header() {
                 {contactInfo.address}
               </span>
             )}
-            {socialPlatforms.filter(p => socialLinks[p.key]).length > 0 && (
-              <span className="flex items-center gap-2 ml-2">
-                {socialPlatforms.filter(p => socialLinks[p.key]).map(p => (
-                  <a
-                    key={p.key}
-                    href={socialLinks[p.key]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={p.label}
-                    className="hover:opacity-80 transition-opacity"
-                  >
-                    <SocialIcon platform={p.key} />
-                  </a>
-                ))}
-              </span>
-            )}
+            {socialPlatforms.map(p => {
+              const url = normalizeSocialUrl(socialLinks[p.key], p.key);
+              if (!url) return null;
+              return (
+                <a
+                  key={p.key}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={p.label}
+                  className="hover:opacity-80 transition-opacity"
+                >
+                  <SocialIcon platform={p.key} />
+                </a>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -247,7 +247,7 @@ function NavDesktopItem({
 
       {openDropdown === item.label && (
         <ul className="absolute left-0 top-full mt-0.5 w-52 rounded-lg bg-white text-gray-800 shadow-xl py-1 z-50">
-          {item.children!.map((child) => (
+          {item.children!.map((child: { label: string; href: string }) => (
             <li key={child.href}>
               <SchoolLink
                 href={child.href}

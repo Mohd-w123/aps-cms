@@ -59,6 +59,53 @@ export const socialPlatforms = [
 
 export type SocialKey = (typeof socialPlatforms)[number]["key"];
 
+/**
+ * Normalizes any social media URL input, stripping leading '#' or spaces,
+ * and converting phone numbers/handles into valid absolute URLs.
+ */
+export function normalizeSocialUrl(url?: string, platform?: string): string | null {
+  if (!url) return null;
+  let clean = url.trim();
+
+  // Strip leading "#", "# ", "##"
+  clean = clean.replace(/^[#\s]+/, "").trim();
+
+  // If empty or was just "#"
+  if (!clean || clean === "#") return null;
+
+  // If already starts with valid protocol
+  if (/^(https?:\/\/|mailto:|tel:)/i.test(clean)) {
+    return clean;
+  }
+
+  // Handle WhatsApp numbers
+  if (platform === "whatsapp" && /^\+?[0-9\s-]+$/.test(clean)) {
+    const digits = clean.replace(/[^0-9]/g, "");
+    return `https://wa.me/${digits}`;
+  }
+
+  // Handle Telegram handles or numbers
+  if (platform === "telegram") {
+    if (/^\+?[0-9\s-]+$/.test(clean)) {
+      const digits = clean.replace(/[^0-9]/g, "");
+      return `https://t.me/+${digits}`;
+    }
+    if (!clean.startsWith("@") && !clean.includes("/")) {
+      return `https://t.me/${clean}`;
+    }
+    if (clean.startsWith("@")) {
+      return `https://t.me/${clean.slice(1)}`;
+    }
+  }
+
+  // Handle domain without protocol (e.g. facebook.com/...)
+  if (/^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/i.test(clean)) {
+    return `https://${clean}`;
+  }
+
+  return `https://${clean}`;
+}
+
 export function SocialIcon({ platform, className }: { platform: string; className?: string }) {
   return <span className={className}>{icons[platform] || icons.website}</span>;
 }
@@ -75,16 +122,21 @@ export function SocialLinksBar({ links, size = "md", variant = "dark" }: SocialL
     ? "bg-white/10 hover:bg-white/20 text-white"
     : "bg-gray-100 hover:bg-gray-200 text-gray-600";
 
-  const activePlatforms = socialPlatforms.filter(p => links[p.key]);
+  const validPlatforms = socialPlatforms
+    .map(p => {
+      const url = normalizeSocialUrl(links[p.key], p.key);
+      return url ? { key: p.key, label: p.label, url } : null;
+    })
+    .filter((p): p is { key: SocialKey; label: (typeof socialPlatforms)[number]["label"]; url: string } => p !== null);
 
-  if (activePlatforms.length === 0) return null;
+  if (validPlatforms.length === 0) return null;
 
   return (
     <div className="flex gap-2 flex-wrap">
-      {activePlatforms.map(p => (
+      {validPlatforms.map(p => (
         <a
           key={p.key}
-          href={links[p.key]}
+          href={p.url}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={p.label}

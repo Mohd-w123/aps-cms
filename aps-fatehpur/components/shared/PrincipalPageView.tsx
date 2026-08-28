@@ -9,6 +9,53 @@ interface PrincipalPageViewProps {
   breadcrumbs?: { label: string; href?: string }[];
 }
 
+export function cleanBioHtml(html: string) {
+  if (!html) return "";
+
+  // 1. Remove empty paragraphs and breaks (<p><br></p>, <p>&nbsp;</p>, etc.)
+  let cleaned = html
+    .replace(/<p[^>]*>\s*(<br\s*\/?>|&nbsp;|\s)*\s*<\/p>/gi, "")
+    .replace(/(<br\s*\/?>\s*){2,}/gi, "<br/>")
+    .trim();
+
+  let prevWasLong = false;
+
+  // 2. Transform <h1>-<h6> tags (e.g. <h3> signature lines like <h3><em>NAZNEEN BANO</em></h3>)
+  cleaned = cleaned.replace(/<h([1-6])([^>]*)>(.*?)<\/h\1>/gi, (_match, _lvl, attrs, inner) => {
+    const textContent = inner.replace(/<[^>]*>/g, "").trim();
+    const isShort = textContent.length > 0 && textContent.length <= 45;
+
+    if (isShort) {
+      const topMargin = prevWasLong ? "24px" : "2px";
+      prevWasLong = false;
+      return `<div${attrs} style="margin-top: ${topMargin} !important; margin-bottom: 2px !important; line-height: 1.35 !important; font-size: 1.15rem !important; font-weight: 700 !important; color: var(--text-dark, #22235b) !important;">${inner}</div>`;
+    } else {
+      prevWasLong = true;
+      return `<h3${attrs} style="margin-top: 20px !important; margin-bottom: 8px !important; line-height: 1.4 !important;">${inner}</h3>`;
+    }
+  });
+
+  // 3. Transform <p> tags
+  cleaned = cleaned.replace(/<p([^>]*)>(.*?)<\/p>/gi, (_match, attrs, inner) => {
+    const textContent = inner.replace(/<[^>]*>/g, "").trim();
+    const isShort =
+      textContent.length > 0 &&
+      textContent.length <= 45 &&
+      !textContent.endsWith(".");
+
+    if (isShort) {
+      const topMargin = prevWasLong ? "24px" : "2px";
+      prevWasLong = false;
+      return `<p${attrs} style="margin-top: ${topMargin} !important; margin-bottom: 2px !important; line-height: 1.35 !important;">${inner}</p>`;
+    } else {
+      prevWasLong = textContent.length > 0;
+      return `<p${attrs} style="margin-top: 14px !important; margin-bottom: 14px !important; line-height: 1.75 !important;">${inner}</p>`;
+    }
+  });
+
+  return cleaned;
+}
+
 export function PrincipalPageView({ breadcrumbs }: PrincipalPageViewProps) {
   const { content, loading } = usePrincipal();
 
@@ -59,9 +106,9 @@ export function PrincipalPageView({ breadcrumbs }: PrincipalPageViewProps) {
                   </p>
                 )}
                 <div
-                  className="prose prose-lg max-w-none mt-6 [&_p]:my-3 [&_p:has(strong)]:my-1 [&_p:empty]:hidden"
+                  className="prose prose-lg max-w-none mt-6"
                   style={{ color: "var(--text-dark)" }}
-                  dangerouslySetInnerHTML={{ __html: content.bio }}
+                  dangerouslySetInnerHTML={{ __html: cleanBioHtml(content.bio) }}
                 />
               </div>
             </div>
