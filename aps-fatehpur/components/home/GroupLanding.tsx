@@ -261,8 +261,6 @@ function GroupNav({ groupName, navLinks, socialLinks, contactInfo }: { groupName
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const hasSocial = socialPlatforms.some(p => socialLinks[p.key]);
-
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
       {/* ── Top Info Bar (visible on desktop, hidden when scrolled) ── */}

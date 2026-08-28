@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useSchool } from "@/hooks/useSchool";
 import { PageBanner } from "@/components/layout/PageBanner";
 import { schools as allSchools } from "@/config/schools";
-import { School, CheckCircle2, Phone, Mail, Clock, ExternalLink } from "lucide-react";
+import { School, CheckCircle2, Clock, ExternalLink } from "lucide-react";
 import { getBranchUrl } from "@/lib/school-urls";
 
 interface AICUService {

@@ -560,7 +560,6 @@ export default function ApplyPage() {
               ) : (
                 <div className="space-y-2">
                   {form.documents.map((doc, idx) => {
-                    const isPdf = doc.url.toLowerCase().endsWith(".pdf") || doc.type === "application/pdf";
                     const isImg = doc.type?.startsWith("image/") || doc.url.match(/\.(jpg|jpeg|png|webp)$/i);
 
                     return (
