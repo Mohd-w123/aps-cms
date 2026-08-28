@@ -153,7 +153,8 @@ interface TopperData { _id: string; photo: string; name?: string; percentage?: n
 interface GalleryData { _id: string; type: string; image: string; videoUrl?: string; category?: string; title?: string; schoolId?: { _id: string; name: string; slug: string }; }
 
 export function GroupLanding() {
-  const [slides, setSlides] = useState<SlideData[]>(fallbackSlides);
+  const [slides, setSlides] = useState<SlideData[]>([]);
+  const [slidesLoaded, setSlidesLoaded] = useState(false);
   const [branches, setBranches] = useState<BranchData[]>([]);
   const [toppers, setToppers] = useState<TopperData[]>(
     fallbackToppers.map((photo, i) => ({ _id: `f-${i}`, photo }))
@@ -167,8 +168,15 @@ export function GroupLanding() {
 
   useEffect(() => {
     // Combined sliders from all school websites
-    fetch("/api/sliders?scope=all&limit=20").then(r => r.json())
-      .then(r => { if (r.success && r.data?.length) setSlides(r.data); }).catch(() => {});
+    fetch("/api/sliders?scope=all&limit=20", { cache: "no-store" }).then(r => r.json())
+      .then(r => {
+        if (r.success && r.data?.length) setSlides(r.data);
+        setSlidesLoaded(true);
+      })
+      .catch(() => {
+        setSlides(fallbackSlides);
+        setSlidesLoaded(true);
+      });
 
     fetch("/api/schools").then(r => r.json())
       .then(r => {
@@ -204,7 +212,7 @@ export function GroupLanding() {
       }).catch(() => {});
 
     // Combined gallery from all school websites
-    fetch("/api/gallery?scope=all&limit=30").then(r => r.json())
+    fetch("/api/gallery?scope=all&limit=40").then(r => r.json())
       .then(r => { if (r.success && r.data?.length) setGallery(r.data); }).catch(() => {});
   }, []);
 
@@ -231,7 +239,7 @@ export function GroupLanding() {
     <div className="min-h-screen flex flex-col bg-[#f6faf5] font-sans">
       <CursorTrail />
       <GroupNav groupName={groupName} navLinks={groupHeaderNav} socialLinks={socialLinks} contactInfo={contactInfo} />
-      <HeroSlider slides={slides} />
+      <HeroSlider slides={slides} loaded={slidesLoaded} />
       <AboutSection />
       <BranchesSection branches={branchCards} />
       <ToppersSection toppers={toppers} />
@@ -376,15 +384,32 @@ function GroupNav({ groupName, navLinks, socialLinks, contactInfo }: { groupName
 }
 
 /* ───────────────────── HERO SLIDER ───────────────────── */
-function HeroSlider({ slides }: { slides: SlideData[] }) {
+function HeroSlider({ slides, loaded }: { slides: SlideData[]; loaded: boolean }) {
   const [current, setCurrent] = useState(0);
   const next = useCallback(() => setCurrent((c) => (c + 1) % slides.length), [slides.length]);
   const prev = useCallback(() => setCurrent((c) => (c - 1 + slides.length) % slides.length), [slides.length]);
 
   useEffect(() => {
+    if (slides.length < 2) return;
     const timer = setInterval(next, 5000);
     return () => clearInterval(timer);
-  }, [next]);
+  }, [next, slides.length]);
+
+  useEffect(() => {
+    if (current >= slides.length) setCurrent(0);
+  }, [current, slides.length]);
+
+  if (!loaded || slides.length === 0) {
+    return (
+      <section id="home" className="relative h-[65vh] md:h-[90vh] overflow-hidden" style={{ background: "linear-gradient(to right, #22235b, #499f42)" }}>
+        <div className="absolute inset-0 pointer-events-none">
+          <Star className="absolute top-24 left-[15%] h-5 w-5 text-[#d4e96e]/70 animate-float" />
+          <Sparkles className="absolute top-32 right-[20%] h-6 w-6 text-[#9ab5db]/60 animate-float-slow" />
+          <Star className="absolute bottom-40 left-[10%] h-4 w-4 text-white/50 animate-bounce-gentle" />
+        </div>
+      </section>
+    );
+  }
 
   const slide = slides[current];
 

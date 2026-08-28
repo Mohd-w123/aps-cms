@@ -5,6 +5,8 @@ import { requireAuth, unauthorizedResponse, forbiddenResponse, canAccessSchool, 
 import { successResponse, errorResponse, parsePagination, paginationMeta } from "@/lib/api-helpers";
 import { userCreateSchema, userUpdateSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/users — admin: list users by school
 export async function GET(request: NextRequest) {
   try {

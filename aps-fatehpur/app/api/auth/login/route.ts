@@ -4,6 +4,8 @@ import User from "@/lib/models/User";
 import "@/lib/models/School"; // ensure School model is registered for populate
 import { comparePassword, signToken } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

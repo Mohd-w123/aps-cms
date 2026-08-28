@@ -6,6 +6,8 @@ import News from "@/lib/models/News";
 import "@/lib/models/School"; // Ensure School model is registered for populate
 import { newsCreateSchema, newsUpdateSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/news — public, paginated
 export async function GET(request: NextRequest) {
   try {

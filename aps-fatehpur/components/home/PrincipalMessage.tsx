@@ -1,20 +1,14 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import Image from "next/image";
 import { Quote } from "lucide-react";
 import { usePrincipal } from "@/hooks/usePrincipal";
 import { SchoolLink } from "@/components/shared/SchoolLink";
 import { PlayfulSection, BlobDecoration } from "@/components/shared/PlayfulUI";
-import { isPrincipalPreviewTruncated } from "@/lib/utils";
 
 export function PrincipalMessage() {
   const { content, loading } = usePrincipal();
-
-  const showReadMore = useMemo(
-    () => (content?.bio ? isPrincipalPreviewTruncated(content.bio) : false),
-    [content?.bio]
-  );
 
   if (loading || !content) return null;
 
@@ -55,15 +49,16 @@ export function PrincipalMessage() {
                 style={{ color: "var(--text-muted-color)" }}
                 dangerouslySetInnerHTML={{ __html: content.bio }}
               />
-              {showReadMore && (
+                {/* Show button always; href = custom URL or default /about/principal */}
+                {(
                 <SchoolLink
-                  href="/about/principal"
+                    href={content.readMoreUrl || "/about/principal"}
                   className="inline-block mt-6 rounded-full px-6 py-3 text-sm font-semibold text-white transition-all hover:scale-105 shadow-lg"
                   style={{ backgroundColor: "var(--school-primary, #499f42)" }}
                 >
                   Read Full Message →
                 </SchoolLink>
-              )}
+                )}
             </div>
           </div>
         </div>

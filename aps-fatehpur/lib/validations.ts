@@ -22,6 +22,7 @@ export const personSchema = z.object({
   bio: z.string().optional().default(""),
   photo: z.string().optional().or(z.literal("")),
   qualifications: z.string().optional(),
+  readMoreUrl: z.string().optional().or(z.literal("")),
   order: z.number().int().optional().default(0),
   isActive: z.boolean().optional().default(true),
 });
@@ -184,8 +185,10 @@ export const userUpdateSchema = z.object({
 // ── Sliders ──
 export const sliderCreateSchema = z.object({
   image: z.string().min(1),
-  title: z.string().min(1).max(500),
+  title: z.string().max(500).optional().default(""),
   subtitle: z.string().max(500).optional().default(""),
+  titleColor: z.string().max(20).optional(),
+  subtitleColor: z.string().max(20).optional(),
   ctaLabel: z.string().max(100).optional(),
   ctaLink: z.string().max(500).optional(),
   order: z.number().int().optional().default(0),

@@ -56,7 +56,8 @@ export default function GalleryPage() {
   }
 
   const filtered = filter === "all" ? displayItems : displayItems.filter((i) => i.type === filter);
-  const categories = Array.from(new Set(filtered.map((i) => i.category)));
+  // Normalize categories to lowercase to prevent duplicates from case differences
+  const categories = Array.from(new Set(filtered.map((i) => i.category?.trim().toLowerCase()).filter(Boolean)));
 
   const openLightbox = (idx: number) => setLightboxIndex(idx);
   const closeLightbox = () => setLightboxIndex(null);
@@ -178,7 +179,7 @@ export default function GalleryPage() {
           {/* Gallery grouped by category */}
           {!loading &&
             categories.map((cat) => {
-              const catItems = filtered.filter((i) => i.category === cat);
+              const catItems = filtered.filter((i) => i.category.trim().toLowerCase() === cat);
               return (
                 <div key={cat} className="mb-12">
                   {categories.length > 1 && (

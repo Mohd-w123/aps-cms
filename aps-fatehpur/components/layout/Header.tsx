@@ -25,8 +25,15 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [contactInfo, setContactInfo] = useState({ phone: "", email: "", address: "" });
   const [tagline, setTagline] = useState("");
+  const [schoolLogo, setSchoolLogo] = useState("");
+  const [schoolName, setSchoolName] = useState("");
+  const [logoErrored, setLogoErrored] = useState(false);
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
   const [navItems, setNavItems] = useState<NavItem[]>(defaultNavigation);
+
+  const resolvedLogo = logoErrored
+    ? "/logos/apsfatehpur.png"
+    : (schoolLogo || school?.logo || "/logos/apsfatehpur.png");
 
   useEffect(() => {
     fetch("/api/schools")
@@ -34,9 +41,14 @@ export function Header() {
       .then(r => {
         if (r.success && r.data?.length) {
           const arr = Array.isArray(r.data) ? r.data : [r.data];
-          // Find current school by slug from cookie
-          const slug = document.cookie.match(/school-slug=([^;]+)/)?.[1] || "apsfatehpur";
-          const s = arr.find((sc: { slug: string }) => sc.slug === slug) || arr[0];
+          const host = typeof window !== "undefined" ? window.location.hostname.toLowerCase().replace(/^www\./, "") : "";
+          const s =
+            arr.find((sc: { slug: string }) => sc.slug === slug) ||
+            arr.find((sc: { domain?: string }) => (sc.domain || "").toLowerCase().replace(/^www\./, "") === host) ||
+            arr[0];
+          setLogoErrored(false);
+          if (s?.logo) setSchoolLogo(s.logo);
+          if (s?.name) setSchoolName(s.name);
           if (s?.contactInfo) {
             setContactInfo({
               phone: s.contactInfo.phone || "",
@@ -50,7 +62,7 @@ export function Header() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [slug]);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -121,22 +133,24 @@ export function Header() {
             }}
             className="flex items-center gap-3 shrink-0"
           >
-            {school?.logo ? (
+            {schoolLogo || school?.logo ? (
               <Image
-                src={school.logo}
-                alt={school.name}
+                key={resolvedLogo}
+                src={resolvedLogo}
+                alt={schoolName || school?.name || "School"}
                 width={44}
                 height={44}
                 className="rounded-full bg-white p-0.5"
+                onError={() => setLogoErrored(true)}
               />
             ) : (
               <GraduationCap className="h-10 w-10" />
             )}
             <div className="hidden sm:block">
               <p className="font-bold text-lg leading-tight">
-                {school?.name || "APS Fatehpur"}
+                {schoolName || school?.name || "APS Fatehpur"}
               </p>
-              <p className="text-xs opacity-80">{tagline || school?.name || ""}</p>
+              <p className="text-xs opacity-80">{tagline || schoolName || school?.name || ""}</p>
             </div>
           </a>
 

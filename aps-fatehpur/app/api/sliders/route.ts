@@ -3,7 +3,10 @@ import connectDB from "@/lib/db";
 import { requireAuth, unauthorizedResponse, canAccessSchool } from "@/lib/auth";
 import { successResponse, errorResponse, getSchoolId, parsePagination, paginationMeta } from "@/lib/api-helpers";
 import Slider from "@/lib/models/Slider";
+import "@/lib/models/School"; // Ensure School model is registered for populate
 import { sliderCreateSchema, sliderUpdateSchema } from "@/lib/validations";
+
+export const dynamic = "force-dynamic";
 
 // GET /api/sliders — public, filtered by scope
 export async function GET(request: NextRequest) {
@@ -92,18 +95,24 @@ export async function PUT(request: NextRequest) {
     if (!payload) return unauthorizedResponse();
 
     const body = await request.json();
-    const { id, ...rest } = body;
-    if (!id) return errorResponse("ID required");
+    const { id, ...updateData } = body;
+    if (!id) return errorResponse("Slider id is required");
 
-    const parsed = sliderUpdateSchema.safeParse(rest);
+    const parsed = sliderUpdateSchema.safeParse(updateData);
     if (!parsed.success) {
       return errorResponse(parsed.error.issues.map((e) => e.message).join(", "));
     }
 
     await connectDB();
-    const slider = await Slider.findByIdAndUpdate(id, parsed.data, { new: true });
+    const slider = await Slider.findById(id);
     if (!slider) return errorResponse("Slider not found", 404);
-    return successResponse(slider);
+
+    if (!canAccessSchool(payload, slider.schoolId.toString())) {
+      return errorResponse("Forbidden", 403);
+    }
+
+    const updated = await Slider.findByIdAndUpdate(id, parsed.data, { new: true });
+    return successResponse(updated);
   } catch (error) {
     console.error("Sliders PUT error:", error);
     return errorResponse("Internal server error", 500);
@@ -118,11 +127,18 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
-    if (!id) return errorResponse("ID required");
+    if (!id) return errorResponse("Slider id is required");
 
     await connectDB();
+    const slider = await Slider.findById(id);
+    if (!slider) return errorResponse("Slider not found", 404);
+
+    if (!canAccessSchool(payload, slider.schoolId.toString())) {
+      return errorResponse("Forbidden", 403);
+    }
+
     await Slider.findByIdAndDelete(id);
-    return successResponse({ deleted: true });
+    return successResponse({ message: "Slider deleted successfully" });
   } catch (error) {
     console.error("Sliders DELETE error:", error);
     return errorResponse("Internal server error", 500);

@@ -1,17 +1,20 @@
 import { NextRequest } from "next/server";
 import connectDB from "@/lib/db";
-import { requireAuth, unauthorizedResponse, forbiddenResponse, canAccessSchool } from "@/lib/auth";
+import { requireAuth, unauthorizedResponse, forbiddenResponse, canAccessSchool, getAuthPayload } from "@/lib/auth";
 import { successResponse, errorResponse, getSchoolId } from "@/lib/api-helpers";
 import Page from "@/lib/models/Page";
 import "@/lib/models/School"; // Ensure School model is registered for populate
 import { pageCreateSchema, pageUpdateSchema } from "@/lib/validations";
 
-// GET /api/pages — public
+export const dynamic = "force-dynamic";
+
+// GET /api/pages — public (isPublished filter) or admin (all pages)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get("slug");
     const scope = searchParams.get("scope");
+    const isAdmin = !!getAuthPayload(request);
 
     await connectDB();
 
@@ -29,12 +32,16 @@ export async function GET(request: NextRequest) {
     if (!schoolId) return errorResponse("School not found", 404);
 
     if (slug) {
-      const page = await Page.findOne({ schoolId, slug, isPublished: true });
+      const filter: Record<string, unknown> = { schoolId, slug };
+      if (!isAdmin) filter.isPublished = true;
+      const page = await Page.findOne(filter);
       if (!page) return errorResponse("Page not found", 404);
       return successResponse(page);
     }
 
-    const pages = await Page.find({ schoolId, isPublished: true }).sort({ createdAt: -1 });
+    const filter: Record<string, unknown> = { schoolId };
+    if (!isAdmin) filter.isPublished = true;
+    const pages = await Page.find(filter).sort({ createdAt: -1 });
     return successResponse(pages);
   } catch (error) {
     console.error("Pages GET error:", error);

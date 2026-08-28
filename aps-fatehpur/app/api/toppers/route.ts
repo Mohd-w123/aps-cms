@@ -6,6 +6,8 @@ import Topper from "@/lib/models/Topper";
 import "@/lib/models/School"; // Ensure School model is registered for populate
 import { topperCreateSchema, topperUpdateSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/toppers — public, paginated
 export async function GET(request: NextRequest) {
   try {

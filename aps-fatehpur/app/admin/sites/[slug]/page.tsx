@@ -93,12 +93,12 @@ export default function SchoolSiteManagement() {
 // ═══════════════════════════════════════════════════════════════
 function SchoolSliders({ schoolSlug }: { schoolSlug: string }) {
   const api = useAdminApi();
-  interface SliderItem { _id: string; image: string; title: string; subtitle: string; ctaLabel?: string; ctaLink?: string; order: number; isPublished: boolean; }
+  interface SliderItem { _id: string; image: string; title: string; subtitle: string; titleColor?: string; subtitleColor?: string; ctaLabel?: string; ctaLink?: string; order: number; isPublished: boolean; }
   const [items, setItems] = useState<SliderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ image: "", title: "", subtitle: "", ctaLabel: "", ctaLink: "", order: 0, isPublished: true });
+  const [form, setForm] = useState({ image: "", title: "", subtitle: "", titleColor: "#ffffff", subtitleColor: "#ffffff", ctaLabel: "", ctaLink: "", order: 0, isPublished: true });
   const [saving, setSaving] = useState(false);
   const [delId, setDelId] = useState<string | null>(null);
 
@@ -110,8 +110,8 @@ function SchoolSliders({ schoolSlug }: { schoolSlug: string }) {
   }, [api, schoolSlug]);
   useEffect(() => { if (api.token) load(); }, [api.token]); // eslint-disable-line
 
-  const doCreate = () => { setEditId(null); setForm({ image: "", title: "", subtitle: "", ctaLabel: "", ctaLink: "", order: items.length, isPublished: true }); setOpen(true); };
-  const doEdit = (s: SliderItem) => { setEditId(s._id); setForm({ image: s.image, title: s.title, subtitle: s.subtitle || "", ctaLabel: s.ctaLabel || "", ctaLink: s.ctaLink || "", order: s.order, isPublished: s.isPublished }); setOpen(true); };
+  const doCreate = () => { setEditId(null); setForm({ image: "", title: "", subtitle: "", titleColor: "#ffffff", subtitleColor: "#ffffff", ctaLabel: "", ctaLink: "", order: items.length, isPublished: true }); setOpen(true); };
+  const doEdit = (s: SliderItem) => { setEditId(s._id); setForm({ image: s.image, title: s.title, subtitle: s.subtitle || "", titleColor: s.titleColor || "#ffffff", subtitleColor: s.subtitleColor || "#ffffff", ctaLabel: s.ctaLabel || "", ctaLink: s.ctaLink || "", order: s.order, isPublished: s.isPublished }); setOpen(true); };
   const close = () => { setOpen(false); setEditId(null); };
 
   const save = async () => {
@@ -165,10 +165,26 @@ function SchoolSliders({ schoolSlug }: { schoolSlug: string }) {
             <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
               <div><label className="block text-sm font-medium text-gray-700 mb-1">Background Image *</label>
                 <FileUploader value={form.image} onChange={url => setForm(f => ({ ...f, image: url }))} /></div>
-              <div><label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+              <div><label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
                 <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
               <div><label className="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
                 <input value={form.subtitle} onChange={e => setForm(f => ({ ...f, subtitle: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title Color</label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={form.titleColor} onChange={e => setForm(f => ({ ...f, titleColor: e.target.value }))} className="h-10 w-12 rounded border border-gray-200 bg-white p-1" />
+                    <input value={form.titleColor} onChange={e => setForm(f => ({ ...f, titleColor: e.target.value }))} placeholder="#ffffff" className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Subtitle Color</label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={form.subtitleColor} onChange={e => setForm(f => ({ ...f, subtitleColor: e.target.value }))} className="h-10 w-12 rounded border border-gray-200 bg-white p-1" />
+                    <input value={form.subtitleColor} onChange={e => setForm(f => ({ ...f, subtitleColor: e.target.value }))} placeholder="#ffffff" className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                  </div>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div><label className="block text-sm font-medium text-gray-700 mb-1">Button Label</label>
                   <input value={form.ctaLabel} onChange={e => setForm(f => ({ ...f, ctaLabel: e.target.value }))} placeholder="e.g. Apply Now" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
@@ -184,7 +200,7 @@ function SchoolSliders({ schoolSlug }: { schoolSlug: string }) {
             </div>
             <div className="flex justify-end gap-3 p-5 border-t">
               <button onClick={close} className="px-4 py-2 rounded-lg border text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-              <button onClick={save} disabled={saving || !form.image || !form.title} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2">
+              <button onClick={save} disabled={saving || !form.image} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2">
                 {saving && <Loader2 className="h-4 w-4 animate-spin" />}{editId ? "Update" : "Create"}
               </button>
             </div>
@@ -802,7 +818,7 @@ function SchoolHomepage({ schoolSlug }: { schoolSlug: string }) {
   const api = useAdminApi();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [section, setSection] = useState<"about" | "features" | "cta">("about");
+  const [section, setSection] = useState<"about" | "principal" | "features" | "cta">("about");
 
   // About
   const [aboutId, setAboutId] = useState<string | null>(null);
@@ -810,6 +826,12 @@ function SchoolHomepage({ schoolSlug }: { schoolSlug: string }) {
   const [aboutContent, setAboutContent] = useState("");
   const [aboutImage, setAboutImage] = useState("");
   const [aboutSignoff, setAboutSignoff] = useState("");
+  const [aboutReadMoreUrl, setAboutReadMoreUrl] = useState("/about");
+
+  // Principal
+  const [principalId, setPrincipalId] = useState<string | null>(null);
+  const [principalForm, setPrincipalForm] = useState({ name: "", designation: "Principal", qualifications: "", bio: "", photo: "", isActive: true, readMoreUrl: "/about/principal" });
+  const [savingPrincipal, setSavingPrincipal] = useState(false);
 
   // Features
   const [featuresId, setFeaturesId] = useState<string | null>(null);
@@ -845,6 +867,7 @@ function SchoolHomepage({ schoolSlug }: { schoolSlug: string }) {
             setAboutContent(p.content || "");
             setAboutImage(p.featuredImage || "");
             if (p.seo?.metaDescription) setAboutSignoff(p.seo.metaDescription);
+            if (p.seo?.metaTitle) setAboutReadMoreUrl(p.seo.metaTitle);
           }
           if (p.slug === "home-features") {
             setFeaturesId(p._id);
@@ -861,7 +884,31 @@ function SchoolHomepage({ schoolSlug }: { schoolSlug: string }) {
     if (api.token) load();
   }, [api.token]); // eslint-disable-line
 
-  const saveSection = async (slug: string, title: string, content: string, id: string | null, featuredImage?: string, seo?: { metaDescription?: string }) => {
+  // Load principal
+  useEffect(() => {
+    const loadPrincipal = async () => {
+      const r = await api.get(`/api/persons?role=principal&limit=1&school=${schoolSlug}`);
+      if (r.success && r.data?.length) {
+        const people = Array.isArray(r.data) ? r.data : [];
+        const p = people.find((x: { readMoreUrl?: string }) => typeof x.readMoreUrl === "string" && x.readMoreUrl.trim().length > 0) || people[0];
+        setPrincipalId(p._id);
+        setPrincipalForm({ name: p.name || "", designation: p.designation || "Principal", qualifications: p.qualifications || "", bio: p.bio || "", photo: p.photo || "", isActive: p.isActive !== false, readMoreUrl: p.readMoreUrl || "/about/principal" });
+      }
+    };
+    if (api.token) loadPrincipal();
+  }, [api.token]); // eslint-disable-line
+
+  const savePrincipal = async () => {
+    setSavingPrincipal(true);
+    const payload = { ...principalForm, role: "principal" };
+    const r = principalId
+      ? await api.put(`/api/persons?school=${schoolSlug}`, { id: principalId, ...payload })
+      : await api.post(`/api/persons?school=${schoolSlug}`, payload);
+    if (r.success && r.data?._id) setPrincipalId(r.data._id);
+    setSavingPrincipal(false);
+  };
+
+  const saveSection = async (slug: string, title: string, content: string, id: string | null, featuredImage?: string, seo?: { metaTitle?: string; metaDescription?: string }) => {
     setSaving(true);
     const payload = { title, slug, content, isPublished: true, ...(featuredImage !== undefined ? { featuredImage } : {}), ...(seo ? { seo } : {}) };
     const r = id
@@ -872,7 +919,7 @@ function SchoolHomepage({ schoolSlug }: { schoolSlug: string }) {
   };
 
   const saveAbout = async () => {
-    const r = await saveSection("home-about", aboutTitle, aboutContent, aboutId, aboutImage, { metaDescription: aboutSignoff });
+    const r = await saveSection("home-about", aboutTitle, aboutContent, aboutId, aboutImage, { metaTitle: aboutReadMoreUrl, metaDescription: aboutSignoff });
     if (r.success && r.data?._id) setAboutId(r.data._id);
   };
 
@@ -894,16 +941,19 @@ function SchoolHomepage({ schoolSlug }: { schoolSlug: string }) {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-gray-600">Manage your homepage sections — About, Features (Why Choose Us), and CTA Banner.</p>
+      <p className="text-sm text-gray-600">Manage your homepage sections — About, Principal&apos;s Message, Features (Why Choose Us), and CTA Banner.</p>
 
       {/* Sub-sections */}
       <div className="flex gap-2 flex-wrap">
-        {([["about", "About Section"], ["features", "Why Choose Us"], ["cta", "CTA Banner"]] as const).map(([key, label]) => (
-          <button key={key} onClick={() => setSection(key)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${section === key ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-            {label}
-          </button>
-        ))}
+        {(["about", "principal", "features", "cta"] as const).map((key) => {
+          const labels: Record<string, string> = { about: "About Section", principal: "Principal's Message", features: "Why Choose Us", cta: "CTA Banner" };
+          return (
+            <button key={key} onClick={() => setSection(key)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${section === key ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+              {labels[key]}
+            </button>
+          );
+        })}
       </div>
 
       {/* ── About Section ── */}
@@ -927,8 +977,56 @@ function SchoolHomepage({ schoolSlug }: { schoolSlug: string }) {
             <label className="block text-sm font-medium text-gray-700 mb-1">Sign-off / Attribution</label>
             <input value={aboutSignoff} onChange={e => setAboutSignoff(e.target.value)} placeholder="e.g. — Chairman, A.P.S School" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">&quot;Read More&quot; Button URL</label>
+            <input value={aboutReadMoreUrl} onChange={e => setAboutReadMoreUrl(e.target.value)} placeholder="e.g. /about" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            <p className="text-xs text-gray-400 mt-1">Leave as /about to use the default page. Enter any internal or external URL.</p>
+          </div>
           <button onClick={saveAbout} disabled={saving} className="px-6 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2">
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}Save About
+          </button>
+        </div>
+      )}
+
+      {/* ── Principal's Message ── */}
+      {section === "principal" && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+          <h3 className="text-lg font-bold text-gray-900">Principal&apos;s Message</h3>
+          <p className="text-xs text-gray-500">Appears in the Principal&apos;s Message section on the homepage and on the /about/principal page.</p>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Photo</label>
+            <FileUploader value={principalForm.photo} onChange={url => setPrincipalForm(f => ({ ...f, photo: url }))} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+              <input value={principalForm.name} onChange={e => setPrincipalForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Mr. Ahmed Khan" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Designation</label>
+              <input value={principalForm.designation} onChange={e => setPrincipalForm(f => ({ ...f, designation: e.target.value }))} placeholder="e.g. Principal" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Qualifications</label>
+            <input value={principalForm.qualifications} onChange={e => setPrincipalForm(f => ({ ...f, qualifications: e.target.value }))} placeholder="e.g. M.Ed., B.Sc., 20+ years experience" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">&quot;Read Full Message&quot; Button URL</label>
+            <input value={principalForm.readMoreUrl} onChange={e => setPrincipalForm(f => ({ ...f, readMoreUrl: e.target.value }))} placeholder="e.g. /about/principal" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            <p className="text-xs text-gray-400 mt-1">The URL where the full principal message page lives. Leave blank to hide the button.</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Message / Bio</label>
+            <RichTextEditor value={principalForm.bio} onChange={val => setPrincipalForm(f => ({ ...f, bio: val }))} />
+          </div>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={principalForm.isActive} onChange={e => setPrincipalForm(f => ({ ...f, isActive: e.target.checked }))} className="rounded border-gray-300" />
+            <span className="text-sm font-medium text-gray-700">Show on homepage</span>
+          </label>
+          <button onClick={savePrincipal} disabled={savingPrincipal || !principalForm.name} className="px-6 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2">
+            {savingPrincipal && <Loader2 className="h-4 w-4 animate-spin" />}
+            {principalId ? "Update Principal" : "Save Principal"}
           </button>
         </div>
       )}

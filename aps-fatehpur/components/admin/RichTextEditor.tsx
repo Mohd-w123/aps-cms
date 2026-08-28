@@ -4,7 +4,18 @@ import React from "react";
 import dynamic from "next/dynamic";
 import "react-quill/dist/quill.snow.css";
 
-const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
+// Register ImageResize module client-side only
+const ReactQuill = dynamic(
+  async () => {
+    const { default: RQ } = await import("react-quill");
+    const { default: Quill } = await import("quill");
+    // @ts-ignore
+    const { default: ImageResize } = await import("quill-resize-image");
+    Quill.register("modules/imageResize", ImageResize);
+    return RQ;
+  },
+  { ssr: false }
+);
 
 interface RichTextEditorProps {
   value: string;
@@ -21,6 +32,10 @@ const modules = {
     [{ align: [] }],
     ["clean"],
   ],
+  imageResize: {
+    parchment: {},
+    modules: ["Resize", "DisplaySize"],
+  },
 };
 
 export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
@@ -32,6 +47,7 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
         .rich-editor .ql-editor { min-height: 200px; }
         .rich-editor .ql-toolbar { border-top-left-radius: 8px; border-top-right-radius: 8px; }
         .rich-editor .ql-container { border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
+        .rich-editor .ql-editor img { max-width: 100%; cursor: pointer; }
       `}</style>
     </div>
   );

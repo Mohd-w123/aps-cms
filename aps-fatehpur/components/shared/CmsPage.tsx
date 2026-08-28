@@ -259,41 +259,76 @@ export function CmsPage({ slug, title, breadcrumbs, children }: CmsPageProps) {
               </div>
               {children}
             </div>
-          ) : activeData?.content ? (
-            /* ── SINGLE SCHOOL FILTERED VIEW ── */
-            <div className="max-w-4xl mx-auto space-y-8">
-              {activeData.featuredImage && (
-                <div className="relative aspect-[16/9] rounded-2xl overflow-hidden shadow-sm">
-                  <Image
-                    src={activeData.featuredImage}
-                    alt={activeData.title || pageTitle}
-                    fill
-                    className="object-cover"
-                  />
+          ) : isGroup ? (
+            /* ── GROUP FILTERED VIEW (SINGLE SCHOOL SELECTED) ── */
+            activeData?.content ? (
+              <div className="max-w-4xl mx-auto space-y-8">
+                {activeData.featuredImage && (
+                  <div className="relative aspect-[16/9] rounded-2xl overflow-hidden shadow-sm">
+                    <Image
+                      src={activeData.featuredImage}
+                      alt={activeData.title || pageTitle}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+                <div
+                  className="prose prose-lg max-w-none"
+                  style={{ color: "var(--text-dark)" }}
+                  dangerouslySetInnerHTML={{ __html: activeData.content }}
+                />
+                {children}
+              </div>
+            ) : (
+              <div className="text-center py-16 max-w-md mx-auto">
+                <School className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <h3 className="text-base font-semibold text-gray-700 mb-1">
+                  {currentSchoolConfig?.name || "School"}
+                </h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Content for this page will be available soon for this school.
+                </p>
+                <button
+                  onClick={() => setActiveSchool("all")}
+                  className="px-4 py-2 rounded-full text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
+                >
+                  ← View All Schools
+                </button>
+              </div>
+            )
+          ) : (
+            /* ── INDIVIDUAL SCHOOL WEBSITE VIEW ── */
+            <div className={page?.featuredImage ? "flex flex-col md:flex-row gap-8 items-start" : ""}>
+              {page?.featuredImage && (
+                <div className="w-full md:w-72 shrink-0">
+                  <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-lg">
+                    <Image
+                      src={page.featuredImage}
+                      alt={page.title}
+                      fill
+                      className="object-cover"
+                      priority
+                    />
+                  </div>
                 </div>
               )}
-              <div
-                className="prose prose-lg max-w-none"
-                style={{ color: "var(--text-dark)" }}
-                dangerouslySetInnerHTML={{ __html: activeData.content }}
-              />
+              <div className="flex-1 min-w-0">
+                {page?.content ? (
+                  <div
+                    className="prose prose-lg max-w-none"
+                    style={{ color: "var(--text-dark)" }}
+                    dangerouslySetInnerHTML={{ __html: page.content }}
+                  />
+                ) : (
+                  <div className="text-center py-16">
+                    <p className="text-lg" style={{ color: "var(--text-muted)" }}>
+                      Content coming soon...
+                    </p>
+                  </div>
+                )}
+              </div>
               {children}
-            </div>
-          ) : (
-            <div className="text-center py-16 max-w-md mx-auto">
-              <School className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-              <h3 className="text-base font-semibold text-gray-700 mb-1">
-                {currentSchoolConfig?.name || "School"}
-              </h3>
-              <p className="text-sm text-gray-500 mb-4">
-                Content for this page will be available soon for this school.
-              </p>
-              <button
-                onClick={() => setActiveSchool("all")}
-                className="px-4 py-2 rounded-full text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
-              >
-                ← View All Schools
-              </button>
             </div>
           )}
         </div>

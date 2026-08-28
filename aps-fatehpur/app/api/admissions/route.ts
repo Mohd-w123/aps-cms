@@ -7,6 +7,8 @@ import "@/lib/models/School";
 import { withSchoolName } from "@/lib/school-label";
 import { admissionCreateSchema, admissionStatusSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 // POST /api/admissions — public
 export async function POST(request: NextRequest) {
   try {

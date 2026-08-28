@@ -3,10 +3,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { WaveBottom, FloatingDecorations } from "@/components/shared/PlayfulUI";
+import { FloatingDecorations } from "@/components/shared/PlayfulUI";
+import { useSchool } from "@/hooks/useSchool";
 
 interface Slide {
-  _id: string; image: string; title: string; subtitle: string; ctaLabel?: string; ctaLink?: string;
+  _id: string; image: string; title: string; subtitle: string;
+  titleColor?: string; subtitleColor?: string;
+  ctaLabel?: string; ctaLink?: string;
 }
 
 const fallbackSlides: Slide[] = [
@@ -16,15 +19,23 @@ const fallbackSlides: Slide[] = [
 ];
 
 export function HeroCarousel() {
-  const [slides, setSlides] = useState<Slide[]>(fallbackSlides);
+  const { slug: schoolSlug } = useSchool();
+  const [slides, setSlides] = useState<Slide[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
-    fetch("/api/sliders?scope=school&limit=10")
+    if (!schoolSlug) return;
+    const controller = new AbortController();
+    setSlides([]);
+    setLoaded(false);
+    fetch(`/api/sliders?school=${schoolSlug}&scope=school&limit=10`, { cache: "no-store", signal: controller.signal })
       .then(r => r.json())
-      .then(r => { if (r.success && r.data?.length) setSlides(r.data); })
-      .catch(() => {});
-  }, []);
+      .then(r => { setSlides(r.success && r.data?.length ? r.data : fallbackSlides); })
+      .catch(err => { if (err.name !== "AbortError") setSlides(fallbackSlides); })
+      .finally(() => setLoaded(true));
+    return () => controller.abort();
+  }, [schoolSlug]);
 
   const next = useCallback(
     () => setCurrent((c) => (c + 1) % slides.length),
@@ -36,14 +47,27 @@ export function HeroCarousel() {
   );
 
   useEffect(() => {
+    if (slides.length < 2) return;
     const timer = setInterval(next, 5000);
     return () => clearInterval(timer);
-  }, [next]);
+  }, [next, slides.length]);
+
+  useEffect(() => {
+    if (current >= slides.length) setCurrent(0);
+  }, [current, slides.length]);
+
+  if (!loaded || slides.length === 0) {
+    return (
+      <section className="relative h-[68vh] min-h-[560px] md:h-[78vh] lg:h-[84vh] max-h-[860px] overflow-hidden" style={{ background: "linear-gradient(to right, var(--text-dark, #22235b), var(--school-primary, #499f42))" }}>
+        <FloatingDecorations />
+      </section>
+    );
+  }
 
   const slide = slides[current];
 
   return (
-    <section className="relative h-[480px] md:h-[560px] lg:h-[620px] overflow-hidden">
+    <section className="relative h-[68vh] min-h-[560px] md:h-[78vh] lg:h-[84vh] max-h-[860px] overflow-hidden">
       {/* Background */}
       <div
         className="absolute inset-0 transition-all duration-700"
@@ -53,20 +77,26 @@ export function HeroCarousel() {
           backgroundPosition: "center",
         }}
       >
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to right, var(--text-dark, #22235b)CC, var(--text-dark, #22235b)80, var(--school-primary, #499f42)4D)" }} />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#22235b]/70 via-[#22235b]/45 to-[#499f42]/25" />
       </div>
 
       {/* Floating decorations */}
       <FloatingDecorations />
 
       {/* Content */}
-      <div className="relative z-10 flex h-full items-center">
-        <div className="container mx-auto px-4">
+      <div className="relative z-10 flex h-full items-start">
+        <div className="container mx-auto px-4 md:px-8 pt-24 md:pt-28 lg:pt-32">
           <div className="max-w-2xl text-white">
-            <h1 className="font-heading text-3xl md:text-5xl font-bold leading-tight mb-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h1
+              className="font-heading text-3xl md:text-5xl font-bold leading-tight mb-4 animate-in fade-in slide-in-from-bottom-4 duration-500 drop-shadow-[0_3px_10px_rgba(0,0,0,0.7)]"
+              style={{ color: slide.titleColor || "#ffffff" }}
+            >
               {slide.title}
             </h1>
-            <p className="text-lg md:text-xl opacity-90 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
+            <p
+              className="text-lg md:text-xl mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150 drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]"
+              style={{ color: slide.subtitleColor || "rgba(255,255,255,0.9)" }}
+            >
               {slide.subtitle}
             </p>
             {slide.ctaLabel && slide.ctaLink && (
@@ -120,8 +150,6 @@ export function HeroCarousel() {
         ))}
       </div>
 
-      {/* Wave bottom divider */}
-      <WaveBottom className="text-white" />
     </section>
   );
 }

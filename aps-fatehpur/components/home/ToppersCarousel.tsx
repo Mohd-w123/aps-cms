@@ -6,6 +6,7 @@ import Image from "next/image";
 import { ArrowRight, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { PlayfulSection, SectionHeader } from "@/components/shared/PlayfulUI";
 import { HorizontalScrollCarousel } from "@/components/shared/HorizontalScrollCarousel";
+import { useSchool } from "@/hooks/useSchool";
 
 interface TopperData {
   _id: string;
@@ -27,15 +28,19 @@ const fallbackToppers: TopperData[] = [
 ];
 
 export function ToppersCarousel() {
+  const { slug: schoolSlug } = useSchool();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [toppers, setToppers] = useState<TopperData[]>(fallbackToppers);
 
   useEffect(() => {
-    fetch("/api/toppers?limit=20")
+    if (!schoolSlug) return;
+    const controller = new AbortController();
+    fetch(`/api/toppers?school=${schoolSlug}&limit=20`, { signal: controller.signal })
       .then(r => r.json())
-      .then(r => { if (r.success && r.data?.length) setToppers(r.data); })
-      .catch(() => {});
-  }, []);
+      .then(r => { setToppers(r.success && r.data?.length ? r.data : fallbackToppers); })
+      .catch(err => { if (err.name !== "AbortError") setToppers(fallbackToppers); });
+    return () => controller.abort();
+  }, [schoolSlug]);
 
   const openLightbox = (i: number) => setLightboxIndex(i);
   const closeLightbox = () => setLightboxIndex(null);

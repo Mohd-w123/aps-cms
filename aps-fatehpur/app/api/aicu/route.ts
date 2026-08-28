@@ -6,7 +6,10 @@ import AICU from "@/lib/models/AICU";
 import "@/lib/models/School"; // Ensure School model is registered for populate
 import { aicuSchema, aicuUpdateSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/aicu — public, returns single active AICU doc (or all if scope=all)
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

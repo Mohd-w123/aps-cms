@@ -6,6 +6,8 @@ import Career from "@/lib/models/Career";
 import "@/lib/models/School"; // Ensure School model is registered for populate
 import { careerCreateSchema, careerUpdateSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/careers — public, active only, paginated
 export async function GET(request: NextRequest) {
   try {

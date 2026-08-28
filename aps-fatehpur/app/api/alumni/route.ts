@@ -6,6 +6,8 @@ import Alumni from "@/lib/models/Alumni";
 import "@/lib/models/School"; // Ensure School model is registered for populate
 import { alumniCreateSchema, alumniUpdateSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 // POST /api/alumni — public (submit for approval)
 export async function POST(request: NextRequest) {
   try {
