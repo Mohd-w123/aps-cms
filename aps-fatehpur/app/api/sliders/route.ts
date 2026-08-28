@@ -8,16 +8,45 @@ import { sliderCreateSchema, sliderUpdateSchema } from "@/lib/validations";
 // GET /api/sliders — public, filtered by scope
 export async function GET(request: NextRequest) {
   try {
-    const schoolId = await getSchoolId(request);
-    if (!schoolId) return errorResponse("School not found", 404);
-
     const { searchParams } = new URL(request.url);
-    const scope = searchParams.get("scope") || "school";
+    const scope = searchParams.get("scope");
     const { page, limit, skip } = parsePagination(searchParams);
 
     await connectDB();
 
-    const filter: Record<string, unknown> = { schoolId, isPublished: true, scope };
+    // scope=all → fetch all published sliders across all schools
+    if (scope === "all") {
+      const filter: Record<string, unknown> = { isPublished: true };
+      const [items, total] = await Promise.all([
+        Slider.find(filter).populate("schoolId", "name slug").sort({ order: 1, createdAt: -1 }).skip(skip).limit(limit),
+        Slider.countDocuments(filter),
+      ]);
+      return successResponse(items, 200, paginationMeta(page, limit, total));
+    }
+
+    if (scope === "group") {
+      // First check if any group-specific sliders exist
+      let filter: Record<string, unknown> = { scope: "group", isPublished: true };
+      let items = await Slider.find(filter).sort({ order: 1 }).skip(skip).limit(limit);
+      let total = await Slider.countDocuments(filter);
+
+      // If no group sliders, combine sliders from all schools!
+      if (items.length === 0) {
+        filter = { isPublished: true };
+        [items, total] = await Promise.all([
+          Slider.find(filter).populate("schoolId", "name slug").sort({ order: 1, createdAt: -1 }).skip(skip).limit(limit),
+          Slider.countDocuments(filter),
+        ]);
+      }
+      return successResponse(items, 200, paginationMeta(page, limit, total));
+    }
+
+    const schoolId = await getSchoolId(request);
+    if (!schoolId) return errorResponse("School not found", 404);
+
+    const filter: Record<string, unknown> = { schoolId, isPublished: true };
+    if (scope) filter.scope = scope;
+
     const [items, total] = await Promise.all([
       Slider.find(filter).sort({ order: 1 }).skip(skip).limit(limit),
       Slider.countDocuments(filter),
