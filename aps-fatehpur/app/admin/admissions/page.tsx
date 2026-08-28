@@ -220,10 +220,22 @@ export default function AdminAdmissionsPage() {
               {detail.sentToSales && <Row label="Sent to Sales" value={detail.sentToSalesAt ? new Date(detail.sentToSalesAt).toLocaleString() : "Yes"} />}
               {detail.documents.length > 0 && (
                 <div className="pt-2">
-                  <p className="font-medium text-gray-700 mb-1">Documents:</p>
-                  {detail.documents.map((d, i) => (
-                    <a key={i} href={d.url} target="_blank" rel="noopener noreferrer" className="block text-emerald-600 underline text-xs">{d.name}</a>
-                  ))}
+                  <p className="font-semibold text-gray-800 mb-2">Attached Documents ({detail.documents.length}):</p>
+                  <div className="space-y-1.5">
+                    {detail.documents.map((d, i) => (
+                      <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 border border-gray-100">
+                        <span className="text-xs font-medium text-gray-800 truncate">{d.name}</span>
+                        <a
+                          href={d.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold inline-flex items-center gap-1"
+                        >
+                          View / Download <Download className="h-3 w-3" />
+                        </a>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
               <div className="flex flex-wrap gap-2 pt-3">
