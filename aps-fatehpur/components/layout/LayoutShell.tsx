@@ -44,10 +44,10 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
     : slug === "apsfatehpur");
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col w-full max-w-full overflow-x-hidden">
       {!hideChrome && <Header />}
-      <main className="min-h-screen">{children}</main>
+      <main className="flex-1 w-full max-w-full overflow-x-hidden">{children}</main>
       {!hideChrome && <Footer />}
-    </>
+    </div>
   );
 }
