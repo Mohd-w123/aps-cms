@@ -154,8 +154,8 @@ export function Header() {
             </div>
           </a>
 
-          {/* Desktop Nav */}
-          <ul className="hidden lg:flex items-center gap-1">
+          {/* Desktop Nav (visible on screens >= 1280px) */}
+          <ul className="hidden xl:flex items-center gap-0.5 2xl:gap-1">
             {navItems.map((item) => (
               <NavDesktopItem
                 key={item.label}
@@ -168,7 +168,7 @@ export function Header() {
             <li>
               <SchoolLink
                 href="/academy/admissions"
-                className="ml-2 inline-block rounded-full px-4 py-2 text-sm font-semibold transition-all hover:scale-105"
+                className="ml-1.5 2xl:ml-2 inline-block rounded-full px-3.5 py-1.5 2xl:px-4 2xl:py-2 text-xs 2xl:text-sm font-semibold transition-all hover:scale-105 shrink-0"
                 style={{
                   backgroundColor: "var(--accent-yellow, #d4e96e)",
                   color: "var(--text-dark, #22235b)",
@@ -179,9 +179,9 @@ export function Header() {
             </li>
           </ul>
 
-          {/* Mobile burger */}
+          {/* Mobile burger (< 1280px) */}
           <button
-            className="lg:hidden p-2 rounded-md hover:bg-white/10 transition-colors"
+            className="xl:hidden p-2 rounded-md hover:bg-white/10 transition-colors shrink-0"
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
           >
@@ -216,7 +216,7 @@ function NavDesktopItem({
       <li>
         <SchoolLink
           href={item.href}
-          className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-white/15 ${
+          className={`block px-2.5 py-1.5 2xl:px-3 2xl:py-2 text-xs 2xl:text-sm font-medium rounded-md transition-colors hover:bg-white/15 whitespace-nowrap ${
             active ? "bg-white/20" : ""
           }`}
         >
@@ -233,7 +233,7 @@ function NavDesktopItem({
       onMouseLeave={() => setOpenDropdown(null)}
     >
       <button
-        className={`flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-white/15 ${
+        className={`flex items-center gap-1 px-2.5 py-1.5 2xl:px-3 2xl:py-2 text-xs 2xl:text-sm font-medium rounded-md transition-colors hover:bg-white/15 whitespace-nowrap ${
           active ? "bg-white/20" : ""
         }`}
       >
