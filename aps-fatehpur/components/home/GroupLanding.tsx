@@ -23,7 +23,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { toEmbedUrl, isDirectVideoUrl } from "@/lib/utils";
 import { SocialLinksBar, SocialIcon, socialPlatforms, normalizeSocialUrl } from "@/components/shared/SocialIcons";
+import { GoogleTranslate } from "@/components/shared/GoogleTranslate";
 import { TestimonialsSlider } from "@/components/home/TestimonialsSlider";
 import { HorizontalScrollCarousel } from "@/components/shared/HorizontalScrollCarousel";
 import { getBranchUrl } from "@/lib/school-urls";
@@ -262,12 +264,10 @@ function GroupNav({ groupName, navLinks, socialLinks, contactInfo }: { groupName
   }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50">
-      {/* ── Top Info Bar (visible on desktop, hidden when scrolled) ── */}
+    <header className={`sticky top-0 z-50 w-full transition-shadow ${scrolled ? "shadow-lg" : "shadow-md"}`}>
+      {/* ── Top Info Bar ── */}
       <div
-        className={`hidden md:block text-white text-sm transition-all duration-300 overflow-hidden ${
-          scrolled ? "max-h-0 opacity-0" : "max-h-12 opacity-100"
-        }`}
+        className="hidden md:block text-white text-sm"
         style={{ backgroundColor: "var(--school-primary-dark, #22235b)" }}
       >
         <div className="w-full mx-auto px-4 md:px-8 flex items-center justify-between py-2">
@@ -292,7 +292,7 @@ function GroupNav({ groupName, navLinks, socialLinks, contactInfo }: { groupName
                 {contactInfo.address}
               </span>
             )}
-            <span className="flex items-center gap-2 ml-2">
+            <div className="flex items-center gap-2 ml-2">
               {socialPlatforms.map(p => {
                 const url = normalizeSocialUrl(socialLinks[p.key], p.key);
                 if (!url) return null;
@@ -309,18 +309,16 @@ function GroupNav({ groupName, navLinks, socialLinks, contactInfo }: { groupName
                   </a>
                 );
               })}
-            </span>
+              <GoogleTranslate variant="dark" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* ── Main Navbar ── */}
       <div
-        className={`transition-all duration-300 ${
-          scrolled || mobileOpen
-            ? "bg-white/90 backdrop-blur-md shadow-sm border-b border-[#9ab5db]/30"
-            : "bg-transparent"
-        }`}
+        className="text-white shadow-sm"
+        style={{ backgroundColor: "var(--school-primary, #499f42)" }}
       >
         <div className="w-full mx-auto px-4 md:px-8 flex items-center justify-between h-16 md:h-18">
           <Link href="#home" className="flex items-center gap-3">
@@ -329,13 +327,9 @@ function GroupNav({ groupName, navLinks, socialLinks, contactInfo }: { groupName
               alt="APS Fatehpur"
               width={44}
               height={44}
-              className="rounded-full ring-2 ring-[#499f42]/30"
+              className="rounded-full bg-white p-0.5"
             />
-            <span
-              className={`font-heading font-bold text-sm md:text-base transition-colors ${
-                scrolled || mobileOpen ? "text-[#22235b]" : "text-white"
-              }`}
-            >
+            <span className="font-heading font-bold text-base md:text-lg text-white">
               {groupName}
             </span>
           </Link>
@@ -345,23 +339,23 @@ function GroupNav({ groupName, navLinks, socialLinks, contactInfo }: { groupName
               <a
                 key={link.href}
                 href={link.href}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all hover:bg-[#499f42]/10 ${
-                  scrolled ? "text-[#22235b] hover:text-[#499f42]" : "text-white/90 hover:text-white hover:bg-white/10"
-                }`}
+                className="px-4 py-2 rounded-full text-sm font-medium transition-all text-white/90 hover:text-white hover:bg-white/15"
               >
                 {link.label}
               </a>
             ))}
           </nav>
 
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className={`md:hidden p-2 rounded-full transition-colors ${
-              scrolled || mobileOpen ? "text-[#22235b] hover:bg-[#499f42]/10" : "text-white hover:bg-white/10"
-            }`}
-          >
-            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          <div className="flex items-center gap-2 md:hidden">
+            <GoogleTranslate variant="dark" />
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="p-2 rounded-lg text-white hover:bg-white/15 transition-colors"
+              aria-label="Open menu"
+            >
+              {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
 
         {mobileOpen && (
@@ -787,13 +781,6 @@ function ToppersSection({ toppers }: { toppers: TopperData[] }) {
 }
 
 /* ───────────────────── GALLERY ───────────────────── */
-function toEmbedUrl(url: string): string {
-  const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
-  if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`;
-  const watchMatch = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
-  if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}`;
-  return url;
-}
 
 type GalleryItemLocal = {
   type: string;
@@ -956,15 +943,26 @@ function GallerySection({ items }: { items: GalleryData[] }) {
             onClick={(e) => e.stopPropagation()}
           >
             {current.type === "video" && current.videoUrl ? (
-              <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-                <iframe
-                  src={toEmbedUrl(current.videoUrl)}
-                  title={current.alt}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="absolute inset-0 w-full h-full rounded-2xl"
-                />
-              </div>
+              isDirectVideoUrl(current.videoUrl) ? (
+                <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden flex items-center justify-center">
+                  <video
+                    src={current.videoUrl}
+                    controls
+                    autoPlay
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                  <iframe
+                    src={toEmbedUrl(current.videoUrl)}
+                    title={current.alt}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="absolute inset-0 w-full h-full rounded-2xl border-0"
+                  />
+                </div>
+              )
             ) : (
               <Image
                 src={current.src}

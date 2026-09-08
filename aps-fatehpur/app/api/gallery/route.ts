@@ -43,6 +43,21 @@ export async function GET(request: NextRequest) {
   }
 }
 
+function extractThumbnailFromVideo(videoUrl?: string): string {
+  if (!videoUrl) return "";
+  const trimmed = videoUrl.trim();
+  const ytMatch = trimmed.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/
+  );
+  if (ytMatch && ytMatch[1]) {
+    return `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+  }
+  if (trimmed.includes("/video/upload/")) {
+    return trimmed.replace(/\.[a-zA-Z0-9]+(?:\?.*)?$/, ".jpg");
+  }
+  return "";
+}
+
 // POST /api/gallery — admin protected
 export async function POST(request: NextRequest) {
   try {
@@ -55,13 +70,18 @@ export async function POST(request: NextRequest) {
       return errorResponse(parsed.error.issues.map((e) => e.message).join(", "));
     }
 
-    const schoolId = await getSchoolId(request) || payload.schoolId;
+    const schoolId = (await getSchoolId(request)) || payload.schoolId;
     if (!canAccessSchool(payload, schoolId)) {
       return errorResponse("Forbidden", 403);
     }
 
+    const galleryData = { ...parsed.data };
+    if (galleryData.type === "video" && (!galleryData.image || galleryData.image.trim() === "")) {
+      galleryData.image = extractThumbnailFromVideo(galleryData.videoUrl);
+    }
+
     await connectDB();
-    const gallery = await Gallery.create({ ...parsed.data, schoolId });
+    const gallery = await Gallery.create({ ...galleryData, schoolId });
     return successResponse(gallery, 201);
   } catch (error) {
     console.error("Gallery POST error:", error);
@@ -92,7 +112,16 @@ export async function PUT(request: NextRequest) {
       return errorResponse("Forbidden", 403);
     }
 
-    const updated = await Gallery.findByIdAndUpdate(id, parsed.data, { new: true });
+    const updatePayload = { ...parsed.data };
+    if (
+      updatePayload.type === "video" &&
+      (!updatePayload.image || updatePayload.image.trim() === "") &&
+      updatePayload.videoUrl
+    ) {
+      updatePayload.image = extractThumbnailFromVideo(updatePayload.videoUrl);
+    }
+
+    const updated = await Gallery.findByIdAndUpdate(id, updatePayload, { new: true });
     return successResponse(updated);
   } catch (error) {
     console.error("Gallery PUT error:", error);

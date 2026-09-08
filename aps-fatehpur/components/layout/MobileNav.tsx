@@ -7,6 +7,7 @@ import { X, ChevronDown, GraduationCap } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useSchool } from "@/hooks/useSchool";
 import { navigation as defaultNavigation, NavItem } from "@/config/navigation";
+import { GoogleTranslate } from "@/components/shared/GoogleTranslate";
 
 interface MobileNavProps {
   open: boolean;
@@ -112,11 +113,11 @@ export function MobileNav({ open, onClose, navItems }: MobileNavProps) {
           })}
 
           {/* Apply CTA */}
-          <div className="px-5 pt-4">
+          <div className="px-5 pt-4 space-y-3">
             <SchoolLink
               href="/academy/admissions"
               onClick={onClose}
-              className="block w-full rounded-full py-3 text-center text-sm font-semibold transition-colors"
+              className="block w-full rounded-full py-3 text-center text-sm font-semibold transition-colors shadow-sm"
               style={{
                 backgroundColor: "var(--accent-yellow)",
                 color: "var(--text-dark)",
@@ -124,6 +125,11 @@ export function MobileNav({ open, onClose, navItems }: MobileNavProps) {
             >
               Apply Now
             </SchoolLink>
+
+            <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
+              <span className="text-xs font-medium text-gray-500">Language:</span>
+              <GoogleTranslate variant="light" />
+            </div>
           </div>
         </nav>
       </SheetContent>

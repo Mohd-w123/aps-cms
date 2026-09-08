@@ -17,6 +17,7 @@ interface FileUploaderProps {
   onChange: (url: string) => void;
   accept?: string;
   label?: string;
+  hideLibrary?: boolean;
 }
 
 export function FileUploader({
@@ -24,18 +25,28 @@ export function FileUploader({
   onChange,
   accept = "image/*",
   label = "Upload Image",
+  hideLibrary = false,
 }: FileUploaderProps) {
   const { token } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
   const [libraryImages, setLibraryImages] = useState<MediaItem[]>([]);
   const [libraryLoading, setLibraryLoading] = useState(false);
 
+  const isVideo =
+    value &&
+    (/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(value) ||
+      value.includes("/video/upload/"));
+
+  const isVideoMode = accept.includes("video");
+
   const upload = async (file: File) => {
     if (!token) return;
     setUploading(true);
+    setError(null);
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -47,9 +58,12 @@ export function FileUploader({
       const json = await res.json();
       if (json.success) {
         onChange(json.data.url);
+      } else {
+        setError(json.error || "Upload failed");
       }
     } catch (err) {
       console.error("Upload failed:", err);
+      setError("Network error during upload");
     } finally {
       setUploading(false);
     }
@@ -95,16 +109,27 @@ export function FileUploader({
     <div>
       {value ? (
         <div className="relative inline-block">
-          <Image
-            src={value}
-            alt="Uploaded"
-            width={160}
-            height={120}
-            className="rounded-lg border border-gray-200 object-cover"
-          />
+          {isVideo ? (
+            <video
+              src={value}
+              controls
+              className="w-48 h-32 rounded-lg border border-gray-200 object-cover bg-black"
+            />
+          ) : (
+            <Image
+              src={value}
+              alt="Uploaded"
+              width={160}
+              height={120}
+              className="rounded-lg border border-gray-200 object-cover"
+            />
+          )}
           <button
-            onClick={() => onChange("")}
-            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+            onClick={() => {
+              onChange("");
+              setError(null);
+            }}
+            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 z-10"
           >
             <X className="h-3 w-3" />
           </button>
@@ -121,23 +146,31 @@ export function FileUploader({
             }`}
           >
             {uploading ? (
-              <Loader2 className="h-6 w-6 animate-spin mx-auto text-emerald-600" />
+              <div className="py-2">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto text-emerald-600 mb-2" />
+                <p className="text-xs text-gray-500">Uploading{isVideoMode ? " video (up to 50MB)..." : "..."}</p>
+              </div>
             ) : (
               <>
                 <Upload className="h-6 w-6 mx-auto text-gray-400 mb-2" />
                 <p className="text-sm text-gray-500">{label}</p>
-                <p className="text-xs text-gray-400 mt-1">Drag & drop or click to browse</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Drag & drop or click to browse {isVideoMode ? "(MP4, WebM, MOV up to 50MB)" : "(PNG, JPG, WebP up to 5MB)"}
+                </p>
               </>
             )}
           </div>
-          <button
-            type="button"
-            onClick={openLibrary}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
-          >
-            <ImageIcon className="h-4 w-4" />
-            Choose from Library
-          </button>
+          {error && <p className="text-xs text-red-500">{error}</p>}
+          {!hideLibrary && !isVideoMode && (
+            <button
+              type="button"
+              onClick={openLibrary}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              <ImageIcon className="h-4 w-4" />
+              Choose from Library
+            </button>
+          )}
         </div>
       )}
       <input

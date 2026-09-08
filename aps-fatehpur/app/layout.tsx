@@ -68,7 +68,7 @@ export default async function RootLayout({
       style={Object.keys(cssVars).length > 0 ? (cssVars as React.CSSProperties) : undefined}
       suppressHydrationWarning
     >
-      <body className="antialiased">
+      <body className="antialiased" suppressHydrationWarning>
         <SchoolProvider initialSlug={slug}>
           <LayoutShell>{children}</LayoutShell>
         </SchoolProvider>

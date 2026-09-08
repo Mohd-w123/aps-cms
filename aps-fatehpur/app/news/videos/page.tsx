@@ -4,7 +4,8 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useSchool } from "@/hooks/useSchool";
 import { PageBanner } from "@/components/layout/PageBanner";
-import { Play, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Play, X, ChevronLeft, ChevronRight, Video as VideoIcon } from "lucide-react";
+import { toEmbedUrl, isDirectVideoUrl } from "@/lib/utils";
 
 interface VideoItem {
   _id: string;
@@ -13,13 +14,7 @@ interface VideoItem {
   order: number;
 }
 
-function toEmbedUrl(url: string): string {
-  const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
-  if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`;
-  const watchMatch = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
-  if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}`;
-  return url;
-}
+
 
 export default function VideosPage() {
   const { slug: schoolSlug } = useSchool();
@@ -82,12 +77,18 @@ export default function VideosPage() {
                   className="group relative aspect-video rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-lg transition-all"
                   onClick={() => setLightboxIndex(i)}
                 >
-                  <Image
-                    src={video.image}
-                    alt={`Video ${i + 1}`}
-                    fill
-                    className="object-cover transition-transform group-hover:scale-105"
-                  />
+                  {video.image ? (
+                    <Image
+                      src={video.image}
+                      alt={`Video ${i + 1}`}
+                      fill
+                      className="object-cover transition-transform group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full bg-gray-900">
+                      <VideoIcon className="h-10 w-10 text-gray-400" />
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-colors flex items-center justify-center">
                     <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                       <Play className="h-7 w-7 ml-1" style={{ color: "var(--school-primary)" }} />
@@ -139,16 +140,27 @@ export default function VideosPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {current.videoUrl ? (
-              <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-                <iframe
-                  src={toEmbedUrl(current.videoUrl)}
-                  title={`Video ${lightboxIndex + 1}`}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="absolute inset-0 w-full h-full rounded-lg"
-                />
-              </div>
-            ) : (
+              isDirectVideoUrl(current.videoUrl) ? (
+                <div className="aspect-video w-full bg-black rounded-lg overflow-hidden flex items-center justify-center">
+                  <video
+                    src={current.videoUrl}
+                    controls
+                    autoPlay
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                  <iframe
+                    src={toEmbedUrl(current.videoUrl)}
+                    title={`Video ${lightboxIndex + 1}`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="absolute inset-0 w-full h-full rounded-lg border-0"
+                  />
+                </div>
+              )
+            ) : current.image ? (
               <Image
                 src={current.image}
                 alt={`Video ${lightboxIndex + 1}`}
@@ -156,7 +168,7 @@ export default function VideosPage() {
                 height={675}
                 className="w-full rounded-lg"
               />
-            )}
+            ) : null}
           </div>
         </div>
       )}
