@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useSchool } from "@/hooks/useSchool";
 import { Header } from "@/components/layout/Header";
@@ -12,13 +12,8 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const schoolParam = searchParams.get("school");
-  const [isLocalhost, setIsLocalhost] = useState(false);
   const isFirstNav = useRef(true);
   const prevSchoolParam = useRef(schoolParam);
-
-  useEffect(() => {
-    setIsLocalhost(window.location.hostname === "localhost");
-  }, []);
 
   // Re-fetch server layout when ?school= changes so <html> theme vars update on client nav
   useEffect(() => {
@@ -33,21 +28,18 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, schoolParam, router]);
 
-  // Hide Header/Footer when showing group landing:
-  // - On production: slug is "apsfatehpur" (hostname-based)
-  // - On localhost: root path "/" without ?school= param
-  // Also hide for admin panel routes
+  // Hide Header/Footer when showing group landing (root path without ?school) or admin panel routes
   const isRootPath = pathname === "/";
   const isAdminRoute = pathname.startsWith("/admin");
-  const hideChrome = isAdminRoute || (isLocalhost
-    ? isRootPath && !schoolParam
-    : slug === "apsfatehpur");
+  const isGroupLanding = isRootPath && !schoolParam;
+  const hideChrome = isAdminRoute || isGroupLanding || (slug === "apsfatehpur" && isRootPath);
 
   return (
-    <div className="min-h-screen flex flex-col w-full max-w-full overflow-x-hidden">
+    <div className="min-h-screen flex flex-col w-full max-w-full overflow-x-hidden" suppressHydrationWarning>
       {!hideChrome && <Header />}
-      <main className="flex-1 w-full max-w-full overflow-x-hidden">{children}</main>
+      <main className="flex-1 w-full max-w-full overflow-x-hidden" suppressHydrationWarning>{children}</main>
       {!hideChrome && <Footer />}
+      <div id="global_google_translate_element" className="hidden" suppressHydrationWarning />
     </div>
   );
 }

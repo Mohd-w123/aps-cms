@@ -104,3 +104,33 @@
 .principal-bio p:not(:has(em)):not(:has(strong)) + p:has(strong) {
   margin-top: 1.5rem !important;
 }
+
+/* ── Google Translate Widget Styling & Intrusive Banner Cleanup ── */
+body {
+  top: 0px !important;
+  position: static !important;
+}
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+iframe.goog-te-banner-frame,
+#goog-gt-tt,
+.goog-te-balloon-frame {
+  display: none !important;
+  visibility: hidden !important;
+}
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}
+#google_translate_element {
+  display: none !important;
+}
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+}
+.goog-text-highlight {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}

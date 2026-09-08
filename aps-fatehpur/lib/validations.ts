@@ -42,16 +42,33 @@ export const newsCreateSchema = z.object({
 export const newsUpdateSchema = newsCreateSchema.partial();
 
 // ── Gallery ──
-export const galleryCreateSchema = z.object({
+const galleryBaseSchema = z.object({
   type: z.enum(["image", "video"]).optional().default("image"),
   category: z.string().optional().default("general"),
-  image: z.string().min(1),
+  image: z.string().optional().default(""),
   title: z.string().optional().default(""),
-  videoUrl: z.string().url().optional(),
+  videoUrl: z.string().optional().default(""),
   order: z.number().int().optional().default(0),
   isPublished: z.boolean().optional().default(true),
 });
-export const galleryUpdateSchema = galleryCreateSchema.partial();
+
+export const galleryCreateSchema = galleryBaseSchema.refine(
+  (data) => {
+    if (data.type === "video") {
+      return (
+        (!!data.videoUrl && data.videoUrl.trim().length > 0) ||
+        (!!data.image && data.image.trim().length > 0)
+      );
+    }
+    return !!data.image && data.image.trim().length > 0;
+  },
+  {
+    message: "Please provide an image for photos, or an uploaded video / video URL for videos",
+    path: ["image"],
+  }
+);
+
+export const galleryUpdateSchema = galleryBaseSchema.partial();
 
 // ── Toppers ──
 export const topperCreateSchema = z.object({

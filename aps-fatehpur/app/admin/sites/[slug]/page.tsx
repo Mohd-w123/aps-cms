@@ -8,8 +8,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { FileUploader } from "@/components/admin/FileUploader";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { schools } from "@/config/schools";
-import { Plus, Pencil, Trash2, X, Loader2, ShieldAlert, Eye, CheckCircle2, XCircle, MessageSquare, Send, Download } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Loader2, ShieldAlert, Eye, CheckCircle2, XCircle, MessageSquare, Send, Download, Film, Play, Upload, Link as LinkIcon } from "lucide-react";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { toEmbedUrl, isDirectVideoUrl, getVideoThumbnail } from "@/lib/utils";
 import { exportToExcel } from "@/lib/export-excel";
 import { toast } from "sonner";
 
@@ -437,14 +438,16 @@ function SchoolNews({ schoolSlug }: { schoolSlug: string }) {
 // ═══════════════════════════════════════════════════════════════
 function SchoolGallery({ schoolSlug }: { schoolSlug: string }) {
   const api = useAdminApi();
-  interface GalleryItem { _id: string; image: string; title?: string; type: string; category?: string; }
+  interface GalleryItem { _id: string; image: string; title?: string; type: string; category?: string; videoUrl?: string; }
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ image: "", title: "", type: "image", category: "general" });
+  const [form, setForm] = useState({ image: "", title: "", type: "image", category: "general", videoUrl: "" });
+  const [videoSource, setVideoSource] = useState<"upload" | "url">("upload");
   const [saving, setSaving] = useState(false);
   const [delId, setDelId] = useState<string | null>(null);
   const [catFilter, setCatFilter] = useState("all");
+  const [previewItem, setPreviewItem] = useState<GalleryItem | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -454,16 +457,36 @@ function SchoolGallery({ schoolSlug }: { schoolSlug: string }) {
   }, [api, schoolSlug]);
   useEffect(() => { if (api.token) load(); }, [api.token]); // eslint-disable-line
 
+  const close = () => {
+    setOpen(false);
+    setForm({ image: "", title: "", type: "image", category: "general", videoUrl: "" });
+    setVideoSource("upload");
+  };
+
   const save = async () => {
     setSaving(true);
-    const r = await api.post(`/api/gallery?school=${schoolSlug}`, form);
-    if (r.success) { setOpen(false); setForm({ image: "", title: "", type: "image", category: "general" }); load(); }
+    let finalImage = form.image;
+    if (form.type === "video" && !finalImage && form.videoUrl) {
+      finalImage = getVideoThumbnail(form.videoUrl);
+    }
+    const payload = {
+      ...form,
+      image: finalImage,
+      videoUrl: form.type === "video" && form.videoUrl ? form.videoUrl.trim() : undefined,
+    };
+    const r = await api.post(`/api/gallery?school=${schoolSlug}`, payload);
+    if (r.success) { close(); load(); }
     setSaving(false);
   };
   const remove = async () => { if (!delId) return; await api.del(`/api/gallery?id=${delId}&school=${schoolSlug}`); setDelId(null); load(); };
 
   const categories = ["all", ...Array.from(new Set(items.map(g => g.category || "general")))];
   const filtered = catFilter === "all" ? items : items.filter(g => (g.category || "general") === catFilter);
+
+  const isFormValid =
+    form.type === "image"
+      ? Boolean(form.image)
+      : Boolean(form.videoUrl || form.image);
 
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>;
 
@@ -477,33 +500,178 @@ function SchoolGallery({ schoolSlug }: { schoolSlug: string }) {
             </button>
           ))}
         </div>
-        <button onClick={() => setOpen(true)} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700"><Plus className="h-4 w-4" /> Add Image</button>
+        <button onClick={() => setOpen(true)} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 shadow-sm">
+          <Plus className="h-4 w-4" /> Add Item
+        </button>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
         {filtered.map((g) => (
-          <div key={g._id} className="relative group rounded-xl overflow-hidden border border-gray-200 bg-gray-100 aspect-square">
-            <Image src={g.image} alt={g.title || ""} fill className="object-cover" />
+          <div key={g._id} className="relative group rounded-xl overflow-hidden border border-gray-200 bg-gray-100 aspect-square shadow-xs">
+            <div className="w-full h-full cursor-pointer relative" onClick={() => setPreviewItem(g)}>
+              {g.image ? (
+                <Image src={g.image} alt={g.title || ""} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+              ) : (
+                <div className="flex items-center justify-center h-full bg-gray-900 text-white">
+                  <Film className="h-8 w-8" />
+                </div>
+              )}
+              {g.type === "video" && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center shadow-md">
+                    <Play className="h-5 w-5 ml-0.5 text-emerald-600" />
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="absolute top-1 left-1">
-              <span className="px-2 py-0.5 bg-black/60 text-white text-[10px] rounded-full">{g.category || "general"}</span>
+              <span className="px-2 py-0.5 bg-black/60 text-white text-[10px] rounded-full uppercase tracking-wider">{g.category || "general"}</span>
             </div>
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-              <button onClick={() => setDelId(g._id)} className="p-2 bg-red-500 text-white rounded-full"><Trash2 className="h-4 w-4" /></button>
+            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onClick={() => setDelId(g._id)} className="p-1.5 bg-red-600/90 text-white rounded-lg hover:bg-red-700 shadow-xs"><Trash2 className="h-3.5 w-3.5" /></button>
             </div>
+            {g.title && <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-2 truncate">{g.title}</div>}
           </div>
         ))}
+        {filtered.length === 0 && <div className="col-span-full text-center py-12 text-gray-400">No items found</div>}
       </div>
 
+      {/* Upload Modal */}
       {open && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl w-full max-w-md my-8">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-lg my-8 shadow-xl">
             <div className="flex items-center justify-between p-5 border-b">
-              <h3 className="text-lg font-bold text-gray-900">Add Gallery Image</h3>
-              <button onClick={() => setOpen(false)} className="p-1 rounded hover:bg-gray-100"><X className="h-5 w-5 text-gray-500" /></button>
+              <h3 className="text-lg font-bold text-gray-900">Add Gallery Item</h3>
+              <button onClick={close} className="p-1 rounded-lg hover:bg-gray-100"><X className="h-5 w-5 text-gray-500" /></button>
             </div>
-            <div className="p-5 space-y-4">
-              <FileUploader value={form.image} onChange={url => setForm(f => ({ ...f, image: url }))} />
-              <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Caption (optional)" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+              {/* Type Switcher */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Item Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, type: "image" }))}
+                    className={`py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 border transition-all ${
+                      form.type === "image"
+                        ? "border-emerald-600 bg-emerald-50 text-emerald-700 font-semibold"
+                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    Photo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, type: "video" }))}
+                    className={`py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 border transition-all ${
+                      form.type === "video"
+                        ? "border-emerald-600 bg-emerald-50 text-emerald-700 font-semibold"
+                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Film className="h-4 w-4" /> Video
+                  </button>
+                </div>
+              </div>
+
+              {/* Photo Mode */}
+              {form.type === "image" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Photo *</label>
+                  <FileUploader value={form.image} onChange={url => setForm(f => ({ ...f, image: url }))} accept="image/*" label="Upload Photo" />
+                </div>
+              )}
+
+              {/* Video Mode */}
+              {form.type === "video" && (
+                <div className="space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Video Source</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setVideoSource("upload")}
+                        className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 border transition-all ${
+                          videoSource === "upload" ? "bg-white border-emerald-500 text-emerald-700 shadow-xs font-semibold" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        <Upload className="h-3.5 w-3.5" /> Upload Video File
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setVideoSource("url")}
+                        className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 border transition-all ${
+                          videoSource === "url" ? "bg-white border-emerald-500 text-emerald-700 shadow-xs font-semibold" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        <LinkIcon className="h-3.5 w-3.5" /> YouTube / Video URL
+                      </button>
+                    </div>
+                  </div>
+
+                  {videoSource === "upload" ? (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Video File * <span className="text-xs text-gray-400 font-normal">(MP4, WebM, MOV up to 50MB)</span>
+                      </label>
+                      <FileUploader
+                        value={form.videoUrl}
+                        onChange={(url) => {
+                          setForm(f => {
+                            const autoThumb = !f.image && url.includes("/video/upload/") ? url.replace(/\.[^/.]+$/, ".jpg") : f.image;
+                            return { ...f, videoUrl: url, image: autoThumb };
+                          });
+                        }}
+                        accept="video/*"
+                        label="Upload Video"
+                        hideLibrary
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Video URL * <span className="text-xs text-gray-400 font-normal">(YouTube, Vimeo, or direct link)</span>
+                      </label>
+                      <input
+                        type="url"
+                        value={form.videoUrl}
+                        onChange={(e) => {
+                          const url = e.target.value;
+                          setForm(f => {
+                            const autoThumb = !f.image ? getVideoThumbnail(url) : f.image;
+                            return { ...f, videoUrl: url, image: autoThumb };
+                          });
+                        }}
+                        placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
+                        className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Poster / Thumbnail <span className="text-xs text-gray-400 font-normal">(Optional)</span>
+                    </label>
+                    <FileUploader
+                      value={form.image}
+                      onChange={url => setForm(f => ({ ...f, image: url }))}
+                      accept="image/*"
+                      label="Upload Custom Thumbnail"
+                    />
+                    {!form.image && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {form.videoUrl ? "Thumbnail will be auto-generated from your video." : "A poster frame will be generated automatically once a video is selected."}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Caption <span className="text-gray-400 font-normal">(Optional)</span></label>
+                <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Caption (optional)" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                 <input value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} placeholder="e.g. sports, event, annual function" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" list="gallery-categories" />
@@ -512,16 +680,48 @@ function SchoolGallery({ schoolSlug }: { schoolSlug: string }) {
                 </datalist>
               </div>
             </div>
-            <div className="flex justify-end gap-3 p-5 border-t">
-              <button onClick={() => setOpen(false)} className="px-4 py-2 rounded-lg border text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-              <button onClick={save} disabled={saving || !form.image} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2">
-                {saving && <Loader2 className="h-4 w-4 animate-spin" />}Upload
+            <div className="flex justify-end gap-3 p-5 border-t bg-gray-50 rounded-b-2xl">
+              <button onClick={close} className="px-4 py-2 rounded-lg border text-sm font-medium text-gray-700 hover:bg-white">Cancel</button>
+              <button onClick={save} disabled={saving || !isFormValid} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2 shadow-sm">
+                {saving && <Loader2 className="h-4 w-4 animate-spin" />}Add to Gallery
               </button>
             </div>
           </div>
         </div>
       )}
-      <ConfirmDialog open={!!delId} onOpenChange={() => setDelId(null)} title="Delete Image" description="Permanently remove this image?" confirmLabel="Delete" onConfirm={remove} destructive />
+
+      {/* Preview Modal */}
+      {previewItem && (
+        <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4" onClick={() => setPreviewItem(null)}>
+          <div className="relative max-w-3xl w-full bg-black rounded-2xl overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setPreviewItem(null)} className="absolute top-3 right-3 z-20 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white">
+              <X className="h-5 w-5" />
+            </button>
+            {previewItem.type === "video" && previewItem.videoUrl ? (
+              isDirectVideoUrl(previewItem.videoUrl) ? (
+                <div className="aspect-video w-full bg-black flex items-center justify-center">
+                  <video src={previewItem.videoUrl} controls autoPlay className="w-full h-full object-contain" />
+                </div>
+              ) : (
+                <div className="aspect-video w-full">
+                  <iframe src={toEmbedUrl(previewItem.videoUrl)} title={previewItem.title || "Video"} className="w-full h-full border-0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
+                </div>
+              )
+            ) : previewItem.image ? (
+              <div className="relative aspect-video w-full bg-black">
+                <Image src={previewItem.image} alt={previewItem.title || ""} fill className="object-contain" />
+              </div>
+            ) : null}
+            {previewItem.title && (
+              <div className="p-4 bg-gray-900 text-white text-sm">
+                <p className="font-medium">{previewItem.title}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <ConfirmDialog open={!!delId} onOpenChange={() => setDelId(null)} title="Delete Item" description="Permanently remove this gallery item?" confirmLabel="Delete" onConfirm={remove} destructive />
     </div>
   );
 }

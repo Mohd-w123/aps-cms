@@ -16,7 +16,7 @@ const GallerySchema = new Schema<IGallery>(
     schoolId: { type: Schema.Types.ObjectId, ref: "School", required: true, index: true },
     type: { type: String, enum: ["image", "video"], default: "image" },
     category: { type: String, default: "general" },
-    image: { type: String, required: true },
+    image: { type: String, default: "" },
     title: { type: String, default: "" },
     videoUrl: { type: String },
     order: { type: Number, default: 0 },

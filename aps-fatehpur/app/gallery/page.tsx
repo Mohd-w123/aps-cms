@@ -6,6 +6,7 @@ import { useSchool } from "@/hooks/useSchool";
 import { PageBanner } from "@/components/layout/PageBanner";
 import { X, ChevronLeft, ChevronRight, ImageIcon, Play } from "lucide-react";
 import { schools as allSchools } from "@/config/schools";
+import { toEmbedUrl, isDirectVideoUrl } from "@/lib/utils";
 
 interface GalleryItem {
   _id: string;
@@ -199,16 +200,24 @@ export default function GalleryPage() {
                           className="group relative aspect-[4/3] rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-lg transition-shadow"
                           onClick={() => openLightbox(globalIdx)}
                         >
-                          <Image
-                            src={item.image}
-                            alt={item.title || "Gallery image"}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                            sizes="(max-width: 768px) 50vw, 25vw"
-                          />
+                          {item.image ? (
+                            <Image
+                              src={item.image}
+                              alt={item.title || "Gallery image"}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              sizes="(max-width: 768px) 50vw, 25vw"
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center h-full bg-gray-100">
+                              <ImageIcon className="h-10 w-10 text-gray-300" />
+                            </div>
+                          )}
                           {item.type === "video" && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                              <Play className="h-10 w-10 text-white" />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
+                              <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                <Play className="h-6 w-6 ml-0.5 text-emerald-600" />
+                              </div>
                             </div>
                           )}
                           {/* School label in group mode */}
@@ -275,15 +284,27 @@ export default function GalleryPage() {
           >
             {filtered[lightboxIndex].type === "video" &&
             filtered[lightboxIndex].videoUrl ? (
-              <div className="aspect-video">
-                <iframe
-                  src={filtered[lightboxIndex].videoUrl}
-                  className="w-full h-full rounded-lg"
-                  allowFullScreen
-                  allow="autoplay; encrypted-media"
-                />
-              </div>
-            ) : (
+              isDirectVideoUrl(filtered[lightboxIndex].videoUrl) ? (
+                <div className="aspect-video w-full bg-black rounded-lg overflow-hidden flex items-center justify-center">
+                  <video
+                    src={filtered[lightboxIndex].videoUrl}
+                    controls
+                    autoPlay
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="aspect-video w-full">
+                  <iframe
+                    src={toEmbedUrl(filtered[lightboxIndex].videoUrl)}
+                    title={filtered[lightboxIndex].title || "Gallery video"}
+                    className="w-full h-full rounded-lg border-0"
+                    allowFullScreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  />
+                </div>
+              )
+            ) : filtered[lightboxIndex].image ? (
               <Image
                 src={filtered[lightboxIndex].image}
                 alt={filtered[lightboxIndex].title || "Gallery image"}
@@ -291,6 +312,10 @@ export default function GalleryPage() {
                 height={800}
                 className="object-contain max-h-[85vh] w-auto mx-auto rounded-lg"
               />
+            ) : (
+              <div className="flex items-center justify-center py-20 text-white/50">
+                <ImageIcon className="h-16 w-16" />
+              </div>
             )}
             {filtered[lightboxIndex].title && (
               <p className="text-white text-center mt-3 text-sm">

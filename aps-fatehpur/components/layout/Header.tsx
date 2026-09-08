@@ -17,6 +17,7 @@ import { getSchoolHomeUrl, navigateToSchoolHome } from "@/lib/school-urls";
 import { navigation as defaultNavigation, NavItem } from "@/config/navigation";
 import { MobileNav } from "./MobileNav";
 import { SocialIcon, socialPlatforms, normalizeSocialUrl } from "@/components/shared/SocialIcons";
+import { GoogleTranslate } from "@/components/shared/GoogleTranslate";
 
 export function Header() {
   const { school, slug } = useSchool();
@@ -91,29 +92,32 @@ export function Header() {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {contactInfo.address && (
-              <span className="flex items-center gap-1.5">
+              <span className="hidden lg:flex items-center gap-1.5 text-xs text-white/90">
                 <MapPin className="h-3.5 w-3.5" />
                 {contactInfo.address}
               </span>
             )}
-            {socialPlatforms.map(p => {
-              const url = normalizeSocialUrl(socialLinks[p.key], p.key);
-              if (!url) return null;
-              return (
-                <a
-                  key={p.key}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={p.label}
-                  className="hover:opacity-80 transition-opacity"
-                >
-                  <SocialIcon platform={p.key} />
-                </a>
-              );
-            })}
+            <div className="flex items-center gap-1.5">
+              {socialPlatforms.map(p => {
+                const url = normalizeSocialUrl(socialLinks[p.key], p.key);
+                if (!url) return null;
+                return (
+                  <a
+                    key={p.key}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={p.label}
+                    className="hover:opacity-80 transition-opacity"
+                  >
+                    <SocialIcon platform={p.key} />
+                  </a>
+                );
+              })}
+            </div>
+            <GoogleTranslate variant="dark" />
           </div>
         </div>
       </div>
@@ -179,14 +183,17 @@ export function Header() {
             </li>
           </ul>
 
-          {/* Mobile burger (< 1280px) */}
-          <button
-            className="xl:hidden p-2 rounded-md hover:bg-white/10 transition-colors shrink-0"
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open menu"
-          >
-            <Menu className="h-6 w-6" />
-          </button>
+          {/* Mobile buttons (< 1280px) */}
+          <div className="flex items-center gap-2 xl:hidden">
+            <GoogleTranslate variant="dark" />
+            <button
+              className="p-2 rounded-md hover:bg-white/10 transition-colors shrink-0"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+          </div>
         </div>
       </nav>
 
