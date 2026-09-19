@@ -73,7 +73,7 @@ export default function AlumniPage() {
       try {
         const url = isGroup
           ? "/api/alumni?limit=100&scope=all"
-          : `/api/alumni?limit=50&school=${schoolSlug}`;
+          : `/api/alumni?limit=50&school=${schoolSlug}&isApproved=true`;
         const res = await fetch(url, {
           headers: isGroup ? {} : { "x-school-slug": schoolSlug },
         });

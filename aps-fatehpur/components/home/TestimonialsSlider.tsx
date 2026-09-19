@@ -24,7 +24,7 @@ export function TestimonialsSlider() {
     const slug = paramSchool || cookieSlug || "apsfatehpur";
     const isGroup = isLocalhost ? !paramSchool : slug === "apsfatehpur";
 
-    const url = isGroup ? "/api/alumni?limit=30&scope=all" : `/api/alumni?limit=20&school=${slug}`;
+    const url = isGroup ? "/api/alumni?limit=30&scope=all" : `/api/alumni?limit=20&school=${slug}&isApproved=true`;
 
     fetch(url)
       .then(r => r.json())
