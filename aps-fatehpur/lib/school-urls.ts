@@ -5,7 +5,7 @@ export function isDevHost(): boolean {
   return host === "localhost" || host.includes("vercel.app");
 }
 
-/** Append ?school=slug to internal paths on dev hosts (branch schools only) */
+/** Append ?school=slug to internal paths for branch schools */
 export function withSchoolParam(href: string, slug: string): string {
   if (
     !href ||
@@ -17,7 +17,7 @@ export function withSchoolParam(href: string, slug: string): string {
   ) {
     return href;
   }
-  if (slug === "apsfatehpur" || !isDevHost()) {
+  if (slug === "apsfatehpur") {
     return href;
   }
   const [path, queryString] = href.split("?");
@@ -26,7 +26,7 @@ export function withSchoolParam(href: string, slug: string): string {
   return `${path}?${params.toString()}`;
 }
 
-/** Home URL for a school site (uses ?school= on dev hosts for branch schools) */
+/** Home URL for a school site */
 export function getSchoolHomeUrl(slug: string): string {
   return withSchoolParam("/", slug);
 }
@@ -38,10 +38,12 @@ export function getBranchUrl(school: {
   websiteUrl?: string;
 }): string {
   if (school.websiteUrl) return school.websiteUrl;
-  if (typeof window !== "undefined" && isDevHost()) {
-    return withSchoolParam("/", school.slug);
+  // If it is an external custom domain like azadschool.in, link to it directly
+  if (school.domain && !school.domain.includes("apsfatehpur.com")) {
+    return `https://${school.domain}`;
   }
-  return school.domain ? `https://${school.domain}` : withSchoolParam("/", school.slug);
+  // For branch schools on apsfatehpur.com, route via ?school=slug so it opens the school site immediately
+  return withSchoolParam("/", school.slug);
 }
 
 /** Navigate to school home, reloading when already on that page */
