@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "NODE_OPTIONS='--max-old-space-size=512' next start",
+    "postbuild": "cp -r public .next/standalone/public && cp -r .next/static .next/standalone/.next/static",
+    "start": "node --max-old-space-size=512 .next/standalone/server.js",
     "lint": "next lint"
   },
   "engines": {
