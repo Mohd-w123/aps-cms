@@ -6,8 +6,6 @@ import { cn } from "@/lib/utils";
 import { getSchoolBySlug } from "@/config/schools";
 import { SchoolProvider } from "@/hooks/useSchool";
 import { LayoutShell } from "@/components/layout/LayoutShell";
-import connectDB from "@/lib/db";
-import School from "@/lib/models/School";
 import { buildThemeCssVars } from "@/lib/theme";
 
 const inter = Inter({
@@ -38,7 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -46,24 +44,7 @@ export default async function RootLayout({
   const headersList = headers();
   const slug = headersList.get("x-school-slug") || "apsfatehpur";
   const school = getSchoolBySlug(slug);
-
-  // Fetch theme from database with a fast 1.5s timeout (admin-managed colors take priority)
-  let dbTheme: Record<string, string> | null = null;
-  try {
-    const fetchTheme = async () => {
-      await connectDB();
-      const dbSchool = await School.findOne({ slug, isActive: true }).select("theme").lean();
-      return (dbSchool?.theme as Record<string, string>) || null;
-    };
-    dbTheme = await Promise.race([
-      fetchTheme(),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500)),
-    ]);
-  } catch {
-    // Fallback to static config if DB is unavailable or timed out
-  }
-
-  const cssVars = buildThemeCssVars(school, dbTheme);
+  const cssVars = buildThemeCssVars(school, null);
 
   return (
     <html
