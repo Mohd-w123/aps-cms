@@ -16,9 +16,15 @@ export function middleware(request: NextRequest) {
   const host = rawHost.toLowerCase().split(":")[0];
   let slug = SCHOOL_MAP[host];
 
+  // Always check ?school= param first — enables subdomain redirects in production
+  // e.g. apsboys.apsfatehpur.com → apsfatehpur.com/?school=apsboys
+  const paramSchool = request.nextUrl.searchParams.get("school");
+  if (!slug && paramSchool) {
+    slug = paramSchool;
+  }
+
   // Localhost/Vercel fallback: use ?school= query param, then existing cookie for inner pages, then default
   if (!slug && (host.includes("localhost") || host.includes("vercel.app"))) {
-    const paramSchool = request.nextUrl.searchParams.get("school");
     const isRootPath = request.nextUrl.pathname === "/";
 
     if (paramSchool) {
