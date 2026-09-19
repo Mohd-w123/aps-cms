@@ -1,10 +1,18 @@
 import { NextRequest } from "next/server";
 import connectDB from "@/lib/db";
 import { requireAuth, unauthorizedResponse, canAccessSchool, forbiddenResponse } from "@/lib/auth";
-import { successResponse, errorResponse, getSchoolId, parsePagination, paginationMeta } from "@/lib/api-helpers";
+import {
+  successResponse,
+  errorResponse,
+  getSchoolId,
+  buildAdminSchoolFilter,
+  parsePagination,
+  paginationMeta,
+} from "@/lib/api-helpers";
 import Alumni from "@/lib/models/Alumni";
 import "@/lib/models/School"; // Ensure School model is registered for populate
 import { alumniCreateSchema, alumniUpdateSchema } from "@/lib/validations";
+import { withSchoolName } from "@/lib/school-label";
 
 export const dynamic = "force-dynamic";
 
@@ -34,11 +42,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/alumni — dual mode: admin sees all, public sees approved only
+// GET /api/alumni — dual mode: admin sees all (superadmin across all schools or filtered by ?school=), public sees approved only
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const scope = searchParams.get("scope");
+    const isApprovedParam = searchParams.get("isApproved");
     const { page, limit, skip } = parsePagination(searchParams);
 
     const payload = requireAuth(request);
@@ -48,24 +57,16 @@ export async function GET(request: NextRequest) {
     let filter: Record<string, unknown>;
 
     // scope=all → fetch approved alumni across all schools (for group landing & alumni page)
-    if (scope === "all" && !payload) {
+    if (scope === "all") {
       filter = { isApproved: true };
-      const [items, total] = await Promise.all([
-        Alumni.find(filter).populate("schoolId", "name slug").sort({ createdAt: -1 }).skip(skip).limit(limit),
-        Alumni.countDocuments(filter),
-      ]);
-      return successResponse(items, 200, paginationMeta(page, limit, total));
-    }
-
-    if (payload) {
-      // Admin mode: use ?school= param if provided (for superadmin viewing other schools)
-      const explicitSchoolId = await getSchoolId(request);
-      const targetSchoolId = explicitSchoolId || payload.schoolId;
-
-      // Permission check: non-superadmin can only view their own school
-      if (!canAccessSchool(payload, targetSchoolId)) return forbiddenResponse();
-
-      filter = { schoolId: targetSchoolId };
+    } else if (payload) {
+      // Admin mode: use buildAdminSchoolFilter (superadmin without ?school= sees all schools)
+      const schoolFilter = await buildAdminSchoolFilter(request, payload);
+      if ("error" in schoolFilter) return schoolFilter.error;
+      filter = { ...schoolFilter.filter };
+      if (isApprovedParam !== null) {
+        filter.isApproved = isApprovedParam === "true";
+      }
     } else {
       // Public mode: approved alumni only
       const schoolId = await getSchoolId(request);
@@ -74,11 +75,15 @@ export async function GET(request: NextRequest) {
     }
 
     const [items, total] = await Promise.all([
-      Alumni.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Alumni.find(filter)
+        .populate("schoolId", "name slug")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
       Alumni.countDocuments(filter),
     ]);
 
-    return successResponse(items, 200, paginationMeta(page, limit, total));
+    return successResponse(withSchoolName(items), 200, paginationMeta(page, limit, total));
   } catch (error) {
     console.error("Alumni GET error:", error);
     return errorResponse("Internal server error", 500);
