@@ -3,6 +3,10 @@ const { parse } = require("url");
 const fs = require("fs");
 const next = require("next");
 
+if (process.env.HOSTNAME && (process.env.HOSTNAME.startsWith("/") || process.env.HOSTNAME.includes(".sock"))) {
+  process.env.HOSTNAME = "0.0.0.0";
+}
+
 const dev = false;
 const app = next({ dev });
 const handle = app.getRequestHandler();
