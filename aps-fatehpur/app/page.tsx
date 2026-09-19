@@ -25,10 +25,8 @@ export default function HomePage() {
 
   if (isLoading) return null;
 
-  // On localhost: show group landing when no ?school= param,
-  // even if cookie says otherwise (client-side nav doesn't re-run middleware)
-  const isLocalhost = typeof window !== "undefined" && window.location.hostname === "localhost";
-  const showGroupLanding = isLocalhost ? !schoolParam : slug === "apsfatehpur";
+  // Show group landing only when at root and no branch school is selected
+  const showGroupLanding = !schoolParam && slug === "apsfatehpur";
 
   if (showGroupLanding) {
     return <GroupLanding />;

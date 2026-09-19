@@ -1,56 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const SCHOOL_MAP: Record<string, string> = {
-  "apsfatehpur.com": "apsfatehpur",
-  "www.apsfatehpur.com": "apsfatehpur",
-  "apsgirls.apsfatehpur.com": "apsgirls",
-  "apsboys.apsfatehpur.com": "apsboys",
-  "madrasa.apsfatehpur.com": "madrasa",
-  "azadschool.in": "azadschool",
-  "www.azadschool.in": "azadschool",
-};
+const SCHOOL_SLUGS = new Set(["apsfatehpur", "apsgirls", "apsboys", "madrasa", "azadschool"]);
 
 export function middleware(request: NextRequest) {
-  const forwardedHost = request.headers.get("x-forwarded-host") || "";
-  const rawHost = forwardedHost || request.headers.get("host") || request.nextUrl.host || "";
-  const host = rawHost.toLowerCase().split(":")[0];
-  let slug = SCHOOL_MAP[host];
+  const { pathname, searchParams } = request.nextUrl;
+  const paramSchool = searchParams.get("school");
 
-  // Always check ?school= param first — enables subdomain redirects in production
-  // e.g. apsboys.apsfatehpur.com → apsfatehpur.com/?school=apsboys
-  const paramSchool = request.nextUrl.searchParams.get("school");
-  if (!slug && paramSchool) {
+  // Check if URL is a branch path like /apsboys or /apsgirls
+  const firstSegment = pathname.split("/")[1]?.toLowerCase();
+  const isBranchPath = Boolean(firstSegment && SCHOOL_SLUGS.has(firstSegment) && firstSegment !== "apsfatehpur");
+
+  let slug = "apsfatehpur";
+
+  if (paramSchool && SCHOOL_SLUGS.has(paramSchool)) {
+    // 1. Explicit ?school= param always wins
     slug = paramSchool;
+  } else if (isBranchPath) {
+    // 2. Direct slug path /apsboys or /apsgirls
+    slug = firstSegment;
+  } else if (pathname === "/") {
+    // 3. Root URL with no school param shows group landing
+    slug = "apsfatehpur";
+  } else {
+    // 4. Inner pages (/about, /gallery, etc.) keep current school from cookie
+    slug = request.cookies.get("school-slug")?.value || "apsfatehpur";
   }
 
-  // Localhost/Vercel fallback: use ?school= query param, then existing cookie for inner pages, then default
-  if (!slug && (host.includes("localhost") || host.includes("vercel.app"))) {
-    const isRootPath = request.nextUrl.pathname === "/";
-
-    if (paramSchool) {
-      // Explicit ?school= param always wins
-      slug = paramSchool;
-    } else if (isRootPath) {
-      // Root path without ?school= → always show group landing
-      slug = "apsfatehpur";
-    } else {
-      // Inner pages → preserve school from cookie
-      slug = request.cookies.get("school-slug")?.value || "apsfatehpur";
-    }
+  // If user visits /apsboys directly, rewrite to /?school=apsboys so the homepage renders that school
+  if (isBranchPath) {
+    const rewriteUrl = request.nextUrl.clone();
+    rewriteUrl.pathname = "/";
+    rewriteUrl.searchParams.set("school", firstSegment);
+    const response = NextResponse.rewrite(rewriteUrl);
+    response.headers.set("x-school-slug", slug);
+    response.cookies.set("school-slug", slug, {
+      path: "/",
+      httpOnly: false,
+      sameSite: "lax",
+    });
+    return response;
   }
 
-  const finalSlug = slug || "apsfatehpur";
-
-  // Set the slug as a REQUEST header so API route handlers can read it
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-school-slug", finalSlug);
+  requestHeaders.set("x-school-slug", slug);
 
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
 
-  // Set cookie so client components and subsequent requests can read it
-  response.cookies.set("school-slug", finalSlug, {
+  response.cookies.set("school-slug", slug, {
     path: "/",
     httpOnly: false,
     sameSite: "lax",
