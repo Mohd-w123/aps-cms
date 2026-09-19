@@ -47,16 +47,20 @@ export default async function RootLayout({
   const slug = headersList.get("x-school-slug") || "apsfatehpur";
   const school = getSchoolBySlug(slug);
 
-  // Fetch theme from database (admin-managed colors take priority)
+  // Fetch theme from database with a fast 1.5s timeout (admin-managed colors take priority)
   let dbTheme: Record<string, string> | null = null;
   try {
-    await connectDB();
-    const dbSchool = await School.findOne({ slug, isActive: true }).select("theme").lean();
-    if (dbSchool?.theme) {
-      dbTheme = dbSchool.theme as Record<string, string>;
-    }
+    const fetchTheme = async () => {
+      await connectDB();
+      const dbSchool = await School.findOne({ slug, isActive: true }).select("theme").lean();
+      return (dbSchool?.theme as Record<string, string>) || null;
+    };
+    dbTheme = await Promise.race([
+      fetchTheme(),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500)),
+    ]);
   } catch {
-    // Fallback to static config if DB is unavailable
+    // Fallback to static config if DB is unavailable or timed out
   }
 
   const cssVars = buildThemeCssVars(school, dbTheme);
