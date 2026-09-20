@@ -118,7 +118,7 @@ export const schools: SchoolConfig[] = [
     id: "azadschool",
     name: "Azad School",
     slug: "azadschool",
-    domain: "azadschool.in",
+    domain: "azadschool.apsfatehpur.com",
     theme: {
       primary: "#ea580c",
       primaryDark: "#c2410c",
