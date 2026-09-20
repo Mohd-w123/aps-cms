@@ -164,8 +164,8 @@ const schoolsData = [
   {
     name: "Azad School",
     slug: "azadschool",
-    domain: "azadschool.in",
-    subdomain: "",
+    domain: "azadschool.apsfatehpur.com",
+    subdomain: "azadschool",
     theme: {
       primaryColor: "#ea580c",
       secondaryColor: "#431407",

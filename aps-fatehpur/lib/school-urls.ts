@@ -37,9 +37,20 @@ export function getBranchUrl(school: {
   domain?: string;
   websiteUrl?: string;
 }): string {
-  if (school.websiteUrl) return school.websiteUrl;
-  // If it is an external custom domain like azadschool.in, link to it directly
-  if (school.domain && !school.domain.includes("apsfatehpur.com")) {
+  // If websiteUrl is explicitly provided and is a valid external URL (not an internal vercel preview or ?school= param), use it
+  if (
+    school.websiteUrl &&
+    !school.websiteUrl.includes("vercel.app") &&
+    !school.websiteUrl.includes("?school=")
+  ) {
+    return school.websiteUrl;
+  }
+  // If it is an external custom domain like another school domain (excluding apsfatehpur.com and azadschool)
+  if (
+    school.domain &&
+    !school.domain.includes("apsfatehpur.com") &&
+    !school.domain.includes("azadschool")
+  ) {
     return `https://${school.domain}`;
   }
   // For branch schools on apsfatehpur.com, route via ?school=slug so it opens the school site immediately
